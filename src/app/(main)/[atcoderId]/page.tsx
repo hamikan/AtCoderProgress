@@ -58,7 +58,7 @@ async function getUserProfile(atcoderId: string) {
 }
 
 export default async function UserProfilePage({ params }: { params: { atcoderId: string } }) {
-  const { atcoderId } = params;
+  const { atcoderId } = await params;
   const userProfile = await getUserProfile(atcoderId);
 
   if (!userProfile) {
