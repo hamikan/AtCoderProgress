@@ -3,23 +3,67 @@
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+// AtCoderの提出データの型定義
+interface Submission {
+  id: number;
+  epoch_second: number;
+  problem_id: string;
+  contest_id: string;
+  user_id: string;
+  language: string;
+  point: number;
+  length: number;
+  result: string;
+  execution_time: number;
+}
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // セッション情報取得中
+  // @ts-ignore
+  const atcoderId = session?.user?.atcoderId;
+
+  useEffect(() => {
+    if (status === 'authenticated' && atcoderId) {
+      const fetchSubmissions = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const res = await fetch(`/api/users/${atcoderId}/submissions`);
+          if (!res.ok) {
+            throw new Error('データの取得に失敗しました。');
+          }
+          const data = await res.json();
+          setSubmissions(data);
+        } catch (err) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError('不明なエラーが発生しました。');
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchSubmissions();
+    }
+  }, [status, atcoderId]);
+
   if (status === 'loading') {
     return <div className="flex items-center justify-center h-screen">読み込み中...</div>;
   }
 
-  // 未認証
   if (status === 'unauthenticated') {
-    // 基本的にこのコンポーネントは認証後に表示されるが、念のため
     return <div className="flex items-center justify-center h-screen">アクセス権がありません。</div>;
   }
 
-  // AtCoder IDがまだ連携されていないユーザー
-  // @ts-ignore next-authの型拡張が必要
+  // @ts-ignore
   if (session && !session.user?.atcoderId) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
@@ -34,16 +78,21 @@ export default function Dashboard() {
     );
   }
 
-  // 認証済みで、AtCoder IDも連携済みのユーザー
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold">ようこそ、{session?.user?.name}さん！</h1>
-      {/* @ts-ignore next-authの型拡張が必要 */}
-      <p className="text-xl text-gray-700">あなたのAtCoder ID: {session?.user?.atcoderId}</p>
-      
-      <div className="mt-8">
-        <p>ここにダッシュボードのコンテンツ（ヒートマップ、レーダーチャートなど）が表示されます。</p>
-      </div>
+      <p className="text-xl text-gray-700">あなたのAtCoder ID: {atcoderId}</p>
+
+      {isLoading && <p className="mt-8">データを読み込んでいます...</p>}
+      {error && <p className="mt-8 text-red-500">エラー: {error}</p>}
+
+      {!isLoading && !error && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold">提出履歴</h2>
+          <p>取得した提出数: {submissions.length}</p>
+          <p>（ここにヒートマップやチャートが表示されます）</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,12 +3,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react'; // useSessionをインポート
 
 export default function LinkAtCoderPage() {
   const [atcoderId, setAtcoderId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { update } = useSession(); // useSessionからupdate関数を取得
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +33,8 @@ export default function LinkAtCoderPage() {
       });
 
       if (res.ok) {
+        // セッション情報を更新
+        await update(); 
         // 成功したらダッシュボード（メインページ）へリダイレクト
         router.push('/');
       } else {
