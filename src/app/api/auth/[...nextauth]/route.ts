@@ -1,29 +1,33 @@
 
-import NextAuth from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
+import NextAuth, { NextAuthOptions } from "next-auth"
+import GithubProvider from "next-auth/providers/github"
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import { PrismaClient } from "@prisma/client"
 
-const handler = NextAuth({
+const prisma = new PrismaClient()
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
-    CredentialsProvider({
-      name: "AtCoder",
-      credentials: {
-        atcoderId: { label: "AtCoder ID", type: "text" },
-        password: {  label: "Password", type: "password" }
-      },
-      async authorize(credentials, req) {
-        // ここでAtCoderのログイン処理を実装します
-        // ダミー実装として、入力があればユーザー情報を返します
-        if (credentials?.atcoderId && credentials?.password) {
-          return { id: credentials.atcoderId, name: credentials.atcoderId }
-        } else {
-          return null
-        }
-      }
-    })
+    GithubProvider({
+      clientId: process.env.GITHUB_ID ?? "",
+      clientSecret: process.env.GITHUB_SECRET ?? "",
+    }),
   ],
   pages: {
     signIn: '/login',
-  }
-})
+  },
+  // セッションにユーザーIDを含める
+  callbacks: {
+    session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+      }
+      return session;
+    },
+  },
+};
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
