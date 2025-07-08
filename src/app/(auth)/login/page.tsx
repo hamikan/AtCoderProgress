@@ -1,47 +1,30 @@
-'use client'
 
-import { signIn } from "next-auth/react"
-import { useState } from "react"
+'use client';
+
+import { signIn } from 'next-auth/react';
+import { FaGithub } from 'react-icons/fa';
 
 export default function LoginPage() {
-  const [atcoderId, setAtcoderId] = useState("")
-  const [password, setPassword] = useState("")
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await signIn("credentials", {
-      atcoderId,
-      password,
-      callbackUrl: `/${atcoderId}`,
-    })
-  }
+  const handleSignIn = () => {
+    signIn('github', { callbackUrl: '/link-atcoder' });
+  };
 
   return (
-    <div>
-      <h1>Login to AtCoder</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="atcoderId">AtCoder ID</label>
-          <input
-            id="atcoderId"
-            type="text"
-            value={atcoderId}
-            onChange={(e) => setAtcoderId(e.target.value)}
-            required
-          />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">ログイン</h1>
+          <p className="mt-2 text-gray-600">さあ、始めましょう</p>
         </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Login</button>
-      </form>
+        <button
+          onClick={handleSignIn}
+          className="w-full inline-flex items-center justify-center px-4 py-3 font-semibold text-white bg-gray-800 rounded-md hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
+        >
+          <FaGithub className="w-6 h-6 mr-3" />
+          GitHubでログイン
+        </button>
+      </div>
     </div>
-  )
+  );
 }
+

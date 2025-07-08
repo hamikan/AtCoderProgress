@@ -96,6 +96,9 @@
 │   ├── server
 │   │   ├── app
 │   │   │   ├── (auth)
+│   │   │   │   ├── link-atcoder
+│   │   │   │   │   ├── page_client-reference-manifest.js
+│   │   │   │   │   └── page.js
 │   │   │   │   ├── login
 │   │   │   │   │   ├── page_client-reference-manifest.js
 │   │   │   │   │   └── page.js
@@ -137,6 +140,7 @@
 │   │   │   ├── preact.js
 │   │   │   ├── react-calendar-heatmap.js
 │   │   │   ├── react-chartjs-2.js
+│   │   │   ├── react-icons.js
 │   │   │   └── uuid.js
 │   │   ├── _error.js
 │   │   ├── app-paths-manifest.json
@@ -154,6 +158,8 @@
 │   │   ├── chunks
 │   │   │   ├── app
 │   │   │   │   ├── (auth)
+│   │   │   │   │   ├── link-atcoder
+│   │   │   │   │   │   └── page.js
 │   │   │   │   │   ├── login
 │   │   │   │   │   │   └── page.js
 │   │   │   │   │   └── register
@@ -195,21 +201,67 @@
 │   │   │   └── ba015fad6dcf6784-s.woff2
 │   │   └── webpack
 │   │       ├── app
-│   │       │   └── layout.f91c8cc66bde116b.hot-update.js
-│   │       ├── 2520d0964d852b69.webpack.hot-update.json
+│   │       │   ├── (auth)
+│   │       │   │   ├── link-atcoder
+│   │       │   │   │   └── page.23dddb3dcec39c8f.hot-update.js
+│   │       │   │   └── login
+│   │       │   │       └── page.27156d0a78dd07af.hot-update.js
+│   │       │   ├── layout.015d579600b1e61a.hot-update.js
+│   │       │   ├── layout.13bfbbea4af3e260.hot-update.js
+│   │       │   ├── layout.233ce1ff93969696.hot-update.js
+│   │       │   ├── layout.27156d0a78dd07af.hot-update.js
+│   │       │   ├── layout.310d79e83a944720.hot-update.js
+│   │       │   ├── layout.7773c01c7f54d527.hot-update.js
+│   │       │   ├── layout.7eab5de8719e7a39.hot-update.js
+│   │       │   ├── layout.b853579e9bf270c4.hot-update.js
+│   │       │   ├── layout.c885727bf9b135de.hot-update.js
+│   │       │   ├── layout.cfe495fdd30f81cf.hot-update.js
+│   │       │   └── layout.df3fe8278ee87cb3.hot-update.js
+│   │       ├── 015d579600b1e61a.webpack.hot-update.json
+│   │       ├── 13bfbbea4af3e260.webpack.hot-update.json
+│   │       ├── 233ce1ff93969696.webpack.hot-update.json
+│   │       ├── 23dddb3dcec39c8f.webpack.hot-update.json
+│   │       ├── 27156d0a78dd07af.webpack.hot-update.json
+│   │       ├── 310d79e83a944720.webpack.hot-update.json
+│   │       ├── 33184befabd53b22.webpack.hot-update.json
 │   │       ├── 633457081244afec._.hot-update.json
-│   │       ├── 6b200fa56a80c539.webpack.hot-update.json
-│   │       ├── e0cf187b5b20878c.webpack.hot-update.json
-│   │       ├── f2f73c5294099771.webpack.hot-update.json
-│   │       ├── f91c8cc66bde116b.webpack.hot-update.json
-│   │       ├── webpack.2520d0964d852b69.hot-update.js
-│   │       ├── webpack.6b200fa56a80c539.hot-update.js
-│   │       ├── webpack.e0cf187b5b20878c.hot-update.js
-│   │       ├── webpack.f2f73c5294099771.hot-update.js
-│   │       └── webpack.f91c8cc66bde116b.hot-update.js
+│   │       ├── 6a0b2dce5920e025.webpack.hot-update.json
+│   │       ├── 7773c01c7f54d527.webpack.hot-update.json
+│   │       ├── 7eab5de8719e7a39.webpack.hot-update.json
+│   │       ├── 8df1ad5a0466ad5c.webpack.hot-update.json
+│   │       ├── b54cb3e7d1d5ccbc.webpack.hot-update.json
+│   │       ├── b853579e9bf270c4.webpack.hot-update.json
+│   │       ├── c6bcb26b2f23c413.webpack.hot-update.json
+│   │       ├── c885727bf9b135de.webpack.hot-update.json
+│   │       ├── cfe495fdd30f81cf.webpack.hot-update.json
+│   │       ├── df3fe8278ee87cb3.webpack.hot-update.json
+│   │       ├── e7afd001ddaabceb.webpack.hot-update.json
+│   │       ├── f9bfa6bd8f97d088.webpack.hot-update.json
+│   │       ├── main.8df1ad5a0466ad5c.hot-update.js
+│   │       ├── webpack.015d579600b1e61a.hot-update.js
+│   │       ├── webpack.13bfbbea4af3e260.hot-update.js
+│   │       ├── webpack.233ce1ff93969696.hot-update.js
+│   │       ├── webpack.23dddb3dcec39c8f.hot-update.js
+│   │       ├── webpack.27156d0a78dd07af.hot-update.js
+│   │       ├── webpack.310d79e83a944720.hot-update.js
+│   │       ├── webpack.33184befabd53b22.hot-update.js
+│   │       ├── webpack.6a0b2dce5920e025.hot-update.js
+│   │       ├── webpack.7773c01c7f54d527.hot-update.js
+│   │       ├── webpack.7eab5de8719e7a39.hot-update.js
+│   │       ├── webpack.8df1ad5a0466ad5c.hot-update.js
+│   │       ├── webpack.b54cb3e7d1d5ccbc.hot-update.js
+│   │       ├── webpack.b853579e9bf270c4.hot-update.js
+│   │       ├── webpack.c6bcb26b2f23c413.hot-update.js
+│   │       ├── webpack.c885727bf9b135de.hot-update.js
+│   │       ├── webpack.cfe495fdd30f81cf.hot-update.js
+│   │       ├── webpack.df3fe8278ee87cb3.hot-update.js
+│   │       ├── webpack.e7afd001ddaabceb.hot-update.js
+│   │       └── webpack.f9bfa6bd8f97d088.hot-update.js
 │   ├── types
 │   │   ├── app
 │   │   │   ├── (auth)
+│   │   │   │   ├── link-atcoder
+│   │   │   │   │   └── page.ts
 │   │   │   │   ├── login
 │   │   │   │   │   └── page.ts
 │   │   │   │   └── register
@@ -230,11 +282,16 @@
 │   ├── package.json
 │   ├── react-loadable-manifest.json
 │   └── trace
+├── prisma
+│   ├── migrations
+│   │   ├── 20250708035249_init
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
+│   └── schema.prisma
 ├── public
 ├── src
 │   ├── app
 │   │   ├── (auth)
-│   │   │   ├── api
 │   │   │   ├── link-atcoder
 │   │   │   │   └── page.tsx
 │   │   │   ├── login
@@ -264,11 +321,14 @@
 │   │   │   │       └── route.ts
 │   │   │   ├── recommendations
 │   │   │   │   └── route.ts
-│   │   │   └── submissions
-│   │   │       ├── [submissionId]
-│   │   │       │   └── publish
-│   │   │       │       └── route.ts
-│   │   │       └── route.ts
+│   │   │   ├── submissions
+│   │   │   │   ├── [submissionId]
+│   │   │   │   │   └── publish
+│   │   │   │   │       └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   └── user
+│   │   │       └── atcoder
+│   │   │           └── route.ts
 │   │   ├── globals.css
 │   │   └── layout.tsx
 │   └── components
@@ -278,7 +338,10 @@
 │       │   ├── Header.tsx
 │       │   └── Hero.tsx
 │       └── Providers.tsx
+├── .env
+├── .env.local
 ├── .gitignore
+├── docker-compose.yml
 ├── eslint.config.mjs
 ├── GEMINI.md
 ├── next-env.d.ts
