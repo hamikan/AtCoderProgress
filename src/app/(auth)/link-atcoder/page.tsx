@@ -41,7 +41,7 @@ export default function LinkAtCoderPage() {
         const data = await res.json();
         setError(data.error || '連携に失敗しました。');
       }
-    } catch (err) {
+    } catch {
       setError('エラーが発生しました。もう一度お試しください。');
     } finally {
       setIsLoading(false);
