@@ -1,4 +1,26 @@
-@import "tailwindcss";
+/* src/app/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* カレンダーヒートマップの色定義 */
+.react-calendar-heatmap .color-empty {
+  fill: #ebedf0; /* 薄いグレー */
+}
+.react-calendar-heatmap .color-scale-1 {
+  fill: #9be9a8; /* 薄い緑 */
+}
+.react-calendar-heatmap .color-scale-2 {
+  fill: #40c463; /* 中間の緑 */
+}
+.react-calendar-heatmap .color-scale-3 {
+  fill: #30a14e; /* 濃い緑 */
+}
+.react-calendar-heatmap .color-scale-4 {
+  fill: #216e39; /* 最も濃い緑 */
+}
+
 
 :root {
   --background: #ffffff;

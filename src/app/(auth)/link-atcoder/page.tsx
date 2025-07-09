@@ -3,12 +3,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react'; // useSessionをインポート
 
 export default function LinkAtCoderPage() {
   const [atcoderId, setAtcoderId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { update } = useSession(); // useSessionからupdate関数を取得
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,13 +33,15 @@ export default function LinkAtCoderPage() {
       });
 
       if (res.ok) {
+        // セッション情報を更新
+        await update(); 
         // 成功したらダッシュボード（メインページ）へリダイレクト
         router.push('/');
       } else {
         const data = await res.json();
         setError(data.error || '連携に失敗しました。');
       }
-    } catch (err) {
+    } catch {
       setError('エラーが発生しました。もう一度お試しください。');
     } finally {
       setIsLoading(false);

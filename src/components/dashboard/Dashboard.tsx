@@ -1,25 +1,78 @@
-
 'use client';
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect, useState, useMemo } from 'react';
+import CalendarHeatmap from 'react-calendar-heatmap';
+import 'react-calendar-heatmap/dist/styles.css';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
+import { Submission } from '@/types/submission';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // セッション情報取得中
+  const atcoderId = session?.user?.atcoderId;
+
+  useEffect(() => {
+    if (status === 'authenticated' && atcoderId) {
+      const fetchSubmissions = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const res = await fetch(`/api/users/${atcoderId}/submissions`);
+          if (!res.ok) {
+            throw new Error('データの取得に失敗しました。');
+          }
+          setSubmissions(await res.json());
+        } catch (err) {
+          // errがErrorオブジェクトのインスタンスであるかを確認
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError('不明なエラーが発生しました。');
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchSubmissions();
+    }
+  }, [status, atcoderId]);
+
+  // 提出データを日付ごとのカウントに加工
+  const dailyCounts = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    submissions.forEach(submission => {
+      // AC (Accepted) の提出のみをカウント
+      if (submission.result === 'AC') {
+        const date = new Date(submission.epoch_second * 1000);
+        const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD形式
+        counts[dateString] = (counts[dateString] || 0) + 1;
+      }
+    });
+    return Object.keys(counts).map(date => ({
+      date: new Date(date), // 文字列をDateオブジェクトに変換
+      count: counts[date],
+    }));
+  }, [submissions]);
+
+  // ヒートマップの開始日と終了日を計算
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setFullYear(endDate.getFullYear() - 1); // 過去1年間のデータ
+
   if (status === 'loading') {
     return <div className="flex items-center justify-center h-screen">読み込み中...</div>;
   }
 
-  // 未認証
   if (status === 'unauthenticated') {
-    // 基本的にこのコンポーネントは認証後に表示されるが、念のため
     return <div className="flex items-center justify-center h-screen">アクセス権がありません。</div>;
   }
 
-  // AtCoder IDがまだ連携されていないユーザー
-  // @ts-ignore next-authの型拡張が必要
   if (session && !session.user?.atcoderId) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
@@ -34,16 +87,58 @@ export default function Dashboard() {
     );
   }
 
-  // 認証済みで、AtCoder IDも連携済みのユーザー
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold">ようこそ、{session?.user?.name}さん！</h1>
-      {/* @ts-ignore next-authの型拡張が必要 */}
-      <p className="text-xl text-gray-700">あなたのAtCoder ID: {session?.user?.atcoderId}</p>
-      
-      <div className="mt-8">
-        <p>ここにダッシュボードのコンテンツ（ヒートマップ、レーダーチャートなど）が表示されます。</p>
-      </div>
+      <p className="text-xl text-gray-700">あなたのAtCoder ID: {atcoderId}</p>
+
+      {isLoading && <p className="mt-8">データを読み込んでいます...</p>}
+      {error && <p className="mt-8 text-red-500">エラー: {error}</p>}
+
+      {!isLoading && !error && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold mb-4">学習のサマリー</h2>
+          <h3 className="text-xl font-medium mb-2">カレンダーヒートマップ</h3>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <CalendarHeatmap
+              startDate={startDate}
+              endDate={endDate}
+              values={dailyCounts}
+              classForValue={(value: { date: string; count: number } | null) => {
+                if (!value) {
+                  return 'color-empty';
+                }
+                // 提出数に応じて色を調整 (例: 1-4段階)
+                if (value.count === 0) return 'color-empty';
+                if (value.count < 3) return 'color-scale-1';
+                if (value.count < 6) return 'color-scale-2';
+                if (value.count < 10) return 'color-scale-3';
+                return 'color-scale-4';
+              }}
+              tooltipDataAttrs={(value: { date: string; count: number } | null) => {
+                if (!value || !value.date) {
+                  return {
+                    'data-tooltip-id': 'heatmap-tooltip',
+                    'data-tooltip-content': 'No submissions',
+                  };
+                }
+                return {
+                  'data-tooltip-id': 'heatmap-tooltip',
+                  'data-tooltip-content': `${value.date}: ${value.count} submissions`,
+                };
+              }}
+              showWeekdayLabels={true}
+            />
+            <ReactTooltip id="heatmap-tooltip" />
+          </div>
+
+          <div className="mt-8">
+            <h3 className="text-xl font-medium mb-2">アルゴリズムタグごとのAC数レーダーチャート</h3>
+            <p>（ここにレーダーチャートが表示されます）</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

@@ -17,11 +17,12 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/login',
   },
-  // セッションにユーザーIDを含める
   callbacks: {
-    session({ session, user }) {
+    async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
+        // atcoderIdをセッションに追加
+        session.user.atcoderId = user.atcoderId;
       }
       return session;
     },

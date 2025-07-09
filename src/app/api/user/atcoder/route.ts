@@ -28,8 +28,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Error updating user with AtCoder ID:', error);
     // Prismaのエラーコードをチェックして、ユニーク制約違反の場合のメッセージを返す
-    if (error.code === 'P2002') {
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+      if ((error as { code: string }).code === 'P2002') {
         return NextResponse.json({ error: 'This AtCoder ID is already taken.' }, { status: 409 });
+      }
     }
     return NextResponse.json({ error: 'Failed to update AtCoder ID' }, { status: 500 });
   }
