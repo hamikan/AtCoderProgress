@@ -5,9 +5,7 @@
 
 /* src/app/globals.css */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* カレンダーヒートマップの色定義 */
 .react-calendar-heatmap .color-empty {
