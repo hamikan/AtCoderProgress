@@ -47,6 +47,8 @@
 .
 ├── .next
 │   ├── cache
+│   │   ├── eslint
+│   │   │   └── .cache_cttyop
 │   │   ├── swc
 │   │   │   └── plugins
 │   │   │       └── v7_macos_aarch64_9.0.0
@@ -54,20 +56,80 @@
 │   │   │   ├── client-development
 │   │   │   │   ├── 0.pack.gz
 │   │   │   │   ├── 1.pack.gz
+│   │   │   │   ├── 10.pack.gz
+│   │   │   │   ├── 11.pack.gz
+│   │   │   │   ├── 12.pack.gz
+│   │   │   │   ├── 13.pack.gz
+│   │   │   │   ├── 14.pack.gz
+│   │   │   │   ├── 15.pack.gz
+│   │   │   │   ├── 16.pack.gz
+│   │   │   │   ├── 17.pack.gz
 │   │   │   │   ├── 2.pack.gz
 │   │   │   │   ├── 3.pack.gz
+│   │   │   │   ├── 4.pack.gz
+│   │   │   │   ├── 5.pack.gz
+│   │   │   │   ├── 6.pack.gz
+│   │   │   │   ├── 7.pack.gz
+│   │   │   │   ├── 8.pack.gz
+│   │   │   │   ├── 9.pack.gz
 │   │   │   │   ├── index.pack.gz
 │   │   │   │   └── index.pack.gz.old
-│   │   │   └── server-development
-│   │   │       ├── 0.pack.gz
-│   │   │       ├── 1.pack.gz
-│   │   │       ├── index.pack.gz
-│   │   │       └── index.pack.gz.old
-│   │   └── .rscinfo
+│   │   │   ├── client-development-fallback
+│   │   │   │   ├── 0.pack.gz
+│   │   │   │   ├── 1.pack.gz
+│   │   │   │   ├── index.pack.gz
+│   │   │   │   └── index.pack.gz.old
+│   │   │   ├── client-production
+│   │   │   │   ├── 0.pack
+│   │   │   │   ├── 1.pack
+│   │   │   │   ├── 2.pack
+│   │   │   │   ├── 3.pack
+│   │   │   │   ├── index.pack
+│   │   │   │   └── index.pack.old
+│   │   │   ├── edge-server-production
+│   │   │   │   ├── 0.pack
+│   │   │   │   └── index.pack
+│   │   │   ├── server-development
+│   │   │   │   ├── 0.pack.gz
+│   │   │   │   ├── 1.pack.gz
+│   │   │   │   ├── 10.pack.gz
+│   │   │   │   ├── 11.pack.gz
+│   │   │   │   ├── 12.pack.gz
+│   │   │   │   ├── 13.pack.gz
+│   │   │   │   ├── 14.pack.gz
+│   │   │   │   ├── 15.pack.gz
+│   │   │   │   ├── 16.pack.gz
+│   │   │   │   ├── 17.pack.gz
+│   │   │   │   ├── 18.pack.gz
+│   │   │   │   ├── 19.pack.gz
+│   │   │   │   ├── 2.pack.gz
+│   │   │   │   ├── 20.pack.gz
+│   │   │   │   ├── 21.pack.gz
+│   │   │   │   ├── 3.pack.gz
+│   │   │   │   ├── 4.pack.gz
+│   │   │   │   ├── 5.pack.gz
+│   │   │   │   ├── 6.pack.gz
+│   │   │   │   ├── 7.pack.gz
+│   │   │   │   ├── 8.pack.gz
+│   │   │   │   ├── 9.pack.gz
+│   │   │   │   ├── index.pack.gz
+│   │   │   │   └── index.pack.gz.old
+│   │   │   └── server-production
+│   │   │       ├── 0.pack
+│   │   │       ├── 1.pack
+│   │   │       ├── 2.pack
+│   │   │       ├── 3.pack
+│   │   │       ├── index.pack
+│   │   │       └── index.pack.old
+│   │   ├── .rscinfo
+│   │   └── .tsbuildinfo
 │   ├── server
 │   │   ├── app
+│   │   │   ├── _not-found
+│   │   │   │   ├── page_client-reference-manifest.js
+│   │   │   │   └── page.js
 │   │   │   ├── (main)
-│   │   │   │   ├── [atcoderId]
+│   │   │   │   ├── dashboard
 │   │   │   │   │   ├── page_client-reference-manifest.js
 │   │   │   │   │   └── page.js
 │   │   │   │   ├── page_client-reference-manifest.js
@@ -82,17 +144,22 @@
 │   │   │               └── submissions
 │   │   │                   ├── route_client-reference-manifest.js
 │   │   │                   └── route.js
+│   │   ├── pages
+│   │   │   ├── _app.js
+│   │   │   ├── _document.js
+│   │   │   └── _error.js
 │   │   ├── vendor-chunks
 │   │   │   ├── @babel.js
+│   │   │   ├── @floating-ui.js
 │   │   │   ├── @heroicons.js
-│   │   │   ├── @kurkle.js
 │   │   │   ├── @next-auth.js
 │   │   │   ├── @panva.js
 │   │   │   ├── @swc.js
-│   │   │   ├── chart.js.js
+│   │   │   ├── classnames.js
 │   │   │   ├── cookie.js
 │   │   │   ├── jose.js
 │   │   │   ├── lru-cache.js
+│   │   │   ├── lucide-react.js
 │   │   │   ├── next-auth.js
 │   │   │   ├── next.js
 │   │   │   ├── oauth.js
@@ -102,8 +169,9 @@
 │   │   │   ├── preact-render-to-string.js
 │   │   │   ├── preact.js
 │   │   │   ├── react-calendar-heatmap.js
-│   │   │   ├── react-chartjs-2.js
+│   │   │   ├── react-tooltip.js
 │   │   │   └── uuid.js
+│   │   ├── _error.js
 │   │   ├── app-paths-manifest.json
 │   │   ├── interception-route-rewrite-manifest.js
 │   │   ├── middleware-build-manifest.js
@@ -118,8 +186,10 @@
 │   ├── static
 │   │   ├── chunks
 │   │   │   ├── app
+│   │   │   │   ├── _not-found
+│   │   │   │   │   └── page.js
 │   │   │   │   ├── (main)
-│   │   │   │   │   ├── [atcoderId]
+│   │   │   │   │   ├── dashboard
 │   │   │   │   │   │   └── page.js
 │   │   │   │   │   └── page.js
 │   │   │   │   ├── api
@@ -131,14 +201,29 @@
 │   │   │   │   │           └── submissions
 │   │   │   │   │               └── route.js
 │   │   │   │   └── layout.js
+│   │   │   ├── fallback
+│   │   │   │   ├── pages
+│   │   │   │   │   ├── _app.js
+│   │   │   │   │   └── _error.js
+│   │   │   │   ├── amp.js
+│   │   │   │   ├── main-app.js
+│   │   │   │   ├── main.js
+│   │   │   │   ├── react-refresh.js
+│   │   │   │   └── webpack.js
+│   │   │   ├── pages
+│   │   │   │   ├── _app.js
+│   │   │   │   └── _error.js
+│   │   │   ├── _error.js
 │   │   │   ├── app-pages-internals.js
 │   │   │   ├── main-app.js
+│   │   │   ├── main.js
 │   │   │   ├── polyfills.js
+│   │   │   ├── react-refresh.js
 │   │   │   └── webpack.js
 │   │   ├── css
 │   │   │   └── app
 │   │   │       ├── (main)
-│   │   │       │   └── [atcoderId]
+│   │   │       │   └── dashboard
 │   │   │       │       └── page.css
 │   │   │       └── layout.css
 │   │   ├── development
@@ -153,20 +238,37 @@
 │   │   │   └── ba015fad6dcf6784-s.woff2
 │   │   └── webpack
 │   │       ├── app
-│   │       │   └── layout.973831d381ad0804.hot-update.js
-│   │       ├── 07841a4845a1ca42.webpack.hot-update.json
-│   │       ├── 491d548fe706ec91.webpack.hot-update.json
-│   │       ├── 5b92fc2d66c960b5.webpack.hot-update.json
+│   │       │   ├── layout.070d988f49e48631.hot-update.js
+│   │       │   ├── layout.1e9f59cee6cc1ff2.hot-update.js
+│   │       │   ├── layout.5d2ad6f595cf3fb4.hot-update.js
+│   │       │   ├── layout.7a50d33e2f968004.hot-update.js
+│   │       │   ├── layout.b632fcc929d9c19e.hot-update.js
+│   │       │   └── layout.c91c5e7f92ef6858.hot-update.js
+│   │       ├── 070d988f49e48631.webpack.hot-update.json
+│   │       ├── 0f24087baae89475.webpack.hot-update.json
+│   │       ├── 11e83c88307c931d.webpack.hot-update.json
+│   │       ├── 1e9f59cee6cc1ff2.webpack.hot-update.json
+│   │       ├── 5d2ad6f595cf3fb4.webpack.hot-update.json
 │   │       ├── 633457081244afec._.hot-update.json
-│   │       ├── 973831d381ad0804.webpack.hot-update.json
-│   │       ├── webpack.07841a4845a1ca42.hot-update.js
-│   │       ├── webpack.491d548fe706ec91.hot-update.js
-│   │       ├── webpack.5b92fc2d66c960b5.hot-update.js
-│   │       └── webpack.973831d381ad0804.hot-update.js
+│   │       ├── 7a50d33e2f968004.webpack.hot-update.json
+│   │       ├── 80d7e09c84ee9662.webpack.hot-update.json
+│   │       ├── b632fcc929d9c19e.webpack.hot-update.json
+│   │       ├── c91c5e7f92ef6858.webpack.hot-update.json
+│   │       ├── e1360e546a4a13d8.webpack.hot-update.json
+│   │       ├── webpack.070d988f49e48631.hot-update.js
+│   │       ├── webpack.0f24087baae89475.hot-update.js
+│   │       ├── webpack.11e83c88307c931d.hot-update.js
+│   │       ├── webpack.1e9f59cee6cc1ff2.hot-update.js
+│   │       ├── webpack.5d2ad6f595cf3fb4.hot-update.js
+│   │       ├── webpack.7a50d33e2f968004.hot-update.js
+│   │       ├── webpack.80d7e09c84ee9662.hot-update.js
+│   │       ├── webpack.b632fcc929d9c19e.hot-update.js
+│   │       ├── webpack.c91c5e7f92ef6858.hot-update.js
+│   │       └── webpack.e1360e546a4a13d8.hot-update.js
 │   ├── types
 │   │   ├── app
 │   │   │   ├── (main)
-│   │   │   │   ├── [atcoderId]
+│   │   │   │   ├── dashboard
 │   │   │   │   │   └── page.ts
 │   │   │   │   └── page.ts
 │   │   │   ├── api
@@ -182,12 +284,15 @@
 │   │   └── package.json
 │   ├── app-build-manifest.json
 │   ├── build-manifest.json
+│   ├── fallback-build-manifest.json
 │   ├── package.json
 │   ├── react-loadable-manifest.json
 │   └── trace
 ├── prisma
 │   ├── migrations
 │   │   ├── 20250708035249_init
+│   │   │   └── migration.sql
+│   │   ├── 20250709140015_add_submission_model
 │   │   │   └── migration.sql
 │   │   └── migration_lock.toml
 │   └── schema.prisma
@@ -203,6 +308,7 @@
 │   │   │       └── page.tsx
 │   │   ├── (main)
 │   │   │   ├── [atcoderId]
+│   │   │   ├── dashboard
 │   │   │   │   └── page.tsx
 │   │   │   ├── problems
 │   │   │   │   └── [problemId]
@@ -222,14 +328,6 @@
 │   │   │   ├── auth
 │   │   │   │   └── [...nextauth]
 │   │   │   │       └── route.ts
-│   │   │   ├── recommendations
-│   │   │   │   └── route.ts
-│   │   │   ├── submissions
-│   │   │   │   ├── [atcoderId]
-│   │   │   │   ├── [submissionId]
-│   │   │   │   │   └── publish
-│   │   │   │   │       └── route.ts
-│   │   │   │   └── route.ts
 │   │   │   ├── user
 │   │   │   │   └── atcoder
 │   │   │   │       └── route.ts
@@ -239,15 +337,20 @@
 │   │   │               └── route.ts
 │   │   ├── globals.css
 │   │   └── layout.tsx
-│   └── components
-│       ├── dashboard
-│       │   └── Dashboard.tsx
-│       ├── landing
-│       │   ├── Features.tsx
-│       │   ├── Footer.tsx
-│       │   ├── Header.tsx
-│       │   └── Hero.tsx
-│       └── Providers.tsx
+│   ├── components
+│   │   ├── dashboard
+│   │   │   └── Dashboard.tsx
+│   │   ├── landing
+│   │   │   ├── Features.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   ├── Header.tsx
+│   │   │   └── Hero.tsx
+│   │   ├── layout
+│   │   │   ├── Footer.tsx
+│   │   │   └── Header.tsx
+│   │   └── Providers.tsx
+│   └── types
+│       └── submission.ts
 ├── .env
 ├── .env.local
 ├── .gitignore
@@ -261,4 +364,5 @@
 ├── package.json
 ├── postcss.config.mjs
 ├── README.md
+├── tailwind.config.ts
 └── tsconfig.json

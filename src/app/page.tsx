@@ -12,17 +12,15 @@ export default async function TopPage() {
 
   // 認証済みの場合、ダッシュボードにリダイレクト
   if (session) {
-    redirect('/dashboard');
+    // redirect('/dashboard');
   }
 
   // 未認証の場合、ランディングページを表示
   return (
-    <div className="bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header />
-      <main>
-        <Hero />
-        <Features />
-      </main>
+      <Hero />
+      <Features />
       <Footer />
     </div>
   );
