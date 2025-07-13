@@ -18,7 +18,7 @@ export default function Hero() {
 
           {/* Heading */}
           <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
-            競技プログラミングの
+            AtCoderの
             <span className="bg-gradient-to-r from-slate-600 to-blue-600 bg-clip-text text-transparent">
               精進を革新する
             </span>
@@ -46,7 +46,7 @@ export default function Hero() {
           </div>
 
           {/* Stats */}
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12">
+          {/* <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12">
             <div className="flex flex-col items-center">
               <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100">
                 <Target className="h-6 w-6 text-emerald-600" />
@@ -68,7 +68,7 @@ export default function Hero() {
               <div className="text-2xl font-bold text-slate-900">10,000+</div>
               <div className="text-sm text-slate-600">利用者数</div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

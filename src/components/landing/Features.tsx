@@ -7,10 +7,8 @@ import {
   Brain, 
   Calendar, 
   Code, 
-  GitBranch, 
   Heart, 
   Radar, 
-  Target,
   Trophy,
   Users
 } from 'lucide-react';
@@ -20,15 +18,15 @@ export default function Features() {
     {
       icon: Brain,
       title: '弱点克服・問題推薦システム',
-      description: 'AIが苦手分野を自動分析し、あなたの実力に最適な「次の課題」を提示します。',
-      badge: 'NEW',
+      description: 'あなたの実力に最適な問題を提示します。',
+      badge: '', // 新機能の追加をしたらNEWなどのバッチを入れる
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
     },
     {
       icon: BarChart3,
       title: 'インテリジェントダッシュボード',
-      description: '生涯AC数、現在レート、学習サマリーを一目で確認。成長の軌跡を可視化します。',
+      description: 'AC数、現在レート、アルゴリズムごとのAC数を一目で確認。成長の軌跡を可視化します。',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
@@ -66,9 +64,9 @@ export default function Features() {
     '🔗 AtCoder ID連携',
     '📊 リアルタイムレート取得',
     '🏷️ カスタムタグ機能',
-    '💾 自動データバックアップ',
-    '🌙 ダークモード対応',
-    '📱 モバイル最適化',
+    '💾 (未)自動データバックアップ',
+    '🌙 (未)ダークモード対応',
+    '📱 (未)モバイル最適化',
   ];
 
   return (
@@ -82,7 +80,7 @@ export default function Features() {
             </span>
           </h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">
-            競技プログラミングの精進に必要なすべての機能を、直感的で美しいインターフェースで提供します。
+            AtCoderの精進に必要なすべての機能を提供します。
           </p>
         </div>
 

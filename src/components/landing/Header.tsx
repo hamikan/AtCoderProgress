@@ -22,7 +22,7 @@ export default function Header() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-slate-600 to-slate-800">
             <Code2 className="h-5 w-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-slate-800">CompetitiveGrow</span>
+          <span className="text-xl font-bold text-slate-800">AtCoder Progress</span>
         </div>
 
         {/* Desktop Navigation */}
