@@ -46,6 +46,7 @@ export default function Dashboard() {
   // 提出データを日付ごとのカウントに加工
   const dailyCounts = useMemo(() => {
     const counts: { [key: string]: number } = {};
+    console.log("submissionsが変更された");
     submissions.forEach(submission => {
       // AC (Accepted) の提出のみをカウント
       if (submission.result === 'AC') {
@@ -100,7 +101,7 @@ export default function Dashboard() {
           <h2 className="text-2xl font-semibold mb-4">学習のサマリー</h2>
           <h3 className="text-xl font-medium mb-2">カレンダーヒートマップ</h3>
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <CalendarHeatmap
+            {/* <CalendarHeatmap
               startDate={startDate}
               endDate={endDate}
               values={dailyCounts}
@@ -129,7 +130,7 @@ export default function Dashboard() {
               }}
               showWeekdayLabels={true}
             />
-            <ReactTooltip id="heatmap-tooltip" />
+            <ReactTooltip id="heatmap-tooltip" /> */}
           </div>
 
           <div className="mt-8">

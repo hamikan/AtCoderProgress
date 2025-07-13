@@ -43,3 +43,5 @@ next-env.d.ts
 GEMINI.md
 
 /src/generated/prisma
+
+tmp.txt
