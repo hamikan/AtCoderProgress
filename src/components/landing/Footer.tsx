@@ -49,7 +49,7 @@ export default function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-slate-400 to-slate-600">
                 <Code2 className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">CompetitiveGrow</span>
+              <span className="text-xl font-bold text-white">AtCoder Progress</span>
             </div>
             <p className="text-base text-slate-300 max-w-md">
               競技プログラミングの精進を記録・可視化し、最適な課題提示で成長をサポートするプラットフォームです。
@@ -126,15 +126,12 @@ export default function Footer() {
         <div className="mt-12 border-t border-slate-700 pt-8">
           <div className="flex flex-col items-center justify-between lg:flex-row">
             <p className="text-sm text-slate-400">
-              &copy; 2025 CompetitiveGrow. All rights reserved.
+              &copy; 2025 AtCoder Progress. All rights reserved.
             </p>
             <div className="mt-4 flex space-x-6 lg:mt-0">
               <a href="#" className="text-sm text-slate-400 hover:text-slate-300 transition-colors">
-                AtCoder 非公式
-              </a>
-              <span className="text-slate-400">|</span>
-              <a href="#" className="text-sm text-slate-400 hover:text-slate-300 transition-colors">
-                Made with ❤️ for CP community
+                このサイトはAtCoder非公式です。
+                ここで起きた問題についてはAtCoder運営は一切関与しません。
               </a>
             </div>
           </div>
