@@ -7,7 +7,6 @@ import ActivityPatterns from '@/components/analytics/ActivityPatterns';
 import ComparisonBenchmark from '@/components/analytics/ComparisonBenchmark';
 import LearningEfficiency from '@/components/analytics/LearningEfficiency';
 import GoalPrediction from '@/components/analytics/GoalPrediction';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrendingUp, Target, Users, Zap, Calendar, Brain } from 'lucide-react';
 
