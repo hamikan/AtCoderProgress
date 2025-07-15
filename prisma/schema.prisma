@@ -46,6 +46,7 @@ model User {
   email         String?      @unique
   emailVerified DateTime?    @map("email_verified")
   image         String?
+  atcoderId     String?      @unique @map("atcoder_id")
   accounts      Account[]
   sessions      Session[]
   submissions   Submission[]
