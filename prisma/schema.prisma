@@ -75,7 +75,22 @@ model Submission {
   executionTime  Int?     @map("execution_time")
 
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem        Problem  @relation(fields: [problemId], references: [id])
   userId         String
 
   @@map("submissions")
+}
+
+model Problem {
+  id           String       @id
+  contestId    String       @map("contest_id")
+  problemIndex String       @map("problem_index")
+  name         String
+  difficulty   Int?
+  
+  submissions  Submission[]
+
+  @@unique([contestId, problemIndex])
+  @@index([contestId])
+  @@map("problems")
 }

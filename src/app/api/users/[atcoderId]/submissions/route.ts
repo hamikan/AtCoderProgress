@@ -25,9 +25,9 @@ export async function GET(request: NextRequest, { params }: { params: { atcoderI
   // 1. DBから最新の提出を取得し、次の取得開始時刻を決める
   const latestDbSubmission = await prisma.submission.findFirst({
     where: { userId: user.id },
-    orderBy: { epoch_second: 'desc' },
+    orderBy: { epochSecond: 'desc' },
   });
-  let fromSecond = latestDbSubmission ? latestDbSubmission.epoch_second + 1 : 0;
+  let fromSecond = latestDbSubmission ? latestDbSubmission.epochSecond + 1 : 0;
 
   // 2. 差分データを外部APIから取得
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest, { params }: { params: { atcoderI
     // 4. DBの既存データと新しいデータを結合して返却
     const allDbSubmissions = await prisma.submission.findMany({
       where: { userId: user.id },
-      orderBy: { epoch_second: 'desc' },
+      orderBy: { epochSecond: 'desc' },
     });
 
     return NextResponse.json(allDbSubmissions);
