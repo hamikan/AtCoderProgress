@@ -24,7 +24,7 @@ model Account {
   idToken           String? @db.Text @map("id_token")
   sessionState      String? @map("session_state")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -35,6 +35,7 @@ model Session {
   sessionToken String   @unique @map("session_token")
   userId       String   @map("user_id")
   expires      DateTime
+
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("sessions")
@@ -47,9 +48,12 @@ model User {
   emailVerified DateTime?    @map("email_verified")
   image         String?
   atcoderId     String?      @unique @map("atcoder_id")
+
   accounts      Account[]
   sessions      Session[]
   submissions   Submission[]
+  solutions     Solution[]
+  createdTags   Tag[]
 
   @@map("users")
 }
@@ -75,22 +79,77 @@ model Submission {
   executionTime  Int?     @map("execution_time")
 
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problem        Problem  @relation(fields: [problemId], references: [id])
+  problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Restrict)
   userId         String
 
   @@map("submissions")
 }
 
 model Problem {
-  id           String       @id
-  contestId    String       @map("contest_id")
-  problemIndex String       @map("problem_index")
-  name         String
-  difficulty   Int?
+  id                  String       @id
+  contestId           String       @map("contest_id")
+  problemIndex        String       @map("problem_index")
+  name                String
+  difficulty          Int?
+  totalSolutionsCount Int          @default(0)
   
-  submissions  Submission[]
+  submissions         Submission[]
+  solutions           Solution[]
 
   @@unique([contestId, problemIndex])
   @@index([contestId])
   @@map("problems")
+}
+
+model Solution {
+  id        String         @id @default(cuid())
+  userId    String?        @map("user_id")
+  problemId String         @map("problem_id")
+  content   String?        @db.Text
+  isPublic  Boolean        @default(false) @map("is_public")
+  status    SolutionStatus
+  solvedAt  DateTime?      @map("solved_at")
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  tags      SolutionTag[]
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  problem   Problem        @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  
+  @@index([userId])
+  @@index([problemId])
+  @@map("solutions")
+}
+
+enum SolutionStatus {
+  SELF_AC
+  EXPLANATION_AC
+  REVIEW_AC
+  TRYING
+}
+
+model Tag {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  isOfficial  Boolean       @default(false) @map("is_official")
+  createdById String?       @map("created_by_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  
+  creator     User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  solutions   SolutionTag[]
+
+  @@map("tags")
+}
+
+model SolutionTag {
+  solutionId String   @map("solution_id")
+  tagId      Int      @map("tag_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  solution   Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([solutionId, tagId])
+  @@map("solution_tags")
 }
