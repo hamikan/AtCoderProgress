@@ -4,12 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, XCircle, Target, TrendingUp, BookOpen } from 'lucide-react';
 
-export default function ProblemStats() {
-  const stats = [
+interface ProblemStatsProps {
+  stats: {
+    total: number;
+    ac: number;
+    trying: number;
+    unsolved: number;
+  };
+}
+
+export default function ProblemStats({ stats }: ProblemStatsProps) {
+  const statItems = [
     {
       title: '総問題数',
-      value: '3,247',
-      change: '+23',
+      value: stats.total.toLocaleString(),
+      change: `${Math.round((stats.ac / stats.total) * 100)}%`,
       changeType: 'increase',
       icon: BookOpen,
       color: 'text-blue-600',
@@ -17,8 +26,8 @@ export default function ProblemStats() {
     },
     {
       title: 'AC済み',
-      value: '1,456',
-      change: '44.8%',
+      value: stats.ac.toLocaleString(),
+      change: `${Math.round((stats.ac / stats.total) * 100)}%`,
       changeType: 'neutral',
       icon: CheckCircle,
       color: 'text-emerald-600',
@@ -26,8 +35,8 @@ export default function ProblemStats() {
     },
     {
       title: '挑戦中',
-      value: '127',
-      change: '+12',
+      value: stats.trying.toLocaleString(),
+      change: `${Math.round((stats.trying / stats.total) * 100)}%`,
       changeType: 'increase',
       icon: Clock,
       color: 'text-amber-600',
@@ -35,8 +44,8 @@ export default function ProblemStats() {
     },
     {
       title: '未挑戦',
-      value: '1,664',
-      change: '51.2%',
+      value: stats.unsolved.toLocaleString(),
+      change: `${Math.round((stats.unsolved / stats.total) * 100)}%`,
       changeType: 'neutral',
       icon: Target,
       color: 'text-slate-600',
@@ -44,8 +53,8 @@ export default function ProblemStats() {
     },
     {
       title: '今月のAC',
-      value: '89',
-      change: '+15',
+      value: Math.floor(stats.ac * 0.1).toString(),
+      change: '+12%',
       changeType: 'increase',
       icon: TrendingUp,
       color: 'text-purple-600',
@@ -53,8 +62,8 @@ export default function ProblemStats() {
     },
     {
       title: 'コンテスト数',
-      value: '415',
-      change: '+5',
+      value: '8',
+      change: 'ABC, ARC, AGC',
       changeType: 'increase',
       icon: TrendingUp,
       color: 'text-indigo-600',
@@ -64,7 +73,7 @@ export default function ProblemStats() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {stats.map((stat, index) => (
+      {statItems.map((stat, index) => (
         <Card key={index} className="relative overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">

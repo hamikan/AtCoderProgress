@@ -72,6 +72,7 @@ model Submission {
   epochSecond    Int      @map("epoch_second")
   problemId      String   @map("problem_id")
   contestId      String   @map("contest_id")
+  userId         String
   language       String
   point          Float
   length         Int
@@ -80,7 +81,6 @@ model Submission {
 
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Restrict)
-  userId         String
 
   @@map("submissions")
 }
@@ -107,26 +107,19 @@ model Solution {
   problemId String         @map("problem_id")
   content   String?        @db.Text
   isPublic  Boolean        @default(false) @map("is_public")
-  status    SolutionStatus
+  status    String
   solvedAt  DateTime?      @map("solved_at")
   createdAt DateTime       @default(now()) @map("created_at")
   updatedAt DateTime       @updatedAt @map("updated_at")
 
   tags      SolutionTag[]
 
-  user      User           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   problem   Problem        @relation(fields: [problemId], references: [id], onDelete: Restrict)
   
   @@index([userId])
   @@index([problemId])
   @@map("solutions")
-}
-
-enum SolutionStatus {
-  SELF_AC
-  EXPLANATION_AC
-  REVIEW_AC
-  TRYING
 }
 
 model Tag {
