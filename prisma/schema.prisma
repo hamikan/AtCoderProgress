@@ -72,6 +72,7 @@ model Submission {
   epochSecond    Int      @map("epoch_second")
   problemId      String   @map("problem_id")
   contestId      String   @map("contest_id")
+  userId         String
   language       String
   point          Float
   length         Int
@@ -80,25 +81,43 @@ model Submission {
 
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Restrict)
-  userId         String
 
   @@map("submissions")
 }
 
+model Contest {
+  id                String  @id
+  startEpochSecond  Int     @map("start_epoch_second")
+  durationSecond    Int     @map("duration_second")
+  
+  problems          ContestProblem[]
+  
+  @@map("contests")
+}
+
 model Problem {
   id                  String       @id
-  contestId           String       @map("contest_id")
-  problemIndex        String       @map("problem_index")
   name                String
   difficulty          Int?
-  totalSolutionsCount Int          @default(0)
+  totalSolutionCount  Int          @default(0)
   
+  contests            ContestProblem[]
   submissions         Submission[]
   solutions           Solution[]
 
-  @@unique([contestId, problemIndex])
-  @@index([contestId])
   @@map("problems")
+}
+
+model ContestProblem {
+  contestId     String  @map("contest_id")
+  problemId     String  @map("problem_id")
+  problemIndex  String  @map("problem_index")
+
+  contest       Contest @relation(fields: [contestId], references: [id])
+  problem       Problem @relation(fields: [problemId], references: [id])
+
+  @@id([contestId, problemId])
+  @@map("contest_problems")
 }
 
 model Solution {
@@ -107,26 +126,19 @@ model Solution {
   problemId String         @map("problem_id")
   content   String?        @db.Text
   isPublic  Boolean        @default(false) @map("is_public")
-  status    SolutionStatus
+  status    String
   solvedAt  DateTime?      @map("solved_at")
   createdAt DateTime       @default(now()) @map("created_at")
   updatedAt DateTime       @updatedAt @map("updated_at")
 
   tags      SolutionTag[]
 
-  user      User           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   problem   Problem        @relation(fields: [problemId], references: [id], onDelete: Restrict)
   
   @@index([userId])
   @@index([problemId])
   @@map("solutions")
-}
-
-enum SolutionStatus {
-  SELF_AC
-  EXPLANATION_AC
-  REVIEW_AC
-  TRYING
 }
 
 model Tag {
