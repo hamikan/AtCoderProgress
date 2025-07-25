@@ -85,20 +85,39 @@ model Submission {
   @@map("submissions")
 }
 
+model Contest {
+  id                String  @id
+  startEpochSecond  Int     @map("start_epoch_second")
+  durationSecond    Int     @map("duration_second")
+  
+  problems          ContestProblem[]
+  
+  @@map("contests")
+}
+
 model Problem {
   id                  String       @id
-  contestId           String       @map("contest_id")
-  problemIndex        String       @map("problem_index")
   name                String
   difficulty          Int?
-  totalSolutionsCount Int          @default(0)
+  totalSolutionCount  Int          @default(0)
   
+  contests            ContestProblem[]
   submissions         Submission[]
   solutions           Solution[]
 
-  @@unique([contestId, problemIndex])
-  @@index([contestId])
   @@map("problems")
+}
+
+model ContestProblem {
+  contestId     String  @map("contest_id")
+  problemId     String  @map("problem_id")
+  problemIndex  String  @map("problem_index")
+
+  contest       Contest @relation(fields: [contestId], references: [id])
+  problem       Problem @relation(fields: [problemId], references: [id])
+
+  @@id([contestId, problemId])
+  @@map("contest_problems")
 }
 
 model Solution {
