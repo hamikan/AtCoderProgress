@@ -51,28 +51,10 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
       color: 'text-slate-600',
       bgColor: 'bg-slate-50',
     },
-    {
-      title: '今月のAC',
-      value: Math.floor(stats.ac * 0.1).toString(),
-      change: '+12%',
-      changeType: 'increase',
-      icon: TrendingUp,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      title: 'コンテスト数',
-      value: '8',
-      change: 'ABC, ARC, AGC',
-      changeType: 'increase',
-      icon: TrendingUp,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-rows-1 md:grid-rows-2 lg:grid-rows-3 xl:grid-rows-6 gap-4">
       {statItems.map((stat, index) => (
         <Card key={index} className="relative overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
