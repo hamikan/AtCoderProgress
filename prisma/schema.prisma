@@ -42,18 +42,19 @@ model Session {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  name          String?
-  email         String?      @unique
-  emailVerified DateTime?    @map("email_verified")
-  image         String?
-  atcoderId     String?      @unique @map("atcoder_id")
+  id                        String      @id @default(cuid())
+  name                      String?
+  email                     String?     @unique
+  emailVerified             DateTime?   @map("email_verified")
+  image                     String?
+  atcoderId                 String?     @unique @map("atcoder_id")
+  submissionsLastFetchedAt  DateTime?   @map("submissions_last_fetched_at")
 
-  accounts      Account[]
-  sessions      Session[]
-  submissions   Submission[]
-  solutions     Solution[]
-  createdTags   Tag[]
+  accounts                  Account[]
+  sessions                  Session[]
+  submissions               Submission[]
+  solutions                 Solution[]
+  createdTags               Tag[]
 
   @@map("users")
 }
