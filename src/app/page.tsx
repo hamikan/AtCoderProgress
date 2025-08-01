@@ -17,11 +17,11 @@ export default async function TopPage() {
 
   // 未認証の場合、ランディングページを表示
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header />
       <Hero />
       <Features />
       <Footer />
-    </div>
+    </main>
   );
 }
