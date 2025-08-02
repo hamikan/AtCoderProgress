@@ -14,14 +14,15 @@ interface ContestTableProps {
   contests: Contest[];
   problemIndexes: string[];
   totalProblems: number;
+  submissionStatusMap: Map<string, string>;
 }
 
-export default function ContestTable({ contests, problemIndexes, totalProblems }: ContestTableProps) {
+export default function ContestTable({ contests, problemIndexes, totalProblems, submissionStatusMap }: ContestTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const contestType = searchParams.get('contest') || 'abc';
+  const contestType = searchParams.get('contestType') || 'abc';
   const sortOrder = searchParams.get('order') || 'desc';
 
   const handleValueChange = (key: string, value: string) => {
@@ -33,6 +34,31 @@ export default function ContestTable({ contests, problemIndexes, totalProblems }
     }
     router.push(`${pathname}?${params.toString()}`);
   };
+
+  const cellBackGroundColor = (problemId: string) => {
+    if(submissionStatusMap.has(problemId)) {
+      const result = submissionStatusMap.get(problemId);
+      if (result === 'AC') {
+        return 'bg-green-100';
+      } else {
+        return 'bg-yellow-100';
+      }
+    }
+    return '';
+  }
+
+  const getContestName = () => {
+    switch (contestType) {
+      case 'abc':
+        return "Beginner";
+      case 'arc':
+        return "Regular";
+      case 'agc':
+        return "Grand";
+      default:
+        return "";
+    }
+  }
   
   return (
     <div className="flex-grow">
@@ -41,11 +67,11 @@ export default function ContestTable({ contests, problemIndexes, totalProblems }
         <CardHeader>
           <div className="flex space-x-4">
             <CardTitle className="text-lg text-slate-900">
-              コンテスト一覧 ({totalProblems}件)
+              AtCoder {getContestName()} Contest
             </CardTitle>
             <Select
               value={contestType}
-              onValueChange={(value) => handleValueChange('contest', value)}
+              onValueChange={(value) => handleValueChange('contestType', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a contest" />
@@ -106,7 +132,7 @@ export default function ContestTable({ contests, problemIndexes, totalProblems }
                         }
                       }
                       return (
-                        <TableCell key={problemIndex} className="text-left border-l">
+                        <TableCell key={problemIndex} className={`text-left border-l ${problem ? cellBackGroundColor(problem.id) : ''}`}>
                           {problem ? (
                             <Tooltip disableHoverableContent>
                               <TooltipTrigger asChild>
