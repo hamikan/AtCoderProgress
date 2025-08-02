@@ -16,13 +16,13 @@ model Account {
   type              String
   provider          String
   providerAccountId String  @map("provider_account_id")
-  refreshToken      String? @db.Text @map("refresh_token")
-  accessToken       String? @db.Text @map("access_token")
-  expiresAt         Int?    @map("expires_at")
-  tokenType         String? @map("token_type")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
   scope             String?
-  idToken           String? @db.Text @map("id_token")
-  sessionState      String? @map("session_state")
+  id_token          String? @db.Text
+  session_state     String?
 
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -42,18 +42,19 @@ model Session {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  name          String?
-  email         String?      @unique
-  emailVerified DateTime?    @map("email_verified")
-  image         String?
-  atcoderId     String?      @unique @map("atcoder_id")
+  id                        String      @id @default(cuid())
+  name                      String?
+  email                     String?     @unique
+  emailVerified             DateTime?   @map("email_verified")
+  image                     String?
+  atcoderId                 String?     @unique @map("atcoder_id")
+  submissionsLastFetchedAt  DateTime?   @map("submissions_last_fetched_at")
 
-  accounts      Account[]
-  sessions      Session[]
-  submissions   Submission[]
-  solutions     Solution[]
-  createdTags   Tag[]
+  accounts                  Account[]
+  sessions                  Session[]
+  submissions               Submission[]
+  solutions                 Solution[]
+  createdTags               Tag[]
 
   @@map("users")
 }
