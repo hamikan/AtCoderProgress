@@ -96,6 +96,16 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
     unsolved: await prisma.problem.count(),
   };
 
+  const submissionStatusMap: Map<string, string> = new Map<string, string>();
+  if (userId) {
+    const allSubmissionFromDB = await prisma.submission.findMany({ where: { userId } })
+    for (const submission of allSubmissionFromDB) {
+      if (submission.result === 'AC' || !submissionStatusMap.has(submission.problemId)) {
+        submissionStatusMap.set(submission.problemId, submission.result);
+      }
+    }
+  }
+
   return (
     <div className="flex space-x-4">
       <div className="flex-1">
