@@ -18,8 +18,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
     {
       title: '総問題数',
       value: stats.total.toLocaleString(),
-      change: `${Math.round((stats.ac / stats.total) * 100)}%`,
-      changeType: 'increase',
+      changeType: 'neutral',
       icon: BookOpen,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -37,7 +36,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
       title: '挑戦中',
       value: stats.trying.toLocaleString(),
       change: `${Math.round((stats.trying / stats.total) * 100)}%`,
-      changeType: 'increase',
+      changeType: 'neutral',
       icon: Clock,
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',

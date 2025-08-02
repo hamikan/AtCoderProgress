@@ -113,6 +113,7 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
     contests,
     problemIndexes,
     totalProblems,
+    submissionStatusMap,
   }
 
   return (
