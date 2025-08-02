@@ -84,24 +84,29 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
     totalProblems,
   }
 
-  const stats = userId ? {
+  const stats = {
     total: totalProblems,
-    ac: await prisma.problem.count({ where: { OR: [ { solutions: { some: { userId, status: { in: ['SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } }, { submissions: { some: { userId, result: 'AC' } } } ] } }),
-    trying: await prisma.problem.count({ where: { solutions: { some: { userId, status: 'TRYING' } } } }),
-    unsolved: await prisma.problem.count({ where: { AND: [ { solutions: { none: { userId } } }, { submissions: { none: { userId, result: 'AC' } } } ] } }),
-  } : {
-    total: await prisma.problem.count(),
     ac: 0,
     trying: 0,
-    unsolved: await prisma.problem.count(),
+    unsolved: totalProblems,
   };
 
   const submissionStatusMap: Map<string, string> = new Map<string, string>();
   if (userId) {
     const allSubmissionFromDB = await prisma.submission.findMany({ where: { userId } })
-    for (const submission of allSubmissionFromDB) {
-      if (submission.result === 'AC' || !submissionStatusMap.has(submission.problemId)) {
-        submissionStatusMap.set(submission.problemId, submission.result);
+    for (const sub of allSubmissionFromDB) {
+      if (submissionStatusMap.has(sub.problemId)) {
+        if (submissionStatusMap.get(sub.problemId) !== 'AC' && sub.result === 'AC') {
+          stats.ac++;
+          stats.trying--;
+        }
+      } else {
+        stats.unsolved--;
+        if (sub.result === 'AC') {
+          stats.ac++;
+        } else {
+          stats.trying++;
+        }
       }
     }
   }
