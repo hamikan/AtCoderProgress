@@ -30,7 +30,7 @@ interface ProblemsPageProps {
     difficulty_min?: string;
     difficulty_max?: string;
     status?: string;
-    contest: 'abc' | 'arc' | 'agc';
+    contestType: 'abc' | 'arc' | 'agc';
     sort: string;
     order: 'asc' | 'desc';
     view?: 'contest' | 'list' | 'grid';
@@ -48,7 +48,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
     difficulty_min = "-4229",
     difficulty_max = "4229",
     status,
-    contest,
+    contestType,
     sort,
     order,
     view = 'contest',
