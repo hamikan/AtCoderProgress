@@ -6,10 +6,11 @@ import ContestTable from '@/components/problem/ContestTable';
 import ProblemStats from '@/components/problem/ProblemStats';
 import { Problem } from '@/types/problem';
 import { Contest } from '@/types/contest';
+import fetchSubmission from '@/lib/services/submission';
 
 interface ProblemsPageProps {
   searchParams: {
-    contest: 'abc' | 'arc' | 'agc';
+    contestType: 'abc' | 'arc' | 'agc';
     order: 'asc' | 'desc';
   }
 }
@@ -17,15 +18,16 @@ interface ProblemsPageProps {
 export async function FetchContestData({ searchParams }: ProblemsPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
+  const atcoderId = session?.user?.atcoderId;
 
   const {
-    contest = 'abc', 
+    contestType = 'abc', 
     order,
   } = searchParams;
 
   const where: Prisma.ContestWhereInput = {};
   where.id = {
-    startsWith: contest
+    startsWith: contestType
   }
     
   const contestsFromDB = await prisma.contest.findMany({
@@ -64,7 +66,7 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
   
   let problemIndexes: string[] = [];
 
-  switch(contest) {
+  switch(contestType) {
     case 'abc':
       problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex']
       break;
@@ -78,32 +80,39 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
       problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex']
   }
 
-  const contestTableProps = {
-    contests,
-    problemIndexes,
-    totalProblems,
-  }
-
-  const stats = userId ? {
+  const stats = {
     total: totalProblems,
-    ac: await prisma.problem.count({ where: { OR: [ { solutions: { some: { userId, status: { in: ['SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } }, { submissions: { some: { userId, result: 'AC' } } } ] } }),
-    trying: await prisma.problem.count({ where: { solutions: { some: { userId, status: 'TRYING' } } } }),
-    unsolved: await prisma.problem.count({ where: { AND: [ { solutions: { none: { userId } } }, { submissions: { none: { userId, result: 'AC' } } } ] } }),
-  } : {
-    total: await prisma.problem.count(),
     ac: 0,
     trying: 0,
-    unsolved: await prisma.problem.count(),
+    unsolved: totalProblems,
   };
 
   const submissionStatusMap: Map<string, string> = new Map<string, string>();
   if (userId) {
-    const allSubmissionFromDB = await prisma.submission.findMany({ where: { userId } })
-    for (const submission of allSubmissionFromDB) {
-      if (submission.result === 'AC' || !submissionStatusMap.has(submission.problemId)) {
-        submissionStatusMap.set(submission.problemId, submission.result);
+    const allSubmissionFromDB = await fetchSubmission(userId, contestType);
+    for (const sub of allSubmissionFromDB.submissions) {
+      if (submissionStatusMap.has(sub.problemId)) {
+        if (submissionStatusMap.get(sub.problemId) !== 'AC' && sub.result === 'AC') {
+          stats.ac++;
+          stats.trying--;
+          submissionStatusMap.set(sub.problemId, 'AC');
+        }
+      } else {
+        stats.unsolved--;
+        if (sub.result === 'AC') {
+          stats.ac++;
+        } else {
+          stats.trying++;
+        }
+        submissionStatusMap.set(sub.problemId, sub.result);
       }
     }
+  }
+
+  const contestTableProps = {
+    contests,
+    problemIndexes,
+    totalProblems,
   }
 
   return (

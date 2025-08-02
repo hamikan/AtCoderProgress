@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { Submission } from '@/types/submission';
 
 const API_ENDPOINT = 'https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions';
+const FETCH_INTERVAL_MINUTES = 15;
 
 export async function GET(request: NextRequest, { params }: { params: { atcoderId: string } }) {
   const session = await getServerSession(authOptions);
@@ -22,6 +23,18 @@ export async function GET(request: NextRequest, { params }: { params: { atcoderI
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
+  const now = new Date();
+  if (user.submissionsLastFetchedAt) {
+    const diffMilliseconds = now.getTime() - user.submissionsLastFetchedAt.getTime();
+    if (diffMilliseconds < FETCH_INTERVAL_MINUTES * 60 * 1000) {
+      // 前回の取得から指定時間内であれば、DBからデータを返す
+      const submissions = await prisma.submission.findMany({
+        where: { userId: user.id },
+      });
+      return NextResponse.json(submissions);
+    }
+  }
+
   // 1. DBから最新の提出を取得し、次の取得開始時刻を決める
   const latestDbSubmission = await prisma.submission.findFirst({
     where: { userId: user.id },
@@ -35,7 +48,7 @@ export async function GET(request: NextRequest, { params }: { params: { atcoderI
   const limit = 500; // APIの1回あたりの取得上限
 
   try {
-    /* 作業中に無駄にAPIを叩かないようにするため一旦コメントアウト
+    // /* 作業中に無駄にAPIを叩かないようにするため一旦コメントアウト
     while (true) {
       const url = `${API_ENDPOINT}?user=${atcoderId}&from_second=${fromSecond}`;
       const response = await fetch(url);
@@ -51,14 +64,14 @@ export async function GET(request: NextRequest, { params }: { params: { atcoderI
       newSubmissions.push(...data);
       if (data.length < limit) break;
 
-      fromSecond = data[data.length - 1].epoch_second + 1;
+      fromSecond = data[data.length - 1].epochSecond + 1;
       await sleep(1500);
     }
 
     // 3. 新しく取得したデータをDBに保存
     if (newSubmissions.length > 0) {
       const submissionsToCreate = newSubmissions.map(sub => {
-        const { user_id, ...rest } = sub; // APIの`user_id`をここで除外
+        const { userId, ...rest } = sub; // APIの`userId`をここで除外
         return {
           ...rest, // 残りのデータを展開
           userId: user.id, // DB用の`userId`を紐付ける
@@ -69,12 +82,17 @@ export async function GET(request: NextRequest, { params }: { params: { atcoderI
         skipDuplicates: true,
       });
     }
-    */
+    // */
 
-    // 4. DBの既存データと新しいデータを結合して返却
+    // 4. Userテーブルの`submissionsLastFetchedAt`を更新
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { submissionsLastFetchedAt: now },
+    });
+
+    // 5. DBの既存データと新しいデータを結合して返却
     const allDbSubmissions = await prisma.submission.findMany({
       where: { userId: user.id },
-      orderBy: { epochSecond: 'desc' },
     });
 
     return NextResponse.json(allDbSubmissions);
