@@ -11,3 +11,8 @@ export interface Submission {
   result: string;
   executionTime: number | null;
 }
+
+export interface SubmissionStatus {
+  result: string;
+  epochSecond: number;
+}
