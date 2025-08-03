@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { getDifficultyColor } from '@/lib/colors';
 import { Problem } from '@/types/problem'
 import { Contest } from '@/types/contest';
+import { SubmissionStatus } from '@/types/submission';
 
 interface ContestTableProps {
   contests: Contest[];
   problemIndexes: string[];
   totalProblems: number;
-  submissionStatusMap: Map<string, string>;
+  submissionStatusMap: Map<string, SubmissionStatus>;
 }
 
 export default function ContestTable({ contests, problemIndexes, totalProblems, submissionStatusMap }: ContestTableProps) {
@@ -35,10 +36,17 @@ export default function ContestTable({ contests, problemIndexes, totalProblems, 
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const cellBackGroundColor = (problemId: string) => {
+  const cellBackGroundColor = (problemId: string, startEpochSecond: number, durationSecond: number) => {
     if(submissionStatusMap.has(problemId)) {
-      const result = submissionStatusMap.get(problemId);
+      const result = submissionStatusMap.get(problemId)?.result;
+      const epochSecond = submissionStatusMap.get(problemId)?.epochSecond;
+      if (!result || !epochSecond) {
+        return '';
+      }
       if (result === 'AC') {
+        if (startEpochSecond <= epochSecond && epochSecond < startEpochSecond + durationSecond) {
+          return 'bg-green-200';
+        }
         return 'bg-green-100';
       } else {
         return 'bg-yellow-100';
@@ -132,7 +140,7 @@ export default function ContestTable({ contests, problemIndexes, totalProblems, 
                         }
                       }
                       return (
-                        <TableCell key={problemIndex} className={`text-left border-l ${problem ? cellBackGroundColor(problem.id) : ''}`}>
+                        <TableCell key={problemIndex} className={`text-left border-l ${problem ? cellBackGroundColor(problem.id, contest.startEpochSecond, contest.durationSecond) : ''}`}>
                           {problem ? (
                             <Tooltip disableHoverableContent>
                               <TooltipTrigger asChild>

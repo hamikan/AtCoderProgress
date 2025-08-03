@@ -6,6 +6,7 @@ import ContestTable from '@/components/problem/ContestTable';
 import ProblemStats from '@/components/problem/ProblemStats';
 import { Problem } from '@/types/problem';
 import { Contest } from '@/types/contest';
+import { SubmissionStatus } from '@/types/submission';
 import fetchSubmission from '@/lib/services/submission';
 
 interface ProblemsPageProps {
@@ -87,15 +88,22 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
     unsolved: totalProblems,
   };
 
-  const submissionStatusMap: Map<string, string> = new Map<string, string>();
+  const submissionStatusMap: Map<string, SubmissionStatus> = new Map<string, SubmissionStatus>();
   if (userId) {
     const allSubmissionFromDB = await fetchSubmission(userId, contestType);
     for (const sub of allSubmissionFromDB.submissions) {
       if (submissionStatusMap.has(sub.problemId)) {
-        if (submissionStatusMap.get(sub.problemId) !== 'AC' && sub.result === 'AC') {
-          stats.ac++;
-          stats.trying--;
-          submissionStatusMap.set(sub.problemId, 'AC');
+        const result = submissionStatusMap.get(sub.problemId)?.result;
+        const epochSecond = submissionStatusMap.get(sub.problemId)?.epochSecond;
+        if (!result || !epochSecond) continue;
+        if (sub.result === 'AC') {
+          if (result !== 'AC') {
+            stats.ac++;
+            stats.trying--;
+            submissionStatusMap.set(sub.problemId, { result: 'AC', epochSecond: sub.epochSecond });
+          } else {
+            submissionStatusMap.set(sub.problemId, { result: 'AC', epochSecond: Math.min(epochSecond, sub.epochSecond) });
+          }
         }
       } else {
         stats.unsolved--;
@@ -104,7 +112,7 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
         } else {
           stats.trying++;
         }
-        submissionStatusMap.set(sub.problemId, sub.result);
+        submissionStatusMap.set(sub.problemId, { result: sub.result, epochSecond: sub.epochSecond} );
       }
     }
   }
