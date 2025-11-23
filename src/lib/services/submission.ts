@@ -4,6 +4,19 @@ import { Submission } from '@/types/submission';
 const API_ENDPOINT = 'https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions';
 const FETCH_INTERVAL_MINUTES = 15;
 
+interface RawSubmission {
+  id: number;
+  epoch_second: number;
+  problem_id: string;
+  contest_id: string;
+  user_id: string;
+  language: string;
+  point: number;
+  length: number;
+  result: string;
+  execution_time: number | null;
+}
+
 export default async function fetchSubmission(userId: string, contestType: string): Promise<{ submissions: Submission[], message: string }> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || !user.atcoderId) {
@@ -24,7 +37,7 @@ export default async function fetchSubmission(userId: string, contestType: strin
 
   // 1. DBから最新の提出を取得し、次の取得開始時刻を決める
   const latestDbSubmission = await prisma.submission.findFirst({
-    where: { userId: user.id },
+    where: { userId: user.id, problemId: { startsWith: contestType } },
     orderBy: { epochSecond: 'desc' },
   });
   let fromSecond: number = latestDbSubmission ? latestDbSubmission.epochSecond + 1 : 0;
@@ -47,16 +60,16 @@ export default async function fetchSubmission(userId: string, contestType: strin
         return { submissions: [], message: `API Error: ${errorData}` };
       }
 
-      const rawData = await response.json();
+      const rawData: RawSubmission[] = await response.json();
 
       if (rawData.length === 0) break;
 
-      const data: Submission[] = rawData.map((sub: any) => ({
+      const data: Submission[] = rawData.map((sub) => ({
         id: sub.id,
         epochSecond: sub.epoch_second,
         problemId: sub.problem_id,
         contestId: sub.contest_id,
-        userId: sub.user_id,
+        userId: user.id,
         language: sub.language,
         point: sub.point,
         length: sub.length,
@@ -98,7 +111,7 @@ export default async function fetchSubmission(userId: string, contestType: strin
 
     // 5. DBの既存データと新しいデータを結合して返却
     const allDbSubmissions = await prisma.submission.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, problemId: { startsWith: contestType } },
     });
 
     return { submissions: allDbSubmissions, message: 'Fetched from API and updated database.' };
