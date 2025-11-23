@@ -1,14 +1,14 @@
-'use client';
-
-import { useState } from 'react';
 import StatsOverview from '@/components/dashboard/StatsOverview';
 import ActivityHeatmap from '@/components/dashboard/ActivityHeatmap';
 import AlgorithmRadar from '@/components/dashboard/AlgorithmRadar';
 import RecommendedProblems from '@/components/dashboard/RecommendedProblems';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import WeaknessAnalysis from '@/components/dashboard/WeaknessAnalysis';
+import { generateHeatmapData } from '@/lib/activity-heatmap';
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const heatmapData = generateHeatmapData();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       
@@ -21,7 +21,7 @@ export default function Dashboard() {
           {/* Left Column - 2/3 width */}
           <div className="lg:col-span-2 space-y-8">
             <RecommendedProblems />
-            <ActivityHeatmap />
+            <ActivityHeatmap data={heatmapData} />
             <RecentActivity />
           </div>
           

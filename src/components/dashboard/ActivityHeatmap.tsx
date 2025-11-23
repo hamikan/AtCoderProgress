@@ -1,31 +1,22 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
+import { HeatmapDay } from '@/lib/activity-heatmap';
 
-export default function ActivityHeatmap() {
-  // Generate sample data for the last 365 days
-  const generateHeatmapData = () => {
-    const data = [];
-    const today = new Date();
-    
-    for (let i = 364; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      
-      // Generate random activity level (0-4)
-      const level = Math.floor(Math.random() * 5);
-      data.push({
-        date: date.toISOString().split('T')[0],
-        level,
-        count: level * Math.floor(Math.random() * 3) + level,
-      });
+interface ActivityHeatmapProps {
+  data: HeatmapDay[];
+}
+
+export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
+  const weeks = useMemo(() => {
+    const result: HeatmapDay[][] = [];
+    for (let i = 0; i < data.length; i += 7) {
+      result.push(data.slice(i, i + 7));
     }
-    
-    return data;
-  };
-
-  const heatmapData = generateHeatmapData();
+    return result;
+  }, [data]);
   
   const getIntensityClass = (level: number) => {
     switch (level) {
@@ -43,12 +34,6 @@ export default function ActivityHeatmap() {
         return 'bg-slate-100';
     }
   };
-
-  // Group data by weeks
-  const weeks = [];
-  for (let i = 0; i < heatmapData.length; i += 7) {
-    weeks.push(heatmapData.slice(i, i + 7));
-  }
 
   const months = [
     '1月', '2月', '3月', '4月', '5月', '6月',
