@@ -10,13 +10,13 @@ import { SubmissionStatus } from '@/types/submission';
 import fetchSubmission from '@/lib/services/submission';
 
 interface ProblemsPageProps {
-  searchParams: {
-    contestType: 'abc' | 'arc' | 'agc';
-    order: 'asc' | 'desc';
+  filters: {
+    contestType?: 'abc' | 'arc' | 'agc';
+    order?: 'asc' | 'desc';
   }
 }
 
-export async function FetchContestData({ searchParams }: ProblemsPageProps) {
+export async function FetchContestData({ filters }: ProblemsPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   const atcoderId = session?.user?.atcoderId;
@@ -24,7 +24,7 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
   const {
     contestType = 'abc', 
     order,
-  } = searchParams;
+  } = filters;
 
   const where: Prisma.ContestWhereInput = {};
   where.id = {
