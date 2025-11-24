@@ -24,21 +24,22 @@ const getAvailableTags = async (userId: string | null | undefined) => {
 };
 
 interface ProblemsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     search?: string;
     tags?: string;
     difficulty_min?: string;
     difficulty_max?: string;
     status?: string;
-    contestType: 'abc' | 'arc' | 'agc';
-    sort: string;
-    order: 'asc' | 'desc';
+    contestType?: 'abc' | 'arc' | 'agc';
+    sort?: string;
+    order?: 'asc' | 'desc';
     view?: 'contest' | 'list' | 'grid';
     page?: string;
-  };
+  }>;
 }
 
 export default async function ProblemsPage({ searchParams }: ProblemsPageProps) {
+  const resolvedSearchParams = await searchParams;
   // const session = await getServerSession(authOptions);
   // const userId = session?.user?.id;
 
@@ -53,7 +54,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
     order,
     view = 'contest',
     page = '1',
-  } = searchParams;
+  } = resolvedSearchParams;
 
   // const currentPage = parseInt(page);
   // const itemsPerPage = view === 'grid' ? 24 : 50;
@@ -278,7 +279,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
           />
         </Suspense> */}
         <Suspense fallback={<div className="text-center p-8">Loading problems...</div>}>
-          {view === 'contest' && <FetchContestData searchParams={searchParams} />}
+          {view === 'contest' && <FetchContestData filters={resolvedSearchParams} />}
         </Suspense>
       </div>
     </div>

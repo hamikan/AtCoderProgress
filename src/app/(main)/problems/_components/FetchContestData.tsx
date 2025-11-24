@@ -8,15 +8,92 @@ import { Problem } from '@/types/problem';
 import { Contest } from '@/types/contest';
 import { SubmissionStatus } from '@/types/submission';
 import fetchSubmission from '@/lib/services/submission';
+import { unstable_cache } from 'next/cache';
 
 interface ProblemsPageProps {
-  searchParams: {
-    contestType: 'abc' | 'arc' | 'agc';
-    order: 'asc' | 'desc';
+  filters: {
+    contestType?: 'abc' | 'arc' | 'agc';
+    order?: 'asc' | 'desc';
   }
 }
 
-export async function FetchContestData({ searchParams }: ProblemsPageProps) {
+const getContestData = (
+  contestType: 'abc' | 'arc' | 'agc',
+  order?: 'asc' | 'desc'
+) =>
+  unstable_cache(
+    async () => {
+      const where: Prisma.ContestWhereInput = {
+        id: { startsWith: contestType },
+      };
+
+      const contestsFromDB = await prisma.contest.findMany({
+        where,
+        include: {
+          problems: {
+            include: {
+              problem: true,
+            },
+          },
+        },
+      });
+
+      contestsFromDB.sort((a, b) => {
+        const comparison = a.id.localeCompare(b.id);
+        return order === 'asc' ? comparison : -comparison;
+      });
+
+      let totalProblems = 0;
+
+      const contests: Contest[] = contestsFromDB.map((contest) => {
+        const problemsResult: { [key: string]: Problem | null } = {};
+        for (const contestProblem of contest.problems) {
+          const problemIndex = contestProblem.problemIndex;
+          problemsResult[problemIndex] = contestProblem.problem;
+        }
+
+        totalProblems += contest.problems.length;
+        return {
+          id: contest.id,
+          startEpochSecond: contest.startEpochSecond,
+          durationSecond: contest.durationSecond,
+          problems: problemsResult,
+        };
+      });
+      
+      let problemIndexes: string[] = [];
+
+      switch(contestType) {
+        case 'abc':
+          problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex']
+          break;
+        case 'arc':
+          problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
+          break;
+        case 'agc':
+          problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
+          break;
+        default:
+          problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex']
+      }
+
+      return { contests, problemIndexes, totalProblems };
+    },
+    ['contest-data', contestType, order ?? 'desc'],
+    { revalidate: 300 }
+  )();
+
+const getSubmissionData = (
+  userId: string,
+  contestType: 'abc' | 'arc' | 'agc'
+) =>
+  unstable_cache(
+    async () => fetchSubmission(userId, contestType),
+    ['submission-data', userId, contestType],
+    { revalidate: 300 }
+  )();
+
+export async function FetchContestData({ filters }: ProblemsPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   const atcoderId = session?.user?.atcoderId;
@@ -24,62 +101,9 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
   const {
     contestType = 'abc', 
     order,
-  } = searchParams;
+  } = filters;
 
-  const where: Prisma.ContestWhereInput = {};
-  where.id = {
-    startsWith: contestType
-  }
-    
-  const contestsFromDB = await prisma.contest.findMany({
-    where,
-    include: {
-      problems: {
-        include: {
-          problem: true
-        }
-      }
-    }
-  })
-  
-  contestsFromDB.sort((a, b) => {
-    const comparison = a.id.localeCompare(b.id);
-    return order === 'asc' ? comparison : -comparison;
-  });
-
-  let totalProblems: number = 0;
-
-  const contests: Contest[] = contestsFromDB.map(contest => {
-    const problemsResult: { [key: string]: Problem | null } = {};
-    for (const contestProblem of contest.problems) {
-      const problemIndex = contestProblem.problemIndex;
-      problemsResult[problemIndex] = contestProblem.problem;
-    }
-
-    totalProblems += contest.problems.length;
-    return {
-      id: contest.id,
-      startEpochSecond: contest.startEpochSecond,
-      durationSecond: contest.durationSecond,
-      problems: problemsResult,
-    }
-  })
-  
-  let problemIndexes: string[] = [];
-
-  switch(contestType) {
-    case 'abc':
-      problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex']
-      break;
-    case 'arc':
-      problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
-      break;
-    case 'agc':
-      problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
-      break;
-    default:
-      problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex']
-  }
+  const { contests, problemIndexes, totalProblems } = await getContestData(contestType, order);
 
   const stats = {
     total: totalProblems,
@@ -88,21 +112,22 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
     unsolved: totalProblems,
   };
 
-  const submissionStatusMap: Map<string, SubmissionStatus> = new Map<string, SubmissionStatus>();
+  const submissionStatusMap: Record<string, SubmissionStatus> = {};
   if (userId) {
-    const allSubmissionFromDB = await fetchSubmission(userId, contestType);
+    const allSubmissionFromDB = await getSubmissionData(userId, contestType);
     for (const sub of allSubmissionFromDB.submissions) {
-      if (submissionStatusMap.has(sub.problemId)) {
-        const result = submissionStatusMap.get(sub.problemId)?.result;
-        const epochSecond = submissionStatusMap.get(sub.problemId)?.epochSecond;
+      const existing = submissionStatusMap[sub.problemId];
+      if (existing) {
+        const result = existing.result;
+        const epochSecond = existing.epochSecond;
         if (!result || !epochSecond) continue;
         if (sub.result === 'AC') {
           if (result !== 'AC') {
             stats.ac++;
             stats.trying--;
-            submissionStatusMap.set(sub.problemId, { result: 'AC', epochSecond: sub.epochSecond });
+            submissionStatusMap[sub.problemId] = { result: 'AC', epochSecond: sub.epochSecond };
           } else {
-            submissionStatusMap.set(sub.problemId, { result: 'AC', epochSecond: Math.min(epochSecond, sub.epochSecond) });
+            submissionStatusMap[sub.problemId] = { result: 'AC', epochSecond: Math.min(epochSecond, sub.epochSecond) };
           }
         }
       } else {
@@ -112,7 +137,7 @@ export async function FetchContestData({ searchParams }: ProblemsPageProps) {
         } else {
           stats.trying++;
         }
-        submissionStatusMap.set(sub.problemId, { result: sub.result, epochSecond: sub.epochSecond} );
+        submissionStatusMap[sub.problemId] = { result: sub.result, epochSecond: sub.epochSecond };
       }
     }
   }
