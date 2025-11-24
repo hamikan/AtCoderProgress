@@ -15,7 +15,7 @@ interface ContestTableProps {
   contests: Contest[];
   problemIndexes: string[];
   totalProblems: number;
-  submissionStatusMap: Map<string, SubmissionStatus>;
+  submissionStatusMap: Record<string, SubmissionStatus>;
 }
 
 export default function ContestTable({ contests, problemIndexes, totalProblems, submissionStatusMap }: ContestTableProps) {
@@ -37,22 +37,17 @@ export default function ContestTable({ contests, problemIndexes, totalProblems, 
   };
 
   const cellBackGroundColor = (problemId: string, startEpochSecond: number, durationSecond: number) => {
-    if(submissionStatusMap.has(problemId)) {
-      const result = submissionStatusMap.get(problemId)?.result;
-      const epochSecond = submissionStatusMap.get(problemId)?.epochSecond;
-      if (!result || !epochSecond) {
-        return '';
-      }
-      if (result === 'AC') {
-        if (startEpochSecond <= epochSecond && epochSecond < startEpochSecond + durationSecond) {
-          return 'bg-green-200';
-        }
-        return 'bg-green-100';
-      } else {
-        return 'bg-yellow-100';
-      }
+    const submission = submissionStatusMap[problemId];
+    if (!submission || !submission.result || submission.epochSecond === undefined) {
+      return '';
     }
-    return '';
+    if (submission.result === 'AC') {
+      if (startEpochSecond <= submission.epochSecond && submission.epochSecond < startEpochSecond + durationSecond) {
+        return 'bg-green-200';
+      }
+      return 'bg-green-100';
+    }
+    return 'bg-yellow-100';
   }
 
   const getContestName = () => {
