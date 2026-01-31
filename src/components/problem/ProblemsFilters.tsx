@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +64,7 @@ export default function ProblemsFilters({ searchParams, availableTags }: Problem
             <SelectItem value="unsolved">未解答</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={searchParams.contest_type || 'all'} onValueChange={(value) => handleQueryChange('contest_type', value === 'all' ? null : value)}>
+        <Select value={searchParams.contestType || 'all'} onValueChange={(value) => handleQueryChange('contestType', value === 'all' ? null : value)}>
           <SelectTrigger><SelectValue placeholder="コンテストタイプ" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全てのコンテスト</SelectItem>

@@ -50,7 +50,7 @@ export default function Dashboard() {
     submissions.forEach(submission => {
       // AC (Accepted) の提出のみをカウント
       if (submission.result === 'AC') {
-        const date = new Date(submission.epoch_second * 1000);
+        const date = new Date(submission.epochSecond * 1000);
         const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD形式
         counts[dateString] = (counts[dateString] || 0) + 1;
       }
