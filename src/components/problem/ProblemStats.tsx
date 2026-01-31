@@ -67,18 +67,20 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
             <div className="flex items-center space-x-1 text-xs">
-              <Badge
-                variant={
-                  stat.changeType === 'increase'
-                    ? 'default'
-                    : stat.changeType === 'decrease'
-                    ? 'destructive'
-                    : 'secondary'
-                }
-                className="text-xs"
-              >
-                {stat.change}
-              </Badge>
+              {stat.change && (
+                <Badge
+                  variant={
+                    stat.changeType === 'increase'
+                      ? 'default'
+                      : stat.changeType === 'decrease'
+                      ? 'destructive'
+                      : 'secondary'
+                  }
+                  className="text-xs"
+                >
+                  {stat.change}
+                </Badge>
+              )}
               {stat.changeType === 'increase' && (
                 <span className="text-slate-500">前月比</span>
               )}

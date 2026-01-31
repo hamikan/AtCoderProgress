@@ -14,11 +14,10 @@ import { SubmissionStatus } from '@/types/submission';
 interface ContestTableProps {
   contests: Contest[];
   problemIndexes: string[];
-  totalProblems: number;
   submissionStatusMap: Record<string, SubmissionStatus>;
 }
 
-export default function ContestTable({ contests, problemIndexes, totalProblems, submissionStatusMap }: ContestTableProps) {
+export default function ContestTable({ contests, problemIndexes, submissionStatusMap }: ContestTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

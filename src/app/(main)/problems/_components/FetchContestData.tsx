@@ -7,7 +7,7 @@ import ProblemStats from '@/components/problem/ProblemStats';
 import { Problem } from '@/types/problem';
 import { Contest } from '@/types/contest';
 import { SubmissionStatus } from '@/types/submission';
-import fetchSubmission from '@/lib/services/submission';
+import { getSubmissionsFromDB } from '@/lib/services/submission';
 import { unstable_cache } from 'next/cache';
 
 interface ProblemsPageProps {
@@ -80,7 +80,7 @@ const getContestData = (
       return { contests, problemIndexes, totalProblems };
     },
     ['contest-data', contestType, order ?? 'desc'],
-    { revalidate: 300 }
+    { revalidate: 43200, tags: ['contest-data'] } // 12 hours
   )();
 
 const getSubmissionData = (
@@ -88,7 +88,7 @@ const getSubmissionData = (
   contestType: 'abc' | 'arc' | 'agc'
 ) =>
   unstable_cache(
-    async () => fetchSubmission(userId, contestType),
+    async () => getSubmissionsFromDB(userId, contestType),
     ['submission-data', userId, contestType],
     { revalidate: 300 }
   )();
@@ -96,7 +96,6 @@ const getSubmissionData = (
 export async function FetchContestData({ filters }: ProblemsPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  const atcoderId = session?.user?.atcoderId;
 
   const {
     contestType = 'abc', 
@@ -115,7 +114,7 @@ export async function FetchContestData({ filters }: ProblemsPageProps) {
   const submissionStatusMap: Record<string, SubmissionStatus> = {};
   if (userId) {
     const allSubmissionFromDB = await getSubmissionData(userId, contestType);
-    for (const sub of allSubmissionFromDB.submissions) {
+    for (const sub of allSubmissionFromDB) {
       const existing = submissionStatusMap[sub.problemId];
       if (existing) {
         const result = existing.result;
@@ -145,7 +144,6 @@ export async function FetchContestData({ filters }: ProblemsPageProps) {
   const contestTableProps = {
     contests,
     problemIndexes,
-    totalProblems,
     submissionStatusMap,
   }
 
