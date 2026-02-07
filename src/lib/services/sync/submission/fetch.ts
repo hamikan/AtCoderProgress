@@ -14,7 +14,7 @@ const FETCH_DELAY_MS = 2000;
 export async function fetchSubmission(atcoderId: string, fromSecond: number): Promise<SubmissionResources> {
   const submissions: Array<RawSubmission> = [];
   while (true) {
-    const url = `${SUBMISSION_ENDPOINTS}?user=${atcoderId}&from_second=${fromSecond}`;
+    const url = `${SUBMISSION_ENDPOINTS.SUBMISSIONS}?user=${atcoderId}&from_second=${fromSecond}`;
     const newSubmissions: Array<RawSubmission> = await fetchJson<Array<RawSubmission>>(url);
     if (newSubmissions.length === 0) break;
     submissions.push(...newSubmissions);

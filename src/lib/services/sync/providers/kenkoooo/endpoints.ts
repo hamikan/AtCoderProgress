@@ -6,5 +6,7 @@ export const CONTEST_ENDPOINTS = {
 } as const;
 
 export const SUBMISSION_ENDPOINTS = {
-  SUBMISSIONS: 'https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions?user=',
+
+  SUBMISSIONS: 'https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions',
+
 } as const;
