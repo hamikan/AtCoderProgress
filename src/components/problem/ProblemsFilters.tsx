@@ -65,27 +65,35 @@ export default function ProblemsFilters({ filters, availableTags }: ProblemsFilt
           }}
         />
         <Select 
-          value={filters.status || 'all'} 
-          onValueChange={(value) => handleQueryChange({ status: value === 'all' ? null : value })}
+          value={filters.status || 'ALL'} 
+          onValueChange={(value) => handleQueryChange({ status: value === 'ALL' ? null : value })}
         >
-          <SelectTrigger><SelectValue placeholder="解答ステータス" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="解答ステータス" />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全てのステータス</SelectItem>
-            <SelectItem value="ac">AC</SelectItem>
-            <SelectItem value="trying">挑戦中</SelectItem>
-            <SelectItem value="unsolved">未解答</SelectItem>
+            <SelectItem value="ALL">全てのステータス</SelectItem>
+            <SelectItem value="AC">AC (全種類)</SelectItem>
+            <SelectItem value="TRYING">挑戦中 (未AC)</SelectItem>
+            <SelectItem value="UNSOLVED">未解答</SelectItem>
+            <div className="h-px bg-slate-100 my-1" />
+            <SelectItem value="SELF_AC">自力AC</SelectItem>
+            <SelectItem value="EXPLANATION_AC">解説AC</SelectItem>
+            <SelectItem value="REVIEW_AC">復習AC</SelectItem>
           </SelectContent>
         </Select>
         <Select 
-          value={filters.contestType || 'all'} 
-          onValueChange={(value) => handleQueryChange({ contestType: value === 'all' ? null : value })}
+          value={filters.contestType || 'ALL'} 
+          onValueChange={(value) => handleQueryChange({ contestType: value === 'ALL' ? null : value })}
         >
-          <SelectTrigger><SelectValue placeholder="コンテストタイプ" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="コンテストタイプ" />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全てのコンテスト</SelectItem>
-            <SelectItem value="abc">ABC</SelectItem>
-            <SelectItem value="arc">ARC</SelectItem>
-            <SelectItem value="agc">AGC</SelectItem>
+            <SelectItem value="ALL">全てのコンテスト</SelectItem>
+            <SelectItem value="ABC">ABC</SelectItem>
+            <SelectItem value="ARC">ARC</SelectItem>
+            <SelectItem value="AGC">AGC</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex items-center space-x-2">

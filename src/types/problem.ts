@@ -1,4 +1,4 @@
-export type ProblemStatus = 'SELF_AC' | 'EXPLANATION_AC' | 'REVIEW_AC' | 'TRYING' | 'UNSOLVED';
+import { SolutionStatus } from '@prisma/client';
 
 export interface Problem {
   id: string;
@@ -13,7 +13,7 @@ export interface ProblemListItem {
   contestId: string;
   problemIndex: string;
   difficulty: number | null;
-  status?: ProblemStatus;
+  status?: SolutionStatus;
   tags?: string[];
   totalSolutionCount?: number;
 }
