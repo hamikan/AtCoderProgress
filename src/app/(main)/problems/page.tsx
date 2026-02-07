@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/options';
 import { FetchContestData } from '@/app/(main)/problems/_components/FetchContestData';
 import { FetchProblemListData } from './_components/FetchProblemListData';
 

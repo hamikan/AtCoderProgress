@@ -3,14 +3,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react'; // useSessionをインポート
+import { useSession } from 'next-auth/react';
+import { linkAtCoderId } from '@/lib/auth/actions';
 
 export default function LinkAtCoderPage() {
   const [atcoderId, setAtcoderId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { update } = useSession(); // useSessionからupdate関数を取得
+  const { update } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,25 +25,11 @@ export default function LinkAtCoderPage() {
     }
 
     try {
-      const res = await fetch('/api/user/atcoder', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ atcoderId }),
-      });
-
-      if (res.ok) {
-        // セッション情報を更新
-        await update(); 
-        // 成功したらダッシュボード（メインページ）へリダイレクト
-        router.push('/');
-      } else {
-        const data = await res.json();
-        setError(data.error || '連携に失敗しました。');
-      }
-    } catch {
-      setError('エラーが発生しました。もう一度お試しください。');
+      await linkAtCoderId(atcoderId);
+      await update(); 
+      router.push('/');
+    } catch (err: any) {
+      setError(err.message || '連携に失敗しました。');
     } finally {
       setIsLoading(false);
     }
