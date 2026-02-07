@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getDifficultyColor } from '@/lib/colors';
+import { getDifficultyColor } from '@/lib/utils';
 import { Problem } from '@/types/problem'
 import { Contest } from '@/types/contest';
 import { SubmissionStatus } from '@/types/submission';
@@ -35,13 +35,15 @@ export default function ContestTable({ contests, problemIndexes, submissionStatu
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const cellBackGroundColor = (problemId: string, startEpochSecond: number, durationSecond: number) => {
+  const cellBackGroundColor = (problemId: string, startEpochSecond: number, durationSecond: bigint) => {
     const submission = submissionStatusMap[problemId];
     if (!submission || !submission.result || submission.epochSecond === undefined) {
       return '';
     }
     if (submission.result === 'AC') {
-      if (startEpochSecond <= submission.epochSecond && submission.epochSecond < startEpochSecond + durationSecond) {
+      const start = BigInt(startEpochSecond);
+      const subEpoch = BigInt(submission.epochSecond);
+      if (start <= subEpoch && subEpoch < start + durationSecond) {
         return 'bg-green-200';
       }
       return 'bg-green-100';

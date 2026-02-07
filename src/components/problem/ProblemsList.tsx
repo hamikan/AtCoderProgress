@@ -6,19 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, Clock, XCircle, Eye, ExternalLink, BookOpen } from 'lucide-react';
-
-type ProblemStatus = 'SELF_AC' | 'EXPLANATION_AC' | 'REVIEW_AC' | 'TRYING' | 'UNSOLVED';
-
-export interface ProblemListItem {
-  id: string;
-  name: string;
-  contestId: string;
-  problemIndex: string;
-  difficulty: number | null;
-  status?: ProblemStatus;
-  tags?: string[];
-  totalSolutionCount?: number;
-}
+import type { ProblemListItem, ProblemStatus } from '@/types/problem';
+import { getDifficultyColor } from '@/lib/utils';
 
 interface ProblemsListProps {
   items: ProblemListItem[];
@@ -57,17 +46,6 @@ const getStatusColor = (status: ProblemStatus) => {
     case 'TRYING': return 'bg-amber-100 text-amber-700';
     default: return 'bg-slate-100 text-slate-700';
   }
-};
-
-const getDifficultyColor = (difficulty: number | null) => {
-  if (difficulty === null) return 'text-slate-400';
-  if (difficulty < 400) return 'text-gray-600';
-  if (difficulty < 800) return 'text-amber-600';
-  if (difficulty < 1200) return 'text-emerald-600';
-  if (difficulty < 1600) return 'text-blue-600';
-  if (difficulty < 2000) return 'text-purple-600';
-  if (difficulty < 2400) return 'text-red-600';
-  return 'text-red-800';
 };
 
 export default function ProblemsList({ items, totalCount }: ProblemsListProps) {

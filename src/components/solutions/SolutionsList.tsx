@@ -17,6 +17,7 @@ import {
   Globe,
   Star
 } from 'lucide-react';
+import { getDifficultyColor } from '@/lib/utils';
 
 interface SolutionsListProps {
   searchQuery: string;
@@ -242,14 +243,6 @@ export default function SolutionsList({
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
     }
-  };
-
-  const getDifficultyColor = (difficulty: number) => {
-    if (difficulty < 800) return 'text-gray-600';
-    if (difficulty < 1200) return 'text-amber-600';
-    if (difficulty < 1600) return 'text-emerald-600';
-    if (difficulty < 2000) return 'text-blue-600';
-    return 'text-purple-600';
   };
 
   return (
