@@ -54,7 +54,7 @@ model User {
   sessions                  Session[]
   submissions               Submission[]
   solutions                 Solution[]
-  createdTags               Tag[]
+  userTags                  UserTag[]
 
   @@map("users")
 }
@@ -73,7 +73,7 @@ model Submission {
   epochSecond    Int      @map("epoch_second")
   problemId      String   @map("problem_id")
   contestId      String   @map("contest_id")
-  userId         String
+  userId         String   @map("user_id")
   language       String
   point          Float
   length         Int
@@ -89,7 +89,7 @@ model Submission {
 model Contest {
   id                String  @id
   startEpochSecond  Int     @map("start_epoch_second")
-  durationSecond    Int     @map("duration_second")
+  durationSecond    BigInt  @map("duration_second")
   
   problems          ContestProblem[]
   
@@ -100,11 +100,13 @@ model Problem {
   id                  String       @id
   name                String
   difficulty          Int?
-  totalSolutionCount  Int          @default(0)
+  totalSolutionCount  Int          @default(0) @map("total_solution_count")
+  firstContestId      String       @default("unknown") @map("first_contest_id")
   
   contests            ContestProblem[]
   submissions         Submission[]
   solutions           Solution[]
+  problemTags         ProblemTag[]
 
   @@map("problems")
 }
@@ -132,7 +134,7 @@ model Solution {
   createdAt DateTime       @default(now()) @map("created_at")
   updatedAt DateTime       @updatedAt @map("updated_at")
 
-  tags      SolutionTag[]
+  userTags  SolutionUserTag[]
 
   user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   problem   Problem        @relation(fields: [problemId], references: [id], onDelete: Restrict)
@@ -143,26 +145,50 @@ model Solution {
 }
 
 model Tag {
-  id          Int           @id @default(autoincrement())
-  name        String        @unique
-  isOfficial  Boolean       @default(false) @map("is_official")
-  createdById String?       @map("created_by_id")
-  createdAt   DateTime      @default(now()) @map("created_at")
+  id            String          @id @default(nanoid())
+  name          String          @unique
+  createdAt     DateTime        @default(now()) @map("created_at")
   
-  creator     User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  solutions   SolutionTag[]
+  userTags      UserTag[]
+  problemTags   ProblemTag[]
 
   @@map("tags")
 }
 
-model SolutionTag {
-  solutionId String   @map("solution_id")
-  tagId      Int      @map("tag_id")
-  assignedAt DateTime @default(now()) @map("assigned_at")
+model UserTag {
+  id            String         @id @default(nanoid())
+  createdById   String         @map("created_by_id")
+  tagId         String?        @map("tag_id")
+  name          String
+  createdAt     DateTime       @default(now()) @map("created_at")
 
+  creator       User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  parentTag     Tag?           @relation(fields: [tagId], references: [id], onDelete: SetNull)
+  solutions     SolutionUserTag[]
+
+  @@unique([createdById, name])
+  @@map("user_tags")
+}
+
+model SolutionUserTag {
+  solutionId String @map("solution_id")
+  userTagId  String @map("user_tag_id")
+  
   solution   Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
-  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  userTag    UserTag  @relation(fields: [userTagId], references: [id], onDelete: Cascade)
 
-  @@id([solutionId, tagId])
-  @@map("solution_tags")
+  @@id([solutionId, userTagId])
+  @@map("solution_user_tags")
+}
+
+model ProblemTag {
+  problemId String   @map("problem_id")
+  tagId     String   @map("tag_id")
+  count     Int      @default(0)
+  
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, tagId])
+  @@map("problem_tags")
 }

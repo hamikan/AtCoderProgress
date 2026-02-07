@@ -1,145 +1,50 @@
-import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getContestsFromDB } from '@/lib/services/db/contest'
 import ContestTable from '@/components/problem/ContestTable';
 import ProblemStats from '@/components/problem/ProblemStats';
-import { Problem } from '@/types/problem';
-import { Contest } from '@/types/contest';
-import { SubmissionStatus } from '@/types/submission';
-import { getSubmissionsFromDB } from '@/lib/services/submission';
-import { unstable_cache } from 'next/cache';
+import { getSubmissionSummary } from '@/lib/services/db/submission';
+
+const getProblemIndexes = (contestType: 'abc' | 'arc' | 'agc') => {
+  switch (contestType) {
+    case 'abc': return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex'];
+    case 'arc': return ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
+    case 'agc': return ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
+  }
+};
 
 interface ProblemsPageProps {
   filters: {
     contestType?: 'abc' | 'arc' | 'agc';
     order?: 'asc' | 'desc';
-  }
+  };
+  userId?: string;
 }
 
-const getContestData = (
-  contestType: 'abc' | 'arc' | 'agc',
-  order?: 'asc' | 'desc'
-) =>
-  unstable_cache(
-    async () => {
-      const where: Prisma.ContestWhereInput = {
-        id: { startsWith: contestType },
-      };
-
-      const contestsFromDB = await prisma.contest.findMany({
-        where,
-        include: {
-          problems: {
-            include: {
-              problem: true,
-            },
-          },
-        },
-      });
-
-      contestsFromDB.sort((a, b) => {
-        const comparison = a.id.localeCompare(b.id);
-        return order === 'asc' ? comparison : -comparison;
-      });
-
-      let totalProblems = 0;
-
-      const contests: Contest[] = contestsFromDB.map((contest) => {
-        const problemsResult: { [key: string]: Problem | null } = {};
-        for (const contestProblem of contest.problems) {
-          const problemIndex = contestProblem.problemIndex;
-          problemsResult[problemIndex] = contestProblem.problem;
-        }
-
-        totalProblems += contest.problems.length;
-        return {
-          id: contest.id,
-          startEpochSecond: contest.startEpochSecond,
-          durationSecond: contest.durationSecond,
-          problems: problemsResult,
-        };
-      });
-      
-      let problemIndexes: string[] = [];
-
-      switch(contestType) {
-        case 'abc':
-          problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex']
-          break;
-        case 'arc':
-          problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
-          break;
-        case 'agc':
-          problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
-          break;
-        default:
-          problemIndexes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex']
-      }
-
-      return { contests, problemIndexes, totalProblems };
-    },
-    ['contest-data', contestType, order ?? 'desc'],
-    { revalidate: 43200, tags: ['contest-data'] } // 12 hours
-  )();
-
-const getSubmissionData = (
-  userId: string,
-  contestType: 'abc' | 'arc' | 'agc'
-) =>
-  unstable_cache(
-    async () => getSubmissionsFromDB(userId, contestType),
-    ['submission-data', userId, contestType],
-    { revalidate: 300 }
-  )();
-
-export async function FetchContestData({ filters }: ProblemsPageProps) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-
+export async function FetchContestData({ filters, userId }: ProblemsPageProps) {
   const {
-    contestType = 'abc', 
-    order,
+    contestType = 'abc',
+    order = 'desc'
   } = filters;
 
-  const { contests, problemIndexes, totalProblems } = await getContestData(contestType, order);
+  const { contests, totalProblems } = await getContestsFromDB(contestType, order);
+  const problemIndexes = getProblemIndexes(contestType)
+
+  let submissionStatusMap = {};
+  let acCount = 0;
+  let tryingCount = 0;
+
+  if (userId) {
+    const summary = await getSubmissionSummary(userId, contestType);
+    submissionStatusMap = summary.statusMap;
+    acCount = summary.acCount;
+    tryingCount = summary.tryingCount;
+  }
 
   const stats = {
     total: totalProblems,
-    ac: 0,
-    trying: 0,
-    unsolved: totalProblems,
+    ac: acCount,
+    trying: tryingCount,
+    unsolved: totalProblems - acCount - tryingCount,
   };
-
-  const submissionStatusMap: Record<string, SubmissionStatus> = {};
-  if (userId) {
-    const allSubmissionFromDB = await getSubmissionData(userId, contestType);
-    for (const sub of allSubmissionFromDB) {
-      const existing = submissionStatusMap[sub.problemId];
-      if (existing) {
-        const result = existing.result;
-        const epochSecond = existing.epochSecond;
-        if (!result || !epochSecond) continue;
-        if (sub.result === 'AC') {
-          if (result !== 'AC') {
-            stats.ac++;
-            stats.trying--;
-            submissionStatusMap[sub.problemId] = { result: 'AC', epochSecond: sub.epochSecond };
-          } else {
-            submissionStatusMap[sub.problemId] = { result: 'AC', epochSecond: Math.min(epochSecond, sub.epochSecond) };
-          }
-        }
-      } else {
-        stats.unsolved--;
-        if (sub.result === 'AC') {
-          stats.ac++;
-        } else {
-          stats.trying++;
-        }
-        submissionStatusMap[sub.problemId] = { result: sub.result, epochSecond: sub.epochSecond };
-      }
-    }
-  }
 
   const contestTableProps = {
     contests,

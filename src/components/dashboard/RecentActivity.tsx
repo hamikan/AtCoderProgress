@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, XCircle, Eye, ExternalLink } from 'lucide-react';
+import { getDifficultyColor } from '@/lib/utils';
 
 export default function RecentActivity() {
   const recentActivities = [
@@ -93,14 +94,6 @@ export default function RecentActivity() {
       default:
         return 'bg-amber-100 text-amber-700 border-amber-200';
     }
-  };
-
-  const getDifficultyColor = (difficulty: number) => {
-    if (difficulty < 800) return 'text-gray-600';
-    if (difficulty < 1200) return 'text-amber-600';
-    if (difficulty < 1600) return 'text-emerald-600';
-    if (difficulty < 2000) return 'text-blue-600';
-    return 'text-purple-600';
   };
 
   return (
