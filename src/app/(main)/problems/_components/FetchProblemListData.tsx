@@ -9,7 +9,10 @@ interface FetchProblemListDataProps {
 }
 
 export async function FetchProblemListData({ filters, userId }: FetchProblemListDataProps) {
-  const { problems: items, totalProblems: totalCount } = await getProblemListFromDB(filters);
+  const { problems: items, totalProblems: totalCount } = await getProblemListFromDB({
+    ...filters,
+    userId
+  });
   const availableTags = await getAvailableTagsFromDB(userId);
 
   return (

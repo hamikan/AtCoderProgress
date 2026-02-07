@@ -123,21 +123,29 @@ model ContestProblem {
   @@map("contest_problems")
 }
 
+enum SolutionStatus {
+  SELF_AC
+  EXPLANATION_AC
+  REVIEW_AC
+  AC
+  TRYING
+  UNSOLVED
+}
+
 model Solution {
-  id        String         @id @default(cuid())
-  userId    String?        @map("user_id")
-  problemId String         @map("problem_id")
-  content   String?        @db.Text
-  isPublic  Boolean        @default(false) @map("is_public")
-  status    String
-  solvedAt  DateTime?      @map("solved_at")
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @updatedAt @map("updated_at")
+  id        String          @id @default(cuid())
+  userId    String?         @map("user_id")
+  problemId String          @map("problem_id")
+  content   String?         @db.Text
+  status    SolutionStatus  @default(UNSOLVED)
+  solvedAt  DateTime?       @map("solved_at")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
 
   userTags  SolutionUserTag[]
 
-  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
-  problem   Problem        @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  problem   Problem         @relation(fields: [problemId], references: [id], onDelete: Restrict)
   
   @@index([userId])
   @@index([problemId])

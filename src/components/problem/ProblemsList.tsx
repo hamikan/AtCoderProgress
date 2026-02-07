@@ -6,18 +6,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, Clock, XCircle, Eye, ExternalLink, BookOpen } from 'lucide-react';
-import type { ProblemListItem, ProblemStatus } from '@/types/problem';
+import type { ProblemListItem } from '@/types/problem';
 import { getDifficultyColor } from '@/lib/utils';
+import { SolutionStatus } from '@prisma/client';
 
 interface ProblemsListProps {
   items: ProblemListItem[];
   totalCount?: number;
 }
 
-const getStatusIcon = (status: ProblemStatus) => {
+const getStatusIcon = (status: SolutionStatus) => {
   switch (status) {
     case 'SELF_AC':
     case 'REVIEW_AC':
+    case 'AC':
       return <CheckCircle className="h-4 w-4 text-emerald-600" />;
     case 'EXPLANATION_AC':
       return <Eye className="h-4 w-4 text-blue-600" />;
@@ -28,8 +30,9 @@ const getStatusIcon = (status: ProblemStatus) => {
   }
 };
 
-const getStatusLabel = (status: ProblemStatus) => {
+const getStatusLabel = (status: SolutionStatus) => {
   switch (status) {
+    case 'AC': return 'AC';
     case 'SELF_AC': return '自力AC';
     case 'EXPLANATION_AC': return '解説AC';
     case 'REVIEW_AC': return '復習AC';
@@ -38,8 +41,9 @@ const getStatusLabel = (status: ProblemStatus) => {
   }
 };
 
-const getStatusColor = (status: ProblemStatus) => {
+const getStatusColor = (status: SolutionStatus) => {
   switch (status) {
+    case 'AC':
     case 'SELF_AC': return 'bg-emerald-100 text-emerald-700';
     case 'EXPLANATION_AC': return 'bg-blue-100 text-blue-700';
     case 'REVIEW_AC': return 'bg-purple-100 text-purple-700';
