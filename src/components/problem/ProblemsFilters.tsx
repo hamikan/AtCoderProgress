@@ -73,8 +73,8 @@ export default function ProblemsFilters({ filters, availableTags }: ProblemsFilt
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">全てのステータス</SelectItem>
-            <SelectItem value="AC">AC (全種類)</SelectItem>
-            <SelectItem value="TRYING">挑戦中 (未AC)</SelectItem>
+            <SelectItem value="AC">AC</SelectItem>
+            <SelectItem value="TRYING">挑戦中</SelectItem>
             <SelectItem value="UNSOLVED">未解答</SelectItem>
             <div className="h-px bg-slate-100 my-1" />
             <SelectItem value="SELF_AC">自力AC</SelectItem>
@@ -98,17 +98,17 @@ export default function ProblemsFilters({ filters, availableTags }: ProblemsFilt
         </Select>
         <div className="flex items-center space-x-2">
           <Select 
-            value={filters.orderBy || 'problemName'} 
+            value={filters.orderBy || 'contestDate'} 
             onValueChange={(value) => handleQueryChange({ orderBy: value })}
           >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="difficulty">難易度</SelectItem>
-              <SelectItem value="problemName">問題名</SelectItem>
+              <SelectItem value="contestDate">新着順</SelectItem>
             </SelectContent>
           </Select>
           <Select 
-            value={filters.order || 'asc'} 
+            value={filters.order || 'desc'} 
             onValueChange={(value) => handleQueryChange({ order: value })}
           >
             <SelectTrigger><SelectValue /></SelectTrigger>

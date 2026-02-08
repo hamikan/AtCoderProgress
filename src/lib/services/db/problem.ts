@@ -22,8 +22,8 @@ export interface ProblemListFilters {
   status?: string;
   contestType?: ContestType;
   order?: 'asc' | 'desc';
-  orderBy?: 'difficulty' | 'problemName';
-  page?: number;
+  orderBy?: 'difficulty' | 'contestDate';
+  page: number;
   pageSize?: number;
   userId?: string;
 }
@@ -107,14 +107,20 @@ export async function getProblemListFromDB({
     }
   }
 
-  let prismaOrderBy: Prisma.ProblemOrderByWithRelationInput | undefined = undefined;
+  let prismaOrderBy: Prisma.ProblemFindManyArgs['orderBy'] = undefined;
   if (order && orderBy) {
     switch (orderBy) {
       case 'difficulty':
         prismaOrderBy = { difficulty: order };
         break;
-      case 'problemName':
-        prismaOrderBy = { name: order };
+      case 'contestDate':
+        prismaOrderBy = [
+          {
+            firstContest: {
+              startEpochSecond: order
+            }
+          }
+        ];
         break;
     }
   }
@@ -158,9 +164,9 @@ export async function getProblemListFromDB({
           STATUS_PRIORITY[curr.status] > STATUS_PRIORITY[prev.status] ? curr : prev
         );
         finalStatus = bestSolution.status;
-      } else if (row.submissions && row.submissions.length > 0) {
+      } else if (row.submissions.length > 0) {
         finalStatus = 'AC';
-      } else if (row._count && row._count.submissions > 0) {
+      } else if (row._count.submissions > 0) {
         finalStatus = 'TRYING';
       }
     }
