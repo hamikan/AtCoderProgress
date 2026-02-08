@@ -92,6 +92,7 @@ model Contest {
   durationSecond    BigInt  @map("duration_second")
   
   problems          ContestProblem[]
+  firstProblems     Problem[]        @relation("FirstContest")
   
   @@map("contests")
 }
@@ -101,8 +102,9 @@ model Problem {
   name                String
   difficulty          Int?
   totalSolutionCount  Int          @default(0) @map("total_solution_count")
-  firstContestId      String       @default("unknown") @map("first_contest_id")
+  firstContestId      String       @map("first_contest_id")
   
+  firstContest        Contest      @relation("FirstContest", fields: [firstContestId], references: [id])
   contests            ContestProblem[]
   submissions         Submission[]
   solutions           Solution[]

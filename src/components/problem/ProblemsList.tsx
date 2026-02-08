@@ -65,13 +65,13 @@ export default function ProblemsList({ items, totalCount }: ProblemsListProps) {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
-                <TableHead className="w-16">状態</TableHead>
+                <TableHead className="w-16 text-center">状態</TableHead>
                 <TableHead>問題名</TableHead>
-                <TableHead className="w-24">難易度</TableHead>
-                <TableHead className="w-32">コンテスト</TableHead>
+                <TableHead className="w-24 text-center">難易度</TableHead>
+                <TableHead className="w-32 text-center">ステータス</TableHead>
                 <TableHead className="w-48">タグ</TableHead>
-                <TableHead className="w-24">解答数</TableHead>
-                <TableHead className="w-32">アクション</TableHead>
+                <TableHead className="w-24 text-center">解答数</TableHead>
+                <TableHead className="w-32 text-right">リンク</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -86,24 +86,25 @@ export default function ProblemsList({ items, totalCount }: ProblemsListProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <Link href={`/problems/${problem.id}`} className="font-medium text-slate-900 hover:underline">
-                          {problem.contestId.toUpperCase()}-{problem.problemIndex}: {problem.name}
-                        </Link>
-                        <Badge className={`text-xs ${getStatusColor(status)}`}>
-                          {getStatusLabel(status)}
-                        </Badge>
-                      </div>
+                      <Link 
+                        href={`https://atcoder.jp/contests/${problem.contestId}/tasks/${problem.id}`} 
+                        target="_blank" 
+                        className="font-medium text-slate-900 hover:underline inline-flex items-center group"
+                      >
+                        <span className="text-slate-500 mr-2">{problem.contestId.toUpperCase()}-{problem.problemIndex}</span>
+                        {problem.name}
+                        <ExternalLink className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-50 transition-opacity" />
+                      </Link>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <span className={`font-medium ${getDifficultyColor(problem.difficulty)}`}>
                         {problem.difficulty ?? '-'}
                       </span>
                     </TableCell>
-                    <TableCell>
-                      <Link href={`https://atcoder.jp/contests/${problem.contestId}`} target="_blank" className="text-sm text-slate-600 hover:underline">
-                        {problem.contestId.toUpperCase()}
-                      </Link>
+                    <TableCell className="text-center">
+                      <Badge className={`text-xs ${getStatusColor(status)}`}>
+                        {getStatusLabel(status)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -119,22 +120,22 @@ export default function ProblemsList({ items, totalCount }: ProblemsListProps) {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <span className="text-sm text-slate-600">
                         {typeof problem.totalSolutionCount === 'number'
                           ? problem.totalSolutionCount.toLocaleString()
                           : '-'}
                       </span>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                          <Link href={`https://atcoder.jp/contests/${problem.contestId}/tasks/${problem.id}`} target="_blank">
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900" asChild>
+                          <Link href={`https://atcoder.jp/contests/${problem.contestId}/tasks/${problem.id}`} target="_blank" title="AtCoderで開く">
                             <ExternalLink className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                          <Link href={`/solutions/new?problemId=${problem.id}`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900" asChild>
+                          <Link href={`/solutions/new?problemId=${problem.id}`} title="解法を記録する">
                             <BookOpen className="h-4 w-4" />
                           </Link>
                         </Button>
