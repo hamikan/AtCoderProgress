@@ -17,7 +17,7 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
     }
     return result;
   }, [data]);
-  
+
   const getIntensityClass = (level: number) => {
     switch (level) {
       case 0:
@@ -42,6 +42,28 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
 
   const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
 
+  const stats = useMemo(() => {
+    const totalAC = data.reduce((sum, day) => sum + day.count, 0);
+    const dailyAverage = data.length > 0 ? (totalAC / data.length).toFixed(1) : '0.0';
+
+    let maxStreak = 0;
+    let currentStreak = 0;
+
+    // Sort data by date just in case, though usually it's compliant
+    const sortedData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    for (const day of sortedData) {
+      if (day.count > 0) {
+        currentStreak++;
+        if (currentStreak > maxStreak) maxStreak = currentStreak;
+      } else {
+        currentStreak = 0;
+      }
+    }
+
+    return { totalAC, maxStreak, dailyAverage };
+  }, [data]);
+
   return (
     <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
       <CardHeader>
@@ -57,43 +79,59 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Month labels */}
-          <div className="flex justify-between text-xs text-slate-500 px-4">
-            {months.map((month, index) => (
-              <span key={index}>{month}</span>
-            ))}
-          </div>
-          
           {/* Heatmap grid */}
-          <div className="flex space-x-1">
-            {/* Weekday labels */}
-            <div className="flex flex-col space-y-1 pr-2">
-              {weekdays.map((day, index) => (
-                <div
-                  key={index}
-                  className="h-3 w-6 flex items-center justify-center text-xs text-slate-500"
-                >
-                  {index % 2 === 1 ? day : ''}
-                </div>
-              ))}
+          <div className="flex flex-col w-full">
+            {/* Month labels */}
+            <div className="flex w-full pl-6 mb-1 h-5 gap-[2px]">
+              {weeks.map((week, index) => {
+                const firstDayOfMonth = week.find(d => {
+                  const date = new Date(d.date);
+                  return date.getDate() === 1;
+                });
+
+                return (
+                  <div key={index} className="flex-1 relative">
+                    {firstDayOfMonth && (
+                      <span className="absolute left-0 bottom-0 text-xs text-slate-500 whitespace-nowrap">
+                        {new Date(firstDayOfMonth.date).getMonth() + 1}月
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            
-            {/* Activity squares */}
-            <div className="flex space-x-1">
-              {weeks.map((week, weekIndex) => (
-                <div key={weekIndex} className="flex flex-col space-y-1">
-                  {week.map((day, dayIndex) => (
-                    <div
-                      key={`${weekIndex}-${dayIndex}`}
-                      className={`h-3 w-3 rounded-sm ${getIntensityClass(day.level)} hover:ring-2 hover:ring-slate-400 cursor-pointer transition-all`}
-                      title={`${day.date}: ${day.count}問解答`}
-                    />
-                  ))}
-                </div>
-              ))}
+
+            <div className="flex w-full gap-[2px]">
+              {/* Weekday labels */}
+              <div className="flex flex-col space-y-1 pr-2 w-6 shrink-0">
+                {weekdays.map((day, index) => (
+                  <div
+                    key={index}
+                    className="h-[10px] flex items-center justify-center text-[10px] text-slate-500 leading-none"
+                    style={{ height: 'calc(100% / 7 - 1px)' }} // approximate alignment
+                  >
+                    {index % 2 === 1 ? day : ''}
+                  </div>
+                ))}
+              </div>
+
+              {/* Activity squares */}
+              <div className="flex w-full gap-[2px]">
+                {weeks.map((week, weekIndex) => (
+                  <div key={weekIndex} className="flex flex-col flex-1 gap-[2px]">
+                    {week.map((day, dayIndex) => (
+                      <div
+                        key={`${weekIndex}-${dayIndex}`}
+                        className={`w-full aspect-square rounded-sm ${getIntensityClass(day.level)} hover:ring-2 hover:ring-slate-400 cursor-pointer transition-all`}
+                        title={`${day.date}: ${day.count}問解答`}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-          
+
           {/* Legend */}
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>少ない</span>
@@ -107,19 +145,19 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
             </div>
             <span>多い</span>
           </div>
-          
+
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200">
             <div className="text-center">
-              <div className="text-lg font-semibold text-slate-900">247</div>
-              <div className="text-xs text-slate-600">今年の総AC数</div>
+              <div className="text-lg font-semibold text-slate-900">{stats.totalAC}</div>
+              <div className="text-xs text-slate-600">表示期間の総AC数</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-semibold text-slate-900">15</div>
+              <div className="text-lg font-semibold text-slate-900">{stats.maxStreak}</div>
               <div className="text-xs text-slate-600">最長連続日数</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-semibold text-slate-900">3.2</div>
+              <div className="text-lg font-semibold text-slate-900">{stats.dailyAverage}</div>
               <div className="text-xs text-slate-600">1日平均AC数</div>
             </div>
           </div>
