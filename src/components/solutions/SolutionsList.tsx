@@ -11,11 +11,6 @@ import {
   Eye, 
   Edit, 
   ExternalLink, 
-  Heart, 
-  MessageCircle,
-  Lock,
-  Globe,
-  Star
 } from 'lucide-react';
 import { getDifficultyColor } from '@/lib/utils';
 
@@ -23,7 +18,6 @@ interface SolutionsListProps {
   searchQuery: string;
   selectedTags: string[];
   statusFilter: string;
-  publicFilter: string;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   onEditSolution: (solution: any) => void;
@@ -31,6 +25,7 @@ interface SolutionsListProps {
 
 interface Solution {
   id: string;
+  problemId: string;
   problemTitle: string;
   contest: string;
   difficulty: number;
@@ -39,11 +34,8 @@ interface Solution {
   contentTags: string[];
   solvedDate: string;
   priority: 'high' | 'medium' | 'low';
-  isPublic: boolean;
   hasCode: boolean;
   hasMemo: boolean;
-  likes: number;
-  comments: number;
   summary: string;
 }
 
@@ -51,7 +43,6 @@ export default function SolutionsList({
   searchQuery,
   selectedTags,
   statusFilter,
-  publicFilter,
   sortBy,
   sortOrder,
   onEditSolution,
@@ -63,6 +54,7 @@ export default function SolutionsList({
   const solutions: Solution[] = [
     {
       id: '1',
+      problemId: 'abc301_d',
       problemTitle: 'ABC 301 D - Bitmask',
       contest: 'AtCoder Beginner Contest 301',
       difficulty: 1200,
@@ -71,15 +63,13 @@ export default function SolutionsList({
       contentTags: ['数学'],
       solvedDate: '2024-01-15',
       priority: 'medium',
-      isPublic: true,
       hasCode: true,
       hasMemo: true,
-      likes: 12,
-      comments: 3,
       summary: 'ビット演算を使った全探索で解決。状態の管理に工夫が必要だった。',
     },
     {
       id: '2',
+      problemId: 'abc300_e',
       problemTitle: 'ABC 300 E - Dice Product 3',
       contest: 'AtCoder Beginner Contest 300',
       difficulty: 1400,
@@ -88,15 +78,13 @@ export default function SolutionsList({
       contentTags: ['数学'],
       solvedDate: '2024-01-14',
       priority: 'high',
-      isPublic: false,
       hasCode: true,
       hasMemo: true,
-      likes: 0,
-      comments: 0,
       summary: '確率DPの考え方が理解できていなかった。期待値の計算方法を復習が必要。',
     },
     {
       id: '3',
+      problemId: 'abc299_f',
       problemTitle: 'ABC 299 F - Square Subsequence',
       contest: 'AtCoder Beginner Contest 299',
       difficulty: 1600,
@@ -105,15 +93,13 @@ export default function SolutionsList({
       contentTags: ['文字列処理'],
       solvedDate: '2024-01-13',
       priority: 'high',
-      isPublic: false,
       hasCode: false,
       hasMemo: true,
-      likes: 0,
-      comments: 0,
       summary: '文字列DPの応用問題。まだ完全に理解できていない。',
     },
     {
       id: '4',
+      problemId: 'abc298_c',
       problemTitle: 'ABC 298 C - Cards Query Problem',
       contest: 'AtCoder Beginner Contest 298',
       difficulty: 1100,
@@ -122,15 +108,13 @@ export default function SolutionsList({
       contentTags: ['実装'],
       solvedDate: '2024-01-12',
       priority: 'low',
-      isPublic: true,
       hasCode: true,
       hasMemo: false,
-      likes: 8,
-      comments: 1,
       summary: 'mapを使ったクエリ処理。実装は簡単だった。',
     },
     {
       id: '5',
+      problemId: 'abc297_d',
       problemTitle: 'ABC 297 D - Count Subtractions',
       contest: 'AtCoder Beginner Contest 297',
       difficulty: 1300,
@@ -139,11 +123,8 @@ export default function SolutionsList({
       contentTags: ['数学'],
       solvedDate: '2024-01-11',
       priority: 'high',
-      isPublic: false,
       hasCode: true,
       hasMemo: true,
-      likes: 0,
-      comments: 0,
       summary: 'コンテスト中に時間が足りなかった。ユークリッド互除法の応用。',
     },
   ];
@@ -159,12 +140,6 @@ export default function SolutionsList({
     // Status filter
     if (statusFilter !== 'all' && solution.status !== statusFilter) {
       return false;
-    }
-
-    // Public filter
-    if (publicFilter !== 'all') {
-      if (publicFilter === 'public' && !solution.isPublic) return false;
-      if (publicFilter === 'private' && solution.isPublic) return false;
     }
 
     // Tags filter
@@ -275,11 +250,6 @@ export default function SolutionsList({
                     <span className={`text-sm font-medium ${getDifficultyColor(solution.difficulty)}`}>
                       {solution.difficulty}
                     </span>
-                    {solution.isPublic ? (
-                      <Globe className="h-4 w-4 text-emerald-600" />
-                    ) : (
-                      <Lock className="h-4 w-4 text-slate-400" />
-                    )}
                   </div>
                   
                   <CardTitle className="text-lg font-semibold text-slate-900">
@@ -347,19 +317,6 @@ export default function SolutionsList({
                     </span>
                   )}
                 </div>
-                
-                {solution.isPublic && (
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-1">
-                      <Heart className="h-3 w-3" />
-                      <span>{solution.likes}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <MessageCircle className="h-3 w-3" />
-                      <span>{solution.comments}</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>

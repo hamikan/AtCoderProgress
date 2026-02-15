@@ -1,13 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -16,404 +12,189 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { X, Plus, Save, Code, FileText, Calendar, Tag, Globe, Lock } from 'lucide-react';
+  ChevronLeft,
+  Save,
+  Sparkles,
+  CheckCircle2,
+  Tag as TagIcon,
+  X,
+  Clock,
+  Database,
+  Plus
+} from 'lucide-react';
+import Link from 'next/link';
+import { SolutionStatus } from '@prisma/client';
+import type { SolutionWithTags } from '@/lib/services/db/solution';
+import type { AvailableTag } from '@/lib/services/db/tag';
+import { getDifficultyColor } from '@/lib/utils';
 
-interface SolutionData {
-  problemTitle: string;
-  contest: string;
-  difficulty: number | string;
-  status: string;
-  solvedDate: string;
-  priority: string;
-  isPublic: boolean;
-  summary: string;
-  approach: string;
-  code: string;
-  memo: string;
-  algorithmTags: string[];
-  contentTags: string[];
-}
+// Plate.js Core & Plugins
+import { Plate, usePlateEditor } from 'platejs/react';
+import { Editor, EditorContainer } from '@/components/ui/editor';
+import { EditorKit } from '@/components/editor/editor-kit';
+
+// Math CSS
+import "katex/dist/katex.min.css";
 
 interface SolutionEditorProps {
-  solution?: Partial<SolutionData> | null;
-  onClose: () => void;
+  problem: {
+    id: string;
+    name: string;
+    difficulty: number | null;
+    firstContest: { id: string };
+  };
+  initialSolution: SolutionWithTags | null;
+  availableTags: AvailableTag[];
 }
 
-export default function SolutionEditor({ solution, onClose }: SolutionEditorProps) {
-  const [formData, setFormData] = useState<SolutionData>({
-    problemTitle: solution?.problemTitle || '',
-    contest: solution?.contest || '',
-    difficulty: solution?.difficulty || '',
-    status: solution?.status || '自力AC',
-    solvedDate: solution?.solvedDate || new Date().toISOString().split('T')[0],
-    priority: solution?.priority || 'medium',
-    isPublic: solution?.isPublic || false,
-    summary: solution?.summary || '',
-    approach: solution?.approach || '',
-    code: solution?.code || '',
-    memo: solution?.memo || '',
-    algorithmTags: solution?.algorithmTags || [],
-    contentTags: solution?.contentTags || [],
+export default function SolutionEditor({ problem, initialSolution, availableTags }: SolutionEditorProps) {
+  const [mounted, setMounted] = useState(false);
+  const [status, setStatus] = useState<SolutionStatus>(initialSolution?.status || 'AC');
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    initialSolution?.userTags.map(t => t.userTag.name) || []
+  );
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Initialize Plate Editor
+  const editor = usePlateEditor({
+    plugins: EditorKit,
+    value: initialSolution?.content
+      ? JSON.parse(initialSolution.content)
+      : [{ type: 'p', children: [{ text: '' }] }]
   });
 
-  const [newAlgorithmTag, setNewAlgorithmTag] = useState('');
-  const [newContentTag, setNewContentTag] = useState('');
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const algorithmTagSuggestions = [
-    'DP', '全探索', '二分探索', 'グラフ', 'ビット演算', '数学', '文字列', 
-    'データ構造', '貪欲法', '実装', 'Union-Find', 'セグメント木', 'BFS', 
-    'DFS', '最短経路', '最大流', '組み合わせ', '確率', 'ゲーム理論', 
-    '累積和', '座標圧縮', 'しゃくとり法'
-  ];
-
-  const contentTagSuggestions = [
-    'グラフ', '数学', '文字列処理', 'ゲーム', 'シミュレーション', 
-    '幾何', '構築', 'インタラクティブ', 'Ad-hoc'
-  ];
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleTagToggle = (tagName: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tagName) ? prev.filter(t => t !== tagName) : [...prev, tagName]
+    );
   };
 
-  const addAlgorithmTag = (tag: string) => {
-    if (tag && !formData.algorithmTags.includes(tag)) {
-      handleInputChange('algorithmTags', [...formData.algorithmTags, tag]);
-      setNewAlgorithmTag('');
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const content = JSON.stringify(editor.children);
+      // TODO: Implement actual save action
+      console.log('Saving Data:', { status, tags: selectedTags, content });
+      alert('解法を保存しました（モック動作）');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const addContentTag = (tag: string) => {
-    if (tag && !formData.contentTags.includes(tag)) {
-      handleInputChange('contentTags', [...formData.contentTags, tag]);
-      setNewContentTag('');
-    }
-  };
-
-  const removeAlgorithmTag = (tag: string) => {
-    handleInputChange('algorithmTags', formData.algorithmTags.filter(t => t !== tag));
-  };
-
-  const removeContentTag = (tag: string) => {
-    handleInputChange('contentTags', formData.contentTags.filter(t => t !== tag));
-  };
-
-  const handleSave = () => {
-    // Here you would typically save to your backend
-    console.log('Saving solution:', formData);
-    onClose();
-  };
+  const difficultyColorClass = getDifficultyColor(problem.difficulty);
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <FileText className="h-5 w-5" />
-            <span>{solution ? '解法を編集' : '新しい解法を記録'}</span>
-          </DialogTitle>
-        </DialogHeader>
+    <div className="min-h-screen bg-[#f9fafb] text-[#0f172a] font-sans antialiased flex flex-col items-center selection:bg-slate-200 selection:text-slate-900">
+      <div className="w-full max-w-[1600px] h-screen flex flex-col p-4 md:p-6 gap-6">
 
-        <div className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">基本情報</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="problemTitle">問題名</Label>
-                  <Input
-                    id="problemTitle"
-                    value={formData.problemTitle}
-                    onChange={(e) => handleInputChange('problemTitle', e.target.value)}
-                    placeholder="ABC 301 D - Bitmask"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contest">コンテスト</Label>
-                  <Input
-                    id="contest"
-                    value={formData.contest}
-                    onChange={(e) => handleInputChange('contest', e.target.value)}
-                    placeholder="AtCoder Beginner Contest 301"
-                  />
+        {/* Navigation */}
+
+        <div className="flex-1 flex gap-8 min-h-0">
+          {/* SIDEBAR: Notion-like */}
+          <aside className="w-80 flex-shrink-0 flex flex-col gap-6 overflow-y-auto pb-4 pr-2 custom-scrollbar text-left text-primary">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-white text-xs font-bold tracking-wide uppercase">
+                  {problem.firstContest.id}
+                </span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-orange-200 bg-orange-50/50">
+                  <span className={`text-[10px] font-bold ${difficultyColorClass} uppercase tracking-wider`}>
+                    Diff: {problem.difficulty ?? '???'}
+                  </span>
                 </div>
               </div>
+              <h1 className="text-3xl font-extrabold text-slate-900 leading-tight tracking-tight">
+                {problem.name}
+              </h1>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="difficulty">難易度</Label>
-                  <Input
-                    id="difficulty"
-                    type="number"
-                    value={formData.difficulty}
-                    onChange={(e) => handleInputChange('difficulty', e.target.value)}
-                    placeholder="1200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">ステータス</Label>
-                  <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="自力AC">自力AC</SelectItem>
-                      <SelectItem value="解説AC">解説AC</SelectItem>
-                      <SelectItem value="挑戦中">挑戦中</SelectItem>
-                      <SelectItem value="本番未AC">本番未AC</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="solvedDate">回答日</Label>
-                  <Input
-                    id="solvedDate"
-                    type="date"
-                    value={formData.solvedDate}
-                    onChange={(e) => handleInputChange('solvedDate', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="priority">振り返り優先度</Label>
-                  <Select value={formData.priority} onValueChange={(value) => handleInputChange('priority', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="high">高</SelectItem>
-                      <SelectItem value="medium">中</SelectItem>
-                      <SelectItem value="low">低</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="isPublic">公開設定</Label>
-                  <div className="flex items-center space-x-2 pt-2">
-                    <Switch
-                      id="isPublic"
-                      checked={formData.isPublic}
-                      onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
-                    />
-                    <div className="flex items-center space-x-1">
-                      {formData.isPublic ? (
-                        <>
-                          <Globe className="h-4 w-4 text-emerald-600" />
-                          <span className="text-sm text-emerald-600">公開</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="h-4 w-4 text-slate-400" />
-                          <span className="text-sm text-slate-600">非公開</span>
-                        </>
-                      )}
+            {/* Status Card with Gradient Accent */}
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.02)] border border-gray-100 overflow-hidden relative group hover:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] transition-all duration-300">
+              <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400"></div>
+              <div className="p-5 space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Current Status</Label>
+                  <div className="relative">
+                    <Select value={status} onValueChange={(v) => setStatus(v as SolutionStatus)}>
+                      <SelectTrigger className="w-full bg-slate-50 border-slate-200 rounded-xl py-2.5 pl-9 pr-10 focus:ring-2 focus:ring-slate-200 transition-all font-medium text-sm text-slate-900 shadow-none border-none h-auto">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                        <SelectItem value="AC" className="text-emerald-600 font-semibold">Accepted (AC)</SelectItem>
+                        <SelectItem value="SELF_AC" className="text-amber-600 font-semibold">Self AC</SelectItem>
+                        <SelectItem value="EXPLANATION_AC" className="text-blue-600 font-semibold">Editorial AC</SelectItem>
+                        <SelectItem value="REVIEW_AC" className="text-purple-600 font-semibold">Reviewing</SelectItem>
+                        <SelectItem value="TRYING" className="text-slate-600 font-semibold">Trying</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none">
+                      <CheckCircle2 className="h-4 w-4 fill-current opacity-80" />
                     </div>
                   </div>
                 </div>
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-slate-200 transition-all hover:translate-y-[-1px] active:translate-y-[1px] disabled:opacity-50 h-auto"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>{isSaving ? 'Saving...' : 'Save Solution'}</span>
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Tags */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center space-x-2">
-                <Tag className="h-5 w-5" />
-                <span>タグ</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Algorithm Tags */}
-              <div className="space-y-3">
-                <Label>アルゴリズムタグ</Label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.algorithmTags.map((tag, index) => (
-                    <Badge
-                      key={index}
-                      variant="default"
-                      className="cursor-pointer bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      onClick={() => removeAlgorithmTag(tag)}
-                    >
-                      {tag}
-                      <X className="h-3 w-3 ml-1" />
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={newAlgorithmTag}
-                    onChange={(e) => setNewAlgorithmTag(e.target.value)}
-                    placeholder="新しいアルゴリズムタグ"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addAlgorithmTag(newAlgorithmTag);
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => addAlgorithmTag(newAlgorithmTag)}
+            {/* Tags Card */}
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.02)] border border-gray-100 p-5 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-900">Tags</h3>
+                <span className="text-xs text-slate-400">{selectedTags.length} selected</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    onClick={() => handleTagToggle(tag.name)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${selectedTags.includes(tag.name)
+                        ? 'bg-slate-100 text-slate-800 border-slate-200'
+                        : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
+                      } group`}
                   >
+                    <span>{tag.name}</span>
+                    {selectedTags.includes(tag.name) && <X className="h-3 w-3 opacity-60 group-hover:opacity-100 ml-1" />}
+                  </button>
+                ))}
+                <div className="relative w-full mt-2 group">
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-slate-600 transition-colors">
                     <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {algorithmTagSuggestions
-                    .filter(tag => !formData.algorithmTags.includes(tag))
-                    .map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-slate-100"
-                        onClick={() => addAlgorithmTag(tag)}
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                </div>
-              </div>
-
-              {/* Content Tags */}
-              <div className="space-y-3">
-                <Label>問題内容タグ</Label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.contentTags.map((tag, index) => (
-                    <Badge
-                      key={index}
-                      variant="default"
-                      className="cursor-pointer bg-purple-100 text-purple-700 hover:bg-purple-200"
-                      onClick={() => removeContentTag(tag)}
-                    >
-                      {tag}
-                      <X className="h-3 w-3 ml-1" />
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
+                  </div>
                   <Input
-                    value={newContentTag}
-                    onChange={(e) => setNewContentTag(e.target.value)}
-                    placeholder="新しい内容タグ"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addContentTag(newContentTag);
-                      }
-                    }}
+                    placeholder="Add tag..."
+                    className="w-full bg-slate-50 border-none rounded-lg py-1.5 pl-9 pr-3 text-xs placeholder:text-slate-400 focus:ring-0 text-slate-700 hover:bg-slate-100 transition-colors shadow-none h-auto"
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => addContentTag(newContentTag)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {contentTagSuggestions
-                    .filter(tag => !formData.contentTags.includes(tag))
-                    .map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-slate-100"
-                        onClick={() => addContentTag(tag)}
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </aside>
 
-          {/* Solution Content */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">解法内容</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="summary">解法要約</Label>
-                <Textarea
-                  id="summary"
-                  value={formData.summary}
-                  onChange={(e) => handleInputChange('summary', e.target.value)}
-                  placeholder="解法の要約を簡潔に記述..."
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="approach">アプローチ・考察</Label>
-                <Textarea
-                  id="approach"
-                  value={formData.approach}
-                  onChange={(e) => handleInputChange('approach', e.target.value)}
-                  placeholder="問題へのアプローチや考察を詳しく記述..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="memo">振り返りメモ</Label>
-                <Textarea
-                  id="memo"
-                  value={formData.memo}
-                  onChange={(e) => handleInputChange('memo', e.target.value)}
-                  placeholder="学んだこと、注意点、改善点など..."
-                  rows={3}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Code */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center space-x-2">
-                <Code className="h-5 w-5" />
-                <span>コード</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="code">ソースコード</Label>
-                <Textarea
-                  id="code"
-                  value={formData.code}
-                  onChange={(e) => handleInputChange('code', e.target.value)}
-                  placeholder="ソースコードを貼り付け..."
-                  rows={12}
-                  className="font-mono text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              キャンセル
-            </Button>
-            <Button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-700">
-              <Save className="h-4 w-4 mr-2" />
-              保存
-            </Button>
-          </div>
+          <main className="flex-1 bg-white rounded-[1.5rem] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05),0_4px_6px_-2px_rgba(0,0,0,0.025)] border border-slate-200 overflow-hidden">
+            {!mounted ? (
+              <div className="min-h-[800px] bg-slate-50 animate-pulse rounded-xl mt-8" />
+            ) : (
+              <Plate editor={editor}>
+                <EditorContainer>
+                  <Editor />
+                </EditorContainer>
+              </Plate>
+            )}
+          </main>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

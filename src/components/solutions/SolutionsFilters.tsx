@@ -25,8 +25,6 @@ interface SolutionsFiltersProps {
   setSelectedTags: (tags: string[]) => void;
   statusFilter: string;
   setStatusFilter: (status: string) => void;
-  publicFilter: string;
-  setPublicFilter: (filter: string) => void;
   sortBy: string;
   setSortBy: (sort: string) => void;
   sortOrder: 'asc' | 'desc';
@@ -40,8 +38,6 @@ export default function SolutionsFilters({
   setSelectedTags,
   statusFilter,
   setStatusFilter,
-  publicFilter,
-  setPublicFilter,
   sortBy,
   setSortBy,
   sortOrder,
@@ -71,7 +67,6 @@ export default function SolutionsFilters({
     setSearchQuery('');
     setSelectedTags([]);
     setStatusFilter('all');
-    setPublicFilter('all');
     setSortBy('date');
     setSortOrder('desc');
   };
@@ -117,21 +112,6 @@ export default function SolutionsFilters({
                 <SelectItem value="解説AC">解説AC</SelectItem>
                 <SelectItem value="挑戦中">挑戦中</SelectItem>
                 <SelectItem value="本番未AC">本番未AC</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Public Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">公開設定</label>
-            <Select value={publicFilter} onValueChange={setPublicFilter}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
-                <SelectItem value="public">公開</SelectItem>
-                <SelectItem value="private">非公開</SelectItem>
               </SelectContent>
             </Select>
           </div>
