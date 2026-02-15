@@ -27,7 +27,6 @@ import {
 } from 'platejs';
 import { KEYS } from '@/lib/plate/constants';
 
-
 const ACTION_THREE_COLUMNS = 'action_three_columns';
 
 const insertList = (editor: PlateEditor, type: string) => {

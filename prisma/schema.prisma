@@ -55,8 +55,30 @@ model User {
   submissions               Submission[]
   solutions                 Solution[]
   userTags                  UserTag[]
+  ratingHistory             UserRatingHistory[]
 
   @@map("users")
+}
+
+model UserRatingHistory {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  isRated           Boolean  @map("is_rated")
+  place             Int
+  oldRating         Int      @map("old_rating")
+  newRating         Int      @map("new_rating")
+  performance       Int
+  innerPerformance  Int      @map("inner_performance")
+  contestScreenName String   @map("contest_screen_name")
+  contestName       String   @map("contest_name")
+  contestNameEn     String   @map("contest_name_en")
+  endTime           DateTime @map("end_time")
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([userId, contestScreenName])
+  @@map("user_rating_history")
 }
 
 model VerificationToken {
