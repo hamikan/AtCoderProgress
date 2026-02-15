@@ -23,9 +23,10 @@ import {
   type NodeEntry,
   type Path,
   type TElement,
-  KEYS,
   PathApi,
 } from 'platejs';
+import { KEYS } from '@/lib/plate/constants';
+
 
 const ACTION_THREE_COLUMNS = 'action_three_columns';
 

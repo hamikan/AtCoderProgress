@@ -24,7 +24,7 @@ import {
   QuoteIcon,
   SquareIcon,
 } from 'lucide-react';
-import { KEYS } from 'platejs';
+import { KEYS } from '@/lib/plate/constants';
 import { useEditorRef, useSelectionFragmentProp } from 'platejs/react';
 
 import {

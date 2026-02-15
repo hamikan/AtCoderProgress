@@ -4,7 +4,6 @@ import * as React from 'react';
 
 import type { PlateEditor, PlateElementProps } from 'platejs/react';
 
-import { AIChatPlugin } from '@platejs/ai/react';
 import {
   CalendarIcon,
   ChevronRightIcon,
@@ -20,12 +19,12 @@ import {
   PilcrowIcon,
   Quote,
   RadicalIcon,
-  SparklesIcon,
   Square,
   Table,
   TableOfContentsIcon,
 } from 'lucide-react';
-import { type TComboboxInputElement, KEYS } from 'platejs';
+import { type TComboboxInputElement } from 'platejs';
+import { KEYS } from '@/lib/plate/constants';
 import { PlateElement } from 'platejs/react';
 
 import {
@@ -57,19 +56,6 @@ type Group = {
 };
 
 const groups: Group[] = [
-  {
-    group: 'AI',
-    items: [
-      {
-        focusEditor: false,
-        icon: <SparklesIcon />,
-        value: 'AI',
-        onSelect: (editor) => {
-          editor.getApi(AIChatPlugin).aiChat.show();
-        },
-      },
-    ],
-  },
   {
     group: 'Basic blocks',
     items: [
@@ -169,7 +155,8 @@ const groups: Group[] = [
       {
         focusEditor: false,
         icon: <RadicalIcon />,
-        label: 'Equation',
+        keywords: ['math', 'block'],
+        label: 'Math (block)',
         value: KEYS.equation,
       },
       {
@@ -211,7 +198,8 @@ const groups: Group[] = [
       {
         focusEditor: false,
         icon: <RadicalIcon />,
-        label: 'Inline Equation',
+        keywords: ['math', 'inline'],
+        label: 'Math (inline)',
         value: KEYS.inlineEquation,
       },
     ].map((item) => ({

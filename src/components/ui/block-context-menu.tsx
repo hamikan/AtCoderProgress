@@ -8,7 +8,7 @@ import {
   BlockMenuPlugin,
   BlockSelectionPlugin,
 } from '@platejs/selection/react';
-import { KEYS } from 'platejs';
+import { KEYS } from '@/lib/plate/constants';
 import { useEditorPlugin, usePlateState, usePluginOption } from 'platejs/react';
 
 import {

@@ -28,7 +28,7 @@ import {
   TableIcon,
   TableOfContentsIcon,
 } from 'lucide-react';
-import { KEYS } from 'platejs';
+import { KEYS } from '@/lib/plate/constants';
 import { type PlateEditor, useEditorRef } from 'platejs/react';
 
 import {

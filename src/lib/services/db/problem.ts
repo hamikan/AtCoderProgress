@@ -184,3 +184,22 @@ export async function getProblemListFromDB({
 
   return { problems, totalProblems };
 }
+
+export async function searchProblemsFromDB(query: string, limit: number = 10) {
+  if (!query || query.length < 2) return [];
+
+  return await prisma.problem.findMany({
+    where: {
+      OR: [
+        { id: { contains: query, mode: 'insensitive' } },
+        { name: { contains: query, mode: 'insensitive' } },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      firstContestId: true,
+    },
+    take: limit,
+  });
+}
