@@ -1,142 +1,123 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, Star, Clock, Target, TrendingUp } from 'lucide-react';
-import { getDifficultyColor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { ExternalLink, Edit3, Target } from 'lucide-react';
 
-export default function RecommendedProblems() {
-  const recommendedProblems = [
+export default function RecommendedProblems({ className }: { className?: string }) {
+  // Mock Data mimicking the user's HTML structure desires
+  const solvedProblems = [
     {
       id: 'abc301_d',
-      title: 'Bitmask',
+      title: 'Maximum Subarray Sum',
       contest: 'AtCoder Beginner Contest 301',
-      difficulty: 1200,
-      tags: ['ビット演算', '全探索'],
-      reason: 'ビット演算が苦手分野として特定されました',
-      priority: 'high',
-      estimatedTime: '30分',
-      successRate: '65%',
+      difficulty: 1450,
+      color: '#00C0C0', // Cyan
+      tags: ['DP', 'Greedy'],
+      url: 'https://atcoder.jp/contests/abc301/tasks/abc301_d',
     },
     {
       id: 'abc298_c',
-      title: 'Cards Query Problem',
+      title: 'Binary Tree Level Order',
       contest: 'AtCoder Beginner Contest 298',
-      difficulty: 1100,
-      tags: ['データ構造', 'map'],
-      reason: 'データ構造の理解を深めるのに最適です',
-      priority: 'medium',
-      estimatedTime: '25分',
-      successRate: '72%',
-    },
-    {
-      id: 'abc295_d',
-      title: 'Three Days Ago',
-      contest: 'AtCoder Beginner Contest 295',
-      difficulty: 1300,
-      tags: ['文字列', 'ハッシュ'],
-      reason: '文字列処理のスキル向上におすすめ',
-      priority: 'medium',
-      estimatedTime: '35分',
-      successRate: '58%',
+      difficulty: 850,
+      color: '#008000', // Green
+      tags: ['BFS', 'Trees'],
+      url: 'https://atcoder.jp/contests/abc298/tasks/abc298_c',
     },
   ];
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'medium':
-        return 'bg-amber-100 text-amber-700 border-amber-200';
-      default:
-        return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
+  const unsolvedProblems = [
+    {
+      id: 'abc220_f',
+      title: 'Shortest Path in Grid',
+      contest: 'AtCoder Beginner Contest 220',
+      difficulty: 2200,
+      color: '#C0C000', // Yellow
+      tags: ['Graphs', 'Dijkstra'],
+      url: 'https://atcoder.jp/contests/abc220/tasks/abc220_f',
+    },
+    {
+      id: 'abc255_e',
+      title: 'Advanced Network Flow',
+      contest: 'AtCoder Beginner Contest 255',
+      difficulty: 2550,
+      color: '#FF8000', // Orange
+      tags: ['Network Flow', 'Optimization'],
+      url: 'https://atcoder.jp/contests/abc255/tasks/abc255_e',
+    },
+  ];
+
+  const ProblemRow = ({ problem, isLast = false }: { problem: any, isLast?: boolean }) => (
+    <div className={cn(
+      "px-6 py-5 flex items-center justify-between hover:bg-background-light/50 dark:hover:bg-white/5 transition-colors group",
+      !isLast && "border-b border-background-light dark:border-white/5"
+    )}>
+      <div className="flex flex-col gap-1.5 flex-1">
+        <div className="flex items-center gap-3">
+          <span
+            className="text-sm font-semibold px-2.5 py-0.5 rounded-lg"
+            style={{ backgroundColor: `${problem.color}1A`, color: problem.color }} // 10% opacity hex if possible, or just use style
+          >
+            {problem.difficulty}
+          </span>
+          <a href={problem.url} target="_blank" rel="noreferrer">
+            <h3 className="text-[15px] font-semibold text-[#111818] dark:text-white group-hover:text-primary transition-colors cursor-pointer">
+              {problem.title}
+            </h3>
+          </a>
+        </div>
+        <div className="flex gap-2">
+          {problem.tags.map((tag: string) => (
+            <span key={tag} className="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col gap-3 ml-4 text-slate-400 dark:text-slate-600">
+        <a href={problem.url} target="_blank" rel="noreferrer" title="Open problem">
+          <ExternalLink className="w-[18px] h-[18px] hover:text-primary cursor-pointer transition-colors" />
+        </a>
+        <button title="Write solution">
+          <Edit3 className="w-[18px] h-[18px] hover:text-primary cursor-pointer transition-colors" />
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Target className="h-5 w-5 text-emerald-600" />
-            <CardTitle className="text-lg font-semibold text-slate-900">
-              あなたにおすすめの問題
-            </CardTitle>
-          </div>
-          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
-            AI推薦
-          </Badge>
+    <div className={cn(
+      "w-full bg-white dark:bg-[#1a2e2e] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-primary/10 overflow-hidden flex flex-col",
+      className
+    )}>
+      {/* Header Section */}
+      <div className="px-6 pt-6 pb-4 flex items-center justify-between border-b border-background-light dark:border-white/5 shrink-0">
+        <div className="flex items-center gap-2">
+          <Target className="text-emerald-500 w-6 h-6" />
+          <h2 className="text-lg font-bold text-[#111818] dark:text-white">次解くべき問題</h2>
         </div>
-        <p className="text-sm text-slate-600">
-          苦手分野の分析結果に基づいて、最適な問題を提案しています
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {recommendedProblems.map((problem, index) => (
-          <div
-            key={problem.id}
-            className="group relative rounded-lg border border-slate-200 p-4 transition-all hover:border-slate-300 hover:shadow-sm"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Badge
-                    className={`text-xs ${getPriorityColor(problem.priority)}`}
-                  >
-                    {problem.priority === 'high' ? '最優先' : '推奨'}
-                  </Badge>
-                  <span className={`text-sm font-medium ${getDifficultyColor(problem.difficulty)}`}>
-                    {problem.difficulty}
-                  </span>
-                </div>
-                
-                <h3 className="font-semibold text-slate-900 group-hover:text-slate-700">
-                  {problem.title}
-                </h3>
-                
-                <p className="text-sm text-slate-600">{problem.contest}</p>
-                
-                <div className="flex flex-wrap gap-1">
-                  {problem.tags.map((tag, tagIndex) => (
-                    <Badge key={tagIndex} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                
-                <p className="text-sm text-slate-600 italic">{problem.reason}</p>
-                
-                <div className="flex items-center space-x-4 text-xs text-slate-500">
-                  <div className="flex items-center space-x-1">
-                    <Clock className="h-3 w-3" />
-                    <span>予想時間: {problem.estimatedTime}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <TrendingUp className="h-3 w-3" />
-                    <span>成功率: {problem.successRate}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col space-y-2">
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  解く
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Star className="h-3 w-3 mr-1" />
-                  保存
-                </Button>
-              </div>
-            </div>
+      </div>
+
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
+        <div className="flex flex-col">
+          {/* Section: AC済み */}
+          <div className="px-6 py-2 bg-background-light/30 dark:bg-white/5 border-b border-background-light dark:border-white/5 bg-green-50 dark:bg-green-900/20">
+            <span className="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">AC済み</span>
           </div>
-        ))}
-        
-        <div className="pt-4 border-t border-slate-200">
-          <Button variant="outline" className="w-full">
-            さらに問題を見る
-          </Button>
+
+          {solvedProblems.map((problem) => (
+            <ProblemRow key={problem.id} problem={problem} />
+          ))}
+
+          {/* Section: 未AC */}
+          <div className="px-6 py-2 bg-background-light/30 dark:bg-white/5 border-t border-b border-background-light dark:border-white/5 bg-yellow-50 dark:bg-yellow-900/20">
+            <span className="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">未AC</span>
+          </div>
+
+          {unsolvedProblems.map((problem, index) => (
+            <ProblemRow key={problem.id} problem={problem} isLast={index === unsolvedProblems.length - 1} />
+          ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

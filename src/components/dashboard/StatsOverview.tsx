@@ -6,14 +6,12 @@ type StatKind =
   | 'acCount'
   | 'rating'
   | 'monthlySolved'
-  | 'streak'
-  | 'strength'
-  | 'weakness';
+  | 'streak';
 
 type ChangeType = 'increase' | 'decrease' | 'neutral';
 type StatValue = string | number;
 
-interface StatInput {
+export interface StatInput {
   value: StatValue;
   change?: StatValue;
   changeType?: ChangeType;
@@ -21,6 +19,7 @@ interface StatInput {
 
 interface StatsOverviewProps {
   stats?: Partial<Record<StatKind, StatInput>>;
+  children?: React.ReactNode;
 }
 
 const STAT_META: Record<
@@ -51,18 +50,6 @@ const STAT_META: Record<
     color: 'text-purple-600',
     bgColor: 'bg-purple-50',
   },
-  strength: {
-    title: '得意分野',
-    icon: Award,
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-  },
-  weakness: {
-    title: '改善ポイント',
-    icon: Zap,
-    color: 'text-red-600',
-    bgColor: 'bg-red-50',
-  },
 };
 
 const DEFAULT_STATS: Record<StatKind, StatInput> = {
@@ -70,8 +57,6 @@ const DEFAULT_STATS: Record<StatKind, StatInput> = {
   rating: { value: 1247, change: '+45', changeType: 'increase' },
   monthlySolved: { value: 89, change: '+12', changeType: 'increase' },
   streak: { value: 15, change: '継続中', changeType: 'neutral' },
-  strength: { value: 'DP', change: '87% AC', changeType: 'neutral' },
-  weakness: { value: 'グラフ', change: '要強化', changeType: 'decrease' },
 };
 
 const formatValue = (value: StatValue | undefined) => {
@@ -99,14 +84,12 @@ const resolveChangeType = (changeType: ChangeType | undefined, change: StatValue
   return undefined;
 };
 
-export default function StatsOverview({ stats }: StatsOverviewProps) {
+export default function StatsOverview({ stats, children }: StatsOverviewProps) {
   const order: StatKind[] = [
     'acCount',
     'rating',
     'monthlySolved',
     'streak',
-    'strength',
-    'weakness',
   ];
 
   const merged = order.map((kind) => ({
@@ -117,7 +100,7 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
   }));
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
       {merged.map((stat) => {
         const changeText = formatChange(stat.change);
         const changeType = resolveChangeType(stat.changeType, stat.change);
@@ -141,15 +124,15 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
                       changeType === 'increase'
                         ? 'default'
                         : changeType === 'decrease'
-                        ? 'destructive'
-                        : 'secondary'
+                          ? 'destructive'
+                          : 'secondary'
                     }
                     className="text-xs"
                   >
                     {changeText}
                   </Badge>
                 )}
-                {changeType === 'increase' && (
+                {(changeType === 'increase' || changeType === 'decrease') && (
                   <span className="text-slate-500">前月比</span>
                 )}
               </div>
@@ -157,6 +140,7 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
           </Card>
         );
       })}
+      {children}
     </div>
   );
 }
