@@ -8,20 +8,10 @@ import { getDifficultyColor } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
-interface RecentActivityItem {
-  id: number;
-  epochSecond: number;
-  problemId: string;
-  contestId: string;
-  title: string;
-  result: string;
-  language: string;
-  point: number;
-  difficulty: number | null;
-}
+import { ActivityData } from '@/lib/services/db/stats/activity';
 
 interface RecentActivityProps {
-  activities?: RecentActivityItem[];
+  activities?: ActivityData[];
 }
 
 export default function RecentActivity({ activities }: RecentActivityProps) {

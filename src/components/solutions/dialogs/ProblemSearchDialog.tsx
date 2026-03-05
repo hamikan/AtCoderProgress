@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Search, Loader2 } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { searchProblems } from '@/lib/actions/problem';

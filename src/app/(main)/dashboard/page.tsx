@@ -50,8 +50,6 @@ export default async function Dashboard() {
     },
     streak: {
       value: stats.currentStreak,
-      change: '継続中',
-      changeType: 'neutral' as const
     },
   };
 

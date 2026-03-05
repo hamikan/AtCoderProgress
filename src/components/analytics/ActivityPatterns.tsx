@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Calendar, Trophy, Target } from 'lucide-react';
+import { Clock, Calendar, Trophy } from 'lucide-react';
 
 export default function ActivityPatterns() {
   // Sample data for activity patterns
@@ -87,7 +87,7 @@ export default function ActivityPatterns() {
     .filter(h => h.problems >= maxHourlyProblems * 0.8)
     .map(h => h.hour);
 
-  const bestDay = weeklyActivity.reduce((best, current) => 
+  const bestDay = weeklyActivity.reduce((best, current) =>
     current.problems > best.problems ? current : best
   );
 
@@ -106,7 +106,7 @@ export default function ActivityPatterns() {
             <p className="text-xs text-slate-600">ピークタイム</p>
           </CardContent>
         </Card>
-        
+
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-slate-600">最も活発な曜日</CardTitle>
@@ -116,7 +116,7 @@ export default function ActivityPatterns() {
             <p className="text-xs text-slate-600">{bestDay.problems}問解答</p>
           </CardContent>
         </Card>
-        
+
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-slate-600">コンテスト参加率</CardTitle>
@@ -126,7 +126,7 @@ export default function ActivityPatterns() {
             <p className="text-xs text-slate-600">過去3ヶ月</p>
           </CardContent>
         </Card>
-        
+
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-slate-600">平均解答時間</CardTitle>
@@ -217,7 +217,7 @@ export default function ActivityPatterns() {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-slate-900">{contest.contest}</h3>
                   <div className="flex items-center space-x-2">
-                    <Badge 
+                    <Badge
                       variant={contest.ratingChange >= 0 ? "default" : "destructive"}
                       className="text-xs"
                     >
