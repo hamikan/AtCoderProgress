@@ -10,7 +10,7 @@ import RatingGraph from '@/components/dashboard/RatingGraph';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { redirect } from 'next/navigation';
-import { getUserStats, getRatingHistoryData, getHeatmapData, getRecentActivity, getTagStats } from '@/lib/services/db/stats';
+import { getUserStats, getRatingHistoryData, getHeatmapData, getRecentActivity, getTagStats, getRecommendedProblems } from '@/lib/services/db/stats';
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
@@ -22,12 +22,13 @@ export default async function Dashboard() {
   const userId = session.user.id;
 
   // Fetch all data in parallel
-  const [stats, ratingHistory, heatmapData, recentActivity, tagStats] = await Promise.all([
+  const [stats, ratingHistory, heatmapData, recentActivity, tagStats, recommendedProblems] = await Promise.all([
     getUserStats(userId),
     getRatingHistoryData(userId),
     getHeatmapData(userId),
     getRecentActivity(userId),
-    getTagStats(userId)
+    getTagStats(userId),
+    getRecommendedProblems(userId),
   ]);
 
   // Map Real Stats to StatsOverview Props
@@ -69,7 +70,7 @@ export default async function Dashboard() {
 
           {/* Sidebar (1/3) */}
           <div className="space-y-8">
-            <RecommendedProblems />
+            <RecommendedProblems data={recommendedProblems} />
             <TagRadar initialStats={tagStats} />
           </div>
         </div>

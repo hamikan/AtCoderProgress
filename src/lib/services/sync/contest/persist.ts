@@ -21,9 +21,7 @@ export async function persistContestData(data: NormalizedContestData) {
   }
 
   console.log(`Upserting ${problems.length} problems...`);
-  // Process problems in chunks to avoid "heap out of memory" or connection issues if parallel, 
-  // but strictly sequential is fine, just slow.
-  // Let's keep it sequential for safety as requested.
+  const insertedProblemIds = new Set<string>();
   for (const problem of problems) {
     await prisma.problem.upsert({
       where: { id: problem.id },
@@ -39,10 +37,18 @@ export async function persistContestData(data: NormalizedContestData) {
         firstContestId: problem.firstContestId,
       },
     });
+    insertedProblemIds.add(problem.id);
   }
 
   console.log(`Upserting ${contestProblems.length} contest-problem relations...`);
+  let skippedCount = 0;
   for (const cp of contestProblems) {
+    // Ensure problem exists before linking
+    if (!insertedProblemIds.has(cp.problemId)) {
+      skippedCount++;
+      continue;
+    }
+
     await prisma.contestProblem.upsert({
       where: {
         contestId_problemId: {
@@ -59,5 +65,8 @@ export async function persistContestData(data: NormalizedContestData) {
         problemIndex: cp.problemIndex,
       },
     });
+  }
+  if (skippedCount > 0) {
+    console.log(`Skipped ${skippedCount} contest-problem relations due to missing problems.`);
   }
 }

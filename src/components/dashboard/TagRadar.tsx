@@ -18,6 +18,7 @@ export interface TagStat {
   score: number; // 0-100
   total: number;
   solved: number;
+  type?: 'official' | 'unofficial';
 }
 
 interface TagRadarProps {
@@ -261,20 +262,25 @@ export default function TagRadar({ initialStats = [] }: TagRadarProps) {
               {displayStats.map((item, index) => (
                 <div key={item.name} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span className="text-sm font-medium text-slate-700">
+                    <div className={`w-2 h-2 rounded-full ${item.type === 'unofficial' ? 'bg-slate-300' : 'bg-blue-500'}`} />
+                    <span
+                      className={`text-sm font-medium text-slate-700 ${item.type === 'official' || !item.type
+                        ? 'border border-slate-200 bg-slate-50 px-2 py-0.5 rounded'
+                        : 'px-2 py-0.5 text-slate-500'
+                        }`}
+                    >
                       {item.name}
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="w-20 h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 transition-all duration-300"
+                        className={`h-full transition-all duration-300 ${item.type === 'unofficial' ? 'bg-slate-400' : 'bg-blue-500'}`}
                         style={{ width: `${item.score}%` }}
                       />
                     </div>
                     <div className="flex items-center gap-2 min-w-[60px] justify-end">
-                      <span className={`text-sm font-bold ${COLORS[index % COLORS.length]}`}>
+                      <span className={`text-sm font-bold ${item.type === 'unofficial' ? 'text-slate-500' : COLORS[index % COLORS.length]}`}>
                         {item.score}%
                       </span>
                       <span className="text-[10px] text-slate-400">
