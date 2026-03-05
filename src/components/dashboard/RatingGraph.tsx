@@ -43,11 +43,9 @@ export default function RatingGraph({ data }: RatingGraphProps) {
     );
   }
 
-  const minRating = Math.min(...filteredData.map((d) => d.rating));
   const maxRating = Math.max(...filteredData.map((d) => d.rating));
 
   // Dynamic Y-axis domain padding with 400 steps
-  const yMin = Math.max(0, Math.floor(minRating / 400) * 400);
   const yMax = Math.ceil(maxRating / 400) * 400;
   // Ensure at least one band is shown above the max rating for visual breathing room if it's close to the top
   const domainMax = yMax < maxRating + 100 ? yMax + 400 : yMax;

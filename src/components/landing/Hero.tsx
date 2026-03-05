@@ -1,13 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, TrendingUp, Target, Users } from 'lucide-react';
+import { ArrowRight, TrendingUp } from 'lucide-react';
 
 export default function Hero() {
   return (
     <section className="relative overflow-hidden py-20 sm:py-32">
       <div className="absolute inset-0 bg-gradient-to-r from-slate-800/5 to-blue-800/5" />
-      
+
       <div className="container relative mx-auto px-4">
         <div className="mx-auto max-w-4xl text-center">
           {/* Badge */}

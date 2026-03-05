@@ -12,17 +12,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  ChevronLeft,
   Save,
-  Sparkles,
   CheckCircle2,
-  Tag as TagIcon,
   X,
-  Clock,
-  Database,
   Plus
 } from 'lucide-react';
-import Link from 'next/link';
 import { SolutionStatus } from '@prisma/client';
 import type { SolutionWithTags } from '@/lib/services/db/solution';
 import type { AvailableTag } from '@/lib/services/db/tag';
@@ -161,8 +155,8 @@ export default function SolutionEditor({ problem, initialSolution, availableTags
                     key={tag.id}
                     onClick={() => handleTagToggle(tag.name)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${selectedTags.includes(tag.name)
-                        ? 'bg-slate-100 text-slate-800 border-slate-200'
-                        : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
+                      ? 'bg-slate-100 text-slate-800 border-slate-200'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
                       } group`}
                   >
                     <span>{tag.name}</span>

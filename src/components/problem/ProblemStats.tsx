@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Clock, XCircle, Target, TrendingUp, BookOpen } from 'lucide-react';
+import { CheckCircle, Clock, Target, BookOpen } from 'lucide-react';
 
 interface ProblemStatsProps {
   stats: {
@@ -73,8 +73,8 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
                     stat.changeType === 'increase'
                       ? 'default'
                       : stat.changeType === 'decrease'
-                      ? 'destructive'
-                      : 'secondary'
+                        ? 'destructive'
+                        : 'secondary'
                   }
                   className="text-xs"
                 >

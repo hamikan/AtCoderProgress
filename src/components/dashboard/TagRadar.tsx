@@ -12,14 +12,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
-// Duplicate interface to avoid server import issues in client component
-export interface TagStat {
-  name: string;
-  score: number; // 0-100
-  total: number;
-  solved: number;
-  type?: 'official' | 'unofficial';
-}
+import type { TagStat } from '@/lib/services/db/stats/tags';
 
 interface TagRadarProps {
   initialStats?: TagStat[];

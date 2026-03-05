@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Calendar, Award, Target } from 'lucide-react';
+import { TrendingUp, Calendar, Award, Target } from 'lucide-react';
 
 interface GrowthTrendsProps {
   selectedPeriod: string;

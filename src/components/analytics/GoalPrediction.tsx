@@ -7,12 +7,6 @@ import { Progress } from '@/components/ui/progress';
 import { Target, Calendar, TrendingUp, Lightbulb, CheckCircle, Clock } from 'lucide-react';
 
 export default function GoalPrediction() {
-  const currentStats = {
-    rating: 1247,
-    acCount: 1456,
-    weeklyProblems: 12,
-    monthlyGrowth: 23,
-  };
 
   const goals = [
     {
@@ -234,7 +228,7 @@ export default function GoalPrediction() {
                   <div className="text-xs text-blue-700">予想達成日数</div>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <h4 className="font-medium text-slate-900 flex items-center space-x-2">
                   <CheckCircle className="h-4 w-4 text-emerald-600" />

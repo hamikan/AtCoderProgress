@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Trophy, Target, Calendar, Award, Zap } from 'lucide-react';
+import { TrendingUp, Trophy, Target, Calendar } from 'lucide-react';
 
 type StatKind =
   | 'acCount'
@@ -56,7 +56,7 @@ const DEFAULT_STATS: Record<StatKind, StatInput> = {
   acCount: { value: 1247, change: '+23', changeType: 'increase' },
   rating: { value: 1247, change: '+45', changeType: 'increase' },
   monthlySolved: { value: 89, change: '+12', changeType: 'increase' },
-  streak: { value: 15, change: '継続中', changeType: 'neutral' },
+  streak: { value: 15 },
 };
 
 const formatValue = (value: StatValue | undefined) => {
@@ -117,7 +117,7 @@ export default function StatsOverview({ stats, children }: StatsOverviewProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-slate-900">{formatValue(stat.value)}</div>
-              <div className="flex items-center space-x-1 text-xs">
+              <div className="flex items-center space-x-1 text-xs h-5 mt-1">
                 {showBadge && (
                   <Badge
                     variant={

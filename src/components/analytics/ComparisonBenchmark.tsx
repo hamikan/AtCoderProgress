@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, TrendingUp, Target, Award, Crown, Star } from 'lucide-react';
+import { Users, TrendingUp, Target, Crown, Star } from 'lucide-react';
 
 export default function ComparisonBenchmark() {
   const ratingComparison = {
@@ -160,7 +160,7 @@ export default function ComparisonBenchmark() {
             <p className="text-xs text-slate-600">全体ランキング</p>
           </CardContent>
         </Card>
-        
+
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-slate-600">上位パーセンタイル</CardTitle>
@@ -170,7 +170,7 @@ export default function ComparisonBenchmark() {
             <p className="text-xs text-slate-600">全ユーザー中</p>
           </CardContent>
         </Card>
-        
+
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-slate-600">目標まで</CardTitle>
@@ -271,7 +271,7 @@ export default function ComparisonBenchmark() {
               <div key={index} className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium text-slate-900">{alg.algorithm}</h3>
-                  <Badge 
+                  <Badge
                     variant={alg.rank === 'above_average' ? "default" : "destructive"}
                     className="text-xs"
                   >
@@ -311,18 +311,16 @@ export default function ComparisonBenchmark() {
         <CardContent>
           <div className="space-y-3">
             {leaderboard.map((user, index) => (
-              <div 
-                key={index} 
-                className={`flex items-center justify-between p-3 rounded-lg ${
-                  user.isCurrentUser 
-                    ? 'bg-blue-50 border-2 border-blue-200' 
+              <div
+                key={index}
+                className={`flex items-center justify-between p-3 rounded-lg ${user.isCurrentUser
+                    ? 'bg-blue-50 border-2 border-blue-200'
                     : 'border border-slate-200'
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    user.rank <= 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${user.rank <= 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'
+                    }`}>
                     {user.rank <= 3 && <Crown className="h-4 w-4" />}
                     {user.rank > 3 && user.rank}
                   </div>

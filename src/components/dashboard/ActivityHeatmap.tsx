@@ -3,15 +3,15 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
-import { HeatmapDay } from '@/lib/activity-heatmap';
+import type { HeatmapData } from '@/lib/services/db/stats/heatmap';
 
 interface ActivityHeatmapProps {
-  data: HeatmapDay[];
+  data: HeatmapData[];
 }
 
 export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
   const weeks = useMemo(() => {
-    const result: HeatmapDay[][] = [];
+    const result: HeatmapData[][] = [];
     for (let i = 0; i < data.length; i += 7) {
       result.push(data.slice(i, i + 7));
     }
@@ -34,11 +34,6 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
         return 'bg-slate-100';
     }
   };
-
-  const months = [
-    '1月', '2月', '3月', '4月', '5月', '6月',
-    '7月', '8月', '9月', '10月', '11月', '12月'
-  ];
 
   const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
 
