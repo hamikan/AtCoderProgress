@@ -56,6 +56,7 @@ model User {
   solutions                 Solution[]
   userTags                  UserTag[]
   ratingHistory             UserRatingHistory[]
+  problemReviews            ProblemReview[]
 
   @@map("users")
 }
@@ -131,6 +132,7 @@ model Problem {
   submissions         Submission[]
   solutions           Solution[]
   problemTags         ProblemTag[]
+  reviews             ProblemReview[]
 
   @@map("problems")
 }
@@ -176,6 +178,24 @@ model Solution {
   @@map("solutions")
 }
 
+model ProblemReview {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  problemId      String    @map("problem_id")
+  stars          Int       @default(3)
+  reviewPriority Int       @default(3) @map("review_priority")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem        Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([userId])
+  @@index([problemId])
+  @@map("problem_reviews")
+}
+
 model Tag {
   id            String          @id @default(nanoid())
   name          String          @unique
@@ -199,6 +219,7 @@ model UserTag {
   solutions     SolutionUserTag[]
 
   @@unique([createdById, name])
+  @@unique([createdById, tagId])
   @@map("user_tags")
 }
 
