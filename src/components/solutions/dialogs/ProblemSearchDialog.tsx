@@ -22,9 +22,10 @@ interface Problem {
 interface ProblemSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSelectProblem?: (problemId: string) => void;
 }
 
-export default function ProblemSearchDialog({ open, onOpenChange }: ProblemSearchDialogProps) {
+export default function ProblemSearchDialog({ open, onOpenChange, onSelectProblem }: ProblemSearchDialogProps) {
   const [search, setSearch] = useState('');
   const [problems, setProblems] = useState<Problem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +55,11 @@ export default function ProblemSearchDialog({ open, onOpenChange }: ProblemSearc
 
   const handleSelect = (problemId: string) => {
     onOpenChange(false);
-    router.push(`/solutions/${problemId}`);
+    if (onSelectProblem) {
+      onSelectProblem(problemId);
+    } else {
+      router.push(`/solutions/${problemId}`);
+    }
   };
 
   return (

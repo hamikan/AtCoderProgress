@@ -1,6 +1,4 @@
-import "@/app/globals.css";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 
 export default function RootLayout({
   children,
@@ -8,12 +6,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex flex-col flex-grow">
+    <div className="flex flex-col h-svh overflow-hidden">
       <Header />
-      <main className="flex-grow">
+      <main className="flex-1 overflow-hidden contain-layout">
         {children}
       </main>
-      <Footer />
     </div>
   );
 }

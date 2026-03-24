@@ -61,3 +61,39 @@ export async function getSolutionByProblemId(userId: string, problemId: string):
     },
   });
 }
+
+/**
+ * サイドバー表示用の解法一覧アイテム
+ */
+export interface SolutionListItem {
+  id: string;
+  problemId: string;
+  problemName: string;
+  contestId: string;
+  difficulty: number | null;
+  status: SolutionStatus;
+  updatedAt: Date;
+}
+
+/**
+ * ユーザーの解法一覧を取得します（サイドバー表示用）。
+ */
+export async function getUserSolutions(userId: string): Promise<SolutionListItem[]> {
+  const solutions = await prisma.solution.findMany({
+    where: { userId },
+    include: {
+      problem: true,
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  return solutions.map(s => ({
+    id: s.id,
+    problemId: s.problemId,
+    problemName: s.problem.name,
+    contestId: s.problem.firstContestId,
+    difficulty: s.problem.difficulty,
+    status: s.status,
+    updatedAt: s.updatedAt,
+  }));
+}

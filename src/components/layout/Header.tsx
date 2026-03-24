@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/options';
 import UserMenu from './UserMenu';
 
-export default async function DashboardHeader() {
+export default async function Header() {
   const session = await getServerSession(authOptions);
   const user = session?.user;
 

@@ -4,7 +4,6 @@ import ActivityHeatmap from '@/components/dashboard/ActivityHeatmap';
 import TagRadar from '@/components/dashboard/TagRadar';
 import RecommendedProblems from '@/components/dashboard/RecommendedProblems';
 import RecentActivity from '@/components/dashboard/RecentActivity';
-// import { generateHeatmapData } from '@/lib/activity-heatmap'; // Use real data instead
 import RatingGraph from '@/components/dashboard/RatingGraph';
 
 import { getServerSession } from 'next-auth';
@@ -21,7 +20,6 @@ export default async function Dashboard() {
 
   const userId = session.user.id;
 
-  // Fetch all data in parallel
   const [stats, ratingHistory, heatmapData, recentActivity, tagStats, recommendedProblems] = await Promise.all([
     getUserStats(userId),
     getRatingHistoryData(userId),
@@ -31,7 +29,6 @@ export default async function Dashboard() {
     getRecommendedProblems(userId),
   ]);
 
-  // Map Real Stats to StatsOverview Props
   const overviewStats = {
     acCount: {
       value: stats.acCount,
@@ -54,12 +51,12 @@ export default async function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="h-full overflow-y-auto bg-slate-50">
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="w-full max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Main Content (2/3) */}
-          <div className="xl:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-4 lg:space-y-8">
             <StatsOverview stats={overviewStats} />
             <RatingGraph data={ratingHistory} />
             <ActivityHeatmap data={heatmapData} />
@@ -67,12 +64,12 @@ export default async function Dashboard() {
           </div>
 
           {/* Sidebar (1/3) */}
-          <div className="space-y-8">
+          <div className="space-y-4 lg:space-y-8">
             <RecommendedProblems data={recommendedProblems} />
             <TagRadar initialStats={tagStats} />
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
