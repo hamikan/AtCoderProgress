@@ -8,8 +8,8 @@ export interface AvailableTag {
 export async function getAvailableTagsFromDB(userId?: string): Promise<Array<AvailableTag>> {
   const [allMasterTags, userTags] = await Promise.all([
     prisma.tag.findMany(),
-    userId 
-      ? prisma.userTag.findMany({ where: { createdById: userId } }) 
+    userId
+      ? prisma.userTag.findMany({ where: { createdById: userId } })
       : [],
   ]);
 

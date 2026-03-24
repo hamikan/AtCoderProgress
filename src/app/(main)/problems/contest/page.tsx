@@ -52,19 +52,17 @@ export default async function ContestPage({ searchParams }: ContestPageProps) {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50 h-full">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-slate-50 h-full overflow-y-auto">
+      <div className="w-full max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
           <div className="flex-1">
-            <Suspense fallback={<div className="text-center p-8">Loading contests...</div>}>
-              <ContestTable
-                contests={contests}
-                problemIndexes={problemIndexes}
-                submissionStatusMap={submissionStatusMap}
-              />
-            </Suspense>
+            <ContestTable
+              contests={contests}
+              problemIndexes={problemIndexes}
+              submissionStatusMap={submissionStatusMap}
+            />
           </div>
-          <div className="w-full lg:w-80">
+          <div className="w-full lg:w-80 lg:sticky lg:top-8 h-fit">
             <ProblemStats stats={stats} />
           </div>
         </div>

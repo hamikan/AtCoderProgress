@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AtCoder Progress",
-  description: "AtCoderの勉強記録を可視化し、苦手分野を自動分析して最適な問題推薦を行うアプリケーション",
+  description: "AtCoderの精進を記録、可視化し、ユーザーに合った問題推薦を行うWEBサイト",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
           {children}

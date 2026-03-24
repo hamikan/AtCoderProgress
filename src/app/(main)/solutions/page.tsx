@@ -1,77 +1,43 @@
-'use client';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth/options';
+import { redirect } from 'next/navigation';
+import { getUserSolutions, getSolutionByProblemId, getProblemDetail } from '@/lib/services/db/solution';
+import { getAvailableTagsFromDB } from '@/lib/services/db/tag';
+import SolutionsWorkspace from '@/components/solutions/SolutionsWorkspace';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import SolutionsList from '@/components/solutions/SolutionsList';
-import SolutionsFilters from '@/components/solutions/SolutionsFilters';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import ProblemSearchDialog from '@/components/solutions/dialogs/ProblemSearchDialog';
+export default async function SolutionsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    redirect('/login');
+  }
 
-export default function SolutionsPage() {
-  const router = useRouter();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const userId = session.user.id;
 
-  const handleNewSolution = () => {
-    setIsSearchOpen(true);
-  };
+  const [solutions, availableTags] = await Promise.all([
+    getUserSolutions(userId),
+    getAvailableTagsFromDB(userId),
+  ]);
 
-  const handleEditSolution = (solution: any) => {
-    router.push(`/solutions/${solution.problemId}`);
-  };
+  // 最新の解法をデフォルトで表示
+  let initialProblem = null;
+  let initialSolution = null;
+
+  if (solutions.length > 0) {
+    const firstProblemId = solutions[0].problemId;
+    const [problem, solution] = await Promise.all([
+      getProblemDetail(firstProblemId),
+      getSolutionByProblemId(userId, firstProblemId),
+    ]);
+    initialProblem = problem;
+    initialSolution = solution;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header Actions */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">解法記録</h1>
-            <p className="text-slate-600">問題の解法とコードを記録・管理</p>
-          </div>
-          <Button 
-            onClick={handleNewSolution}
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            新しい解法を記録
-          </Button>
-        </div>
-
-        {/* Filters */}
-        <SolutionsFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          sortOrder={sortOrder}
-          setSortOrder={setSortOrder}
-        />
-
-        {/* Solutions List */}
-        <SolutionsList
-          searchQuery={searchQuery}
-          selectedTags={selectedTags}
-          statusFilter={statusFilter}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onEditSolution={handleEditSolution}
-        />
-
-        <ProblemSearchDialog 
-          open={isSearchOpen} 
-          onOpenChange={setIsSearchOpen} 
-        />
-      </main>
-    </div>
+    <SolutionsWorkspace
+      solutions={solutions}
+      availableTags={availableTags}
+      initialProblem={initialProblem}
+      initialSolution={initialSolution}
+    />
   );
 }
