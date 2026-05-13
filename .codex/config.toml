@@ -1,0 +1,16 @@
+# Additional MCP servers (uncomment as needed):
+# [mcp_servers.supabase]
+# command = "npx"
+# args = ["-y", "supabase-mcp-server@latest", "--read-only"]
+#
+# [mcp_servers.firecrawl]
+# command = "npx"
+# args = ["-y", "firecrawl-mcp"]
+#
+# [mcp_servers.fal-ai]
+# command = "npx"
+# args = ["-y", "fal-ai-mcp-server"]
+#
+# [mcp_servers.cloudflare]
+# command = "npx"
+# args = ["-y", "@cloudflare/mcp-server-cloudflare"]

@@ -1,7 +1,15 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/options';
 import { redirect } from 'next/navigation';
-import { getUserSolutions, getSolutionByProblemId, getProblemDetail } from '@/lib/services/db/solution';
+import {
+  getUserSolutions,
+  getSolutionById,
+  getProblemDetail,
+  getSolutionsByProblemAndContest,
+  type ProblemDetail,
+  type SolutionRecordListItem,
+  type SolutionWithTags,
+} from '@/lib/services/db/solution';
 import { getAvailableTagsFromDB } from '@/lib/services/db/tag';
 import SolutionsWorkspace from '@/components/solutions/SolutionsWorkspace';
 
@@ -19,17 +27,26 @@ export default async function SolutionsPage() {
   ]);
 
   // 最新の解法をデフォルトで表示
-  let initialProblem = null;
-  let initialSolution = null;
+  let initialProblem: ProblemDetail | null = null;
+  let initialSolution: SolutionWithTags | null = null;
+  let initialContestId: string | null = null;
+  let initialRelatedSolutions: SolutionRecordListItem[] = [];
 
   if (solutions.length > 0) {
-    const firstProblemId = solutions[0].problemId;
-    const [problem, solution] = await Promise.all([
-      getProblemDetail(firstProblemId),
-      getSolutionByProblemId(userId, firstProblemId),
-    ]);
-    initialProblem = problem;
-    initialSolution = solution;
+    const firstSolutionId = solutions[0].latestSolutionId;
+    const solution = await getSolutionById(userId, firstSolutionId);
+    const firstProblemId = solution?.problemId;
+
+    if (firstProblemId && solution) {
+      const [problem, relatedSolutions] = await Promise.all([
+        getProblemDetail(firstProblemId),
+        getSolutionsByProblemAndContest(userId, firstProblemId, solution.contestId),
+      ]);
+      initialProblem = problem;
+      initialSolution = solution;
+      initialContestId = solution.contestId;
+      initialRelatedSolutions = relatedSolutions;
+    }
   }
 
   return (
@@ -38,6 +55,8 @@ export default async function SolutionsPage() {
       availableTags={availableTags}
       initialProblem={initialProblem}
       initialSolution={initialSolution}
+      initialContestId={initialContestId}
+      initialRelatedSolutions={initialRelatedSolutions}
     />
   );
 }
