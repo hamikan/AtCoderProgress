@@ -1,0 +1,2 @@
+ALTER TABLE "solutions"
+ADD COLUMN "title" VARCHAR(120);

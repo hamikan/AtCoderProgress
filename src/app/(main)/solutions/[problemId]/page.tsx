@@ -1,9 +1,14 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/options';
 import { redirect, notFound } from 'next/navigation';
-import { getSolutionByProblemId, getProblemDetail } from '@/lib/services/db/solution';
+import {
+  getSolutionById,
+  getProblemDetail,
+  getSolutionsByProblemAndContest,
+  getUserSolutions,
+} from '@/lib/services/db/solution';
 import { getAvailableTagsFromDB } from '@/lib/services/db/tag';
-import SolutionEditor from '@/components/solutions/SolutionEditor';
+import SolutionsWorkspace from '@/components/solutions/SolutionsWorkspace';
 
 interface SolutionPageProps {
   params: Promise<{
@@ -17,24 +22,33 @@ export default async function SolutionPage({ params }: SolutionPageProps) {
     redirect('/login');
   }
 
-  const { problemId } = await params;
-  const problem = await getProblemDetail(problemId);
+  const { problemId: solutionId } = await params;
+  const [solution, solutions, availableTags] = await Promise.all([
+    getSolutionById(session.user.id, solutionId),
+    getUserSolutions(session.user.id),
+    getAvailableTagsFromDB(session.user.id),
+  ]);
+
+  if (!solution) {
+    notFound();
+  }
+
+  const [problem, relatedSolutions] = await Promise.all([
+    getProblemDetail(solution.problemId),
+    getSolutionsByProblemAndContest(session.user.id, solution.problemId, solution.contestId),
+  ]);
   if (!problem) {
     notFound();
   }
 
-  const solution = await getSolutionByProblemId(session.user.id, problemId);
-  const availableTags = await getAvailableTagsFromDB(session.user.id);
-
   return (
-    <div className="min-h-screen bg-[#f9fafb] py-8">
-      <div className="container mx-auto px-4 md:px-8 max-w-[1600px]">
-        <SolutionEditor
-          problem={problem}
-          initialSolution={solution}
-          availableTags={availableTags}
-        />
-      </div>
-    </div>
+    <SolutionsWorkspace
+      solutions={solutions}
+      availableTags={availableTags}
+      initialProblem={problem}
+      initialSolution={solution}
+      initialContestId={solution.contestId}
+      initialRelatedSolutions={relatedSolutions}
+    />
   );
 }
