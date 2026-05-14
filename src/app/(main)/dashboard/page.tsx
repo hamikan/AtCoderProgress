@@ -19,14 +19,20 @@ export default async function Dashboard() {
   }
 
   const userId = session.user.id;
+  const stats = await getUserStats(userId);
 
-  const [stats, ratingHistory, heatmapData, recentActivity, tagStats, recommendedProblems] = await Promise.all([
-    getUserStats(userId),
+  const [
+    ratingHistory,
+    heatmapData,
+    recentActivity,
+    tagStats,
+    recommendedProblems,
+  ] = await Promise.all([
     getRatingHistoryData(userId),
     getHeatmapData(userId),
     getRecentActivity(userId),
     getTagStats(userId),
-    getRecommendedProblems(userId),
+    getRecommendedProblems(userId, stats.currentRating),
   ]);
 
   const overviewStats = {

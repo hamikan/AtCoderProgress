@@ -30,19 +30,16 @@ export default async function ContestPage({ searchParams }: ContestPageProps) {
   const contestType = (params.contestType?.toLowerCase() as 'abc' | 'arc' | 'agc') || 'abc';
   const order = (params.order as 'asc' | 'desc') || 'desc';
 
-  const { contests, totalProblems } = await getContestsFromDB(contestType, order);
+  const [contestResult, submissionSummary] = await Promise.all([
+    getContestsFromDB(contestType, order),
+    userId ? getSubmissionSummary(userId, contestType) : Promise.resolve(null),
+  ]);
+  const { contests, totalProblems } = contestResult;
   const problemIndexes = getProblemIndexes(contestType);
 
-  let submissionStatusMap = {};
-  let acCount = 0;
-  let tryingCount = 0;
-
-  if (userId) {
-    const summary = await getSubmissionSummary(userId, contestType);
-    submissionStatusMap = summary.statusMap;
-    acCount = summary.acCount;
-    tryingCount = summary.tryingCount;
-  }
+  const submissionStatusMap = submissionSummary?.statusMap ?? {};
+  const acCount = submissionSummary?.acCount ?? 0;
+  const tryingCount = submissionSummary?.tryingCount ?? 0;
 
   const stats = {
     total: totalProblems,

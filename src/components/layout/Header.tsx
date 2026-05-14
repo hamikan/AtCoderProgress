@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Bell, Code2, Home } from 'lucide-react';
 import { getServerSession } from 'next-auth/next';
+import Link from 'next/link';
 import { authOptions } from '@/lib/auth/options';
 import UserMenu from './UserMenu';
 
@@ -19,13 +20,13 @@ export default async function Header() {
             <span className="text-xl font-bold text-slate-800">AtCoder Progress</span>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="/dashboard" className="flex items-center space-x-2 text-sm font-medium text-slate-900">
+            <Link href="/dashboard" className="flex items-center space-x-2 text-sm font-medium text-slate-900">
               <Home className="h-4 w-4" />
               <span>ダッシュボード</span>
-            </a>
-            <a href="/problems" className="text-sm font-medium text-slate-600 hover:text-slate-900">問題一覧</a>
-            <a href="/solutions" className="text-sm font-medium text-slate-600 hover:text-slate-900">解法記録</a>
-            <a href="/analytics" className="text-sm font-medium text-slate-600 hover:text-slate-900">分析</a>
+            </Link>
+            <Link href="/problems" className="text-sm font-medium text-slate-600 hover:text-slate-900">問題一覧</Link>
+            <Link href="/solutions" className="text-sm font-medium text-slate-600 hover:text-slate-900">解法記録</Link>
+            <Link href="/analytics" className="text-sm font-medium text-slate-600 hover:text-slate-900">分析</Link>
           </nav>
         </div>
         <div className="flex items-center space-x-4">

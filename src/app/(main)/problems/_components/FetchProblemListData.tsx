@@ -9,11 +9,14 @@ interface FetchProblemListDataProps {
 }
 
 export async function FetchProblemListData({ filters, userId }: FetchProblemListDataProps) {
-  const { problems: items, totalProblems: totalCount } = await getProblemListFromDB({
-    ...filters,
-    userId
-  });
-  const availableTags = await getAvailableTagsFromDB(userId);
+  const [problemResult, availableTags] = await Promise.all([
+    getProblemListFromDB({
+      ...filters,
+      userId
+    }),
+    getAvailableTagsFromDB(userId),
+  ]);
+  const { problems: items, totalProblems: totalCount } = problemResult;
 
   return (
     <div className="space-y-6">
