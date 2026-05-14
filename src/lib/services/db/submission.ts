@@ -1,13 +1,23 @@
 import { prisma } from '@/lib/prisma';
-import { Submission } from '@/types/submission';
 import { SubmissionStatus } from '@/types/submission';
 
-export async function getSubmissionsFromDB(userId: string, contestType: string): Promise<Submission[]> {
+interface SubmissionSummaryRow {
+  problemId: string;
+  result: string;
+  epochSecond: number;
+}
+
+export async function getSubmissionsFromDB(userId: string, contestType: string): Promise<SubmissionSummaryRow[]> {
   return prisma.submission.findMany({
     where: {
       userId,
       ...(contestType ? { problemId: { startsWith: contestType } } : {})
-    }
+    },
+    select: {
+      problemId: true,
+      result: true,
+      epochSecond: true,
+    },
   })
 }
 

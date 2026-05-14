@@ -12,13 +12,15 @@ export interface RecommendedProblem {
     reason: string;
 }
 
-export async function getRecommendedProblems(userId: string): Promise<{ unsolved: RecommendedProblem[]; solved: RecommendedProblem[] }> {
-    const userStats = await getUserStats(userId);
-    const currentRating = userStats.currentRating;
+export async function getRecommendedProblems(
+    userId: string,
+    currentRating?: number
+): Promise<{ unsolved: RecommendedProblem[]; solved: RecommendedProblem[] }> {
+    const effectiveCurrentRating = currentRating ?? (await getUserStats(userId)).currentRating;
 
     const difficultyFilter = {
-        gte: Math.max(0, currentRating - 100),
-        lte: currentRating + 400,
+        gte: Math.max(0, effectiveCurrentRating - 100),
+        lte: effectiveCurrentRating + 400,
     };
 
     const [unsolved, solved] = await Promise.all([
@@ -131,4 +133,3 @@ async function getSolvedRecommendations(userId: string, difficultyFilter: Prisma
         reason: `振り返り優先度:${c.priority},  ★:${c.avgStars.toFixed(1)}, ${c.days}d ago`,
     }));
 }
-

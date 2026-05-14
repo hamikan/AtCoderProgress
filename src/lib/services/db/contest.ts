@@ -10,9 +10,22 @@ export async function getContestsFromDB(
     where: {
       id: { startsWith: contestType },
     },
-    include: {
+    select: {
+      id: true,
+      startEpochSecond: true,
+      durationSecond: true,
       problems: {
-        include: { problem: true },
+        select: {
+          problemIndex: true,
+          problem: {
+            select: {
+              id: true,
+              name: true,
+              difficulty: true,
+              totalSolutionCount: true,
+            },
+          },
+        },
       },
     },
   });
@@ -27,8 +40,10 @@ export async function getContestsFromDB(
     const problems: Record<string, Problem | null> = {};
     for (const problem of contest.problems) {
       problems[problem.problemIndex] = {
-        ...problem.problem,
-        totalSolutionCount: 0, // 必要に応じて集計ロジックを実装
+        id: problem.problem.id,
+        name: problem.problem.name,
+        difficulty: problem.problem.difficulty,
+        totalSolutionCount: problem.problem.totalSolutionCount,
       };
     }
 

@@ -75,8 +75,10 @@ export default async function ProblemListPage({ searchParams }: ProblemListPageP
     userId,
   };
 
-  const { problems, totalProblems } = await getProblemListFromDB(filters);
-  const availableTags = await getAvailableTagsFromDB(userId);
+  const [{ problems, totalProblems }, availableTags] = await Promise.all([
+    getProblemListFromDB(filters),
+    getAvailableTagsFromDB(userId),
+  ]);
 
   return (
     <div className="bg-gradient-to-br from-slate-50 to-blue-50 h-full">
