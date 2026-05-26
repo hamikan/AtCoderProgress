@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +16,10 @@ interface ContestTableProps {
   contests: Contest[];
   problemIndexes: string[];
   submissionStatusMap: Record<string, SubmissionStatus>;
+  footer?: ReactNode;
 }
 
-export default function ContestTable({ contests, problemIndexes, submissionStatusMap }: ContestTableProps) {
+export default function ContestTable({ contests, problemIndexes, submissionStatusMap, footer }: ContestTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -35,7 +37,7 @@ export default function ContestTable({ contests, problemIndexes, submissionStatu
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const cellBackGroundColor = (problemId: string, startEpochSecond: number, durationSecond: bigint) => {
+  const cellBackGroundColor = (problemId: string, startEpochSecond: number, durationSecond: number) => {
     const submission = submissionStatusMap[problemId];
     if (!submission || !submission.result || submission.epochSecond === undefined) {
       return '';
@@ -43,7 +45,7 @@ export default function ContestTable({ contests, problemIndexes, submissionStatu
     if (submission.result === 'AC') {
       const start = BigInt(startEpochSecond);
       const subEpoch = BigInt(submission.epochSecond);
-      if (start <= subEpoch && subEpoch < start + durationSecond) {
+      if (start <= subEpoch && subEpoch < start + BigInt(durationSecond)) {
         return 'bg-green-200';
       }
       return 'bg-green-100';
@@ -168,6 +170,7 @@ export default function ContestTable({ contests, problemIndexes, submissionStatu
               </TableBody>
             </Table>
           </div>
+          {footer}
         </CardContent>
       </Card>
     </TooltipProvider>

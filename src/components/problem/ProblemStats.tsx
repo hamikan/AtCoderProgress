@@ -14,6 +14,9 @@ interface ProblemStatsProps {
 }
 
 export default function ProblemStats({ stats }: ProblemStatsProps) {
+  const percentage = (value: number) =>
+    stats.total > 0 ? `${Math.round((value / stats.total) * 100)}%` : '0%';
+
   const statItems = [
     {
       title: '総問題数',
@@ -26,7 +29,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
     {
       title: 'AC済み',
       value: stats.ac.toLocaleString(),
-      change: `${Math.round((stats.ac / stats.total) * 100)}%`,
+      change: percentage(stats.ac),
       changeType: 'neutral',
       icon: CheckCircle,
       color: 'text-emerald-600',
@@ -35,7 +38,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
     {
       title: '挑戦中',
       value: stats.trying.toLocaleString(),
-      change: `${Math.round((stats.trying / stats.total) * 100)}%`,
+      change: percentage(stats.trying),
       changeType: 'neutral',
       icon: Clock,
       color: 'text-amber-600',
@@ -44,7 +47,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
     {
       title: '未挑戦',
       value: stats.unsolved.toLocaleString(),
-      change: `${Math.round((stats.unsolved / stats.total) * 100)}%`,
+      change: percentage(stats.unsolved),
       changeType: 'neutral',
       icon: Target,
       color: 'text-slate-600',
