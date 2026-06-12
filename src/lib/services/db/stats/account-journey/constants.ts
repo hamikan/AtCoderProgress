@@ -1,0 +1,127 @@
+import type { RatingBandDefinition } from './types';
+
+export const DP_CURRICULUM_CONTESTS = [
+  {
+    contestId: 'dp',
+    key: 'edpc-core',
+    title: 'EDPC',
+  },
+  {
+    contestId: 'tdpc',
+    key: 'tdpc',
+    title: 'TDPC',
+  },
+  {
+    contestId: 'ndpc',
+    key: 'ndpc',
+    title: 'NDPC',
+  },
+];
+
+export const RECOMMENDED_EXACT_CONTEST_IDS = [
+  'abs',
+  ...DP_CURRICULUM_CONTESTS.map((contest) => contest.contestId),
+  'typical90',
+  'tessoku-book',
+  'math-and-algorithm',
+];
+
+export const DIFFICULTY_UNKNOWN_BUCKET = {
+  key: 'unknown',
+  label: '不明',
+  rangeLabel: 'Difficultyなし',
+  textColor: 'text-slate-500',
+  bgColor: 'bg-slate-100',
+  barColor: 'bg-slate-400',
+};
+
+export const RATING_BANDS: RatingBandDefinition[] = [
+  {
+    key: 'gray',
+    label: '灰',
+    rangeLabel: '0 - 399',
+    min: 0,
+    max: 399,
+    textColor: 'text-slate-600',
+    bgColor: 'bg-slate-100',
+    borderColor: 'border-slate-200',
+    barColor: 'bg-slate-500',
+  },
+  {
+    key: 'brown',
+    label: '茶',
+    rangeLabel: '400 - 799',
+    min: 400,
+    max: 799,
+    textColor: 'text-amber-800',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    barColor: 'bg-amber-700',
+  },
+  {
+    key: 'green',
+    label: '緑',
+    rangeLabel: '800 - 1199',
+    min: 800,
+    max: 1199,
+    textColor: 'text-emerald-700',
+    bgColor: 'bg-emerald-50',
+    borderColor: 'border-emerald-200',
+    barColor: 'bg-emerald-600',
+  },
+  {
+    key: 'cyan',
+    label: '水',
+    rangeLabel: '1200 - 1599',
+    min: 1200,
+    max: 1599,
+    textColor: 'text-cyan-700',
+    bgColor: 'bg-cyan-50',
+    borderColor: 'border-cyan-200',
+    barColor: 'bg-cyan-500',
+  },
+  {
+    key: 'blue',
+    label: '青',
+    rangeLabel: '1600 - 1999',
+    min: 1600,
+    max: 1999,
+    textColor: 'text-blue-700',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    barColor: 'bg-blue-600',
+  },
+  {
+    key: 'yellow',
+    label: '黄',
+    rangeLabel: '2000 - 2399',
+    min: 2000,
+    max: 2399,
+    textColor: 'text-yellow-700',
+    bgColor: 'bg-yellow-50',
+    borderColor: 'border-yellow-200',
+    barColor: 'bg-yellow-500',
+  },
+  {
+    key: 'orange',
+    label: '橙',
+    rangeLabel: '2400 - 2799',
+    min: 2400,
+    max: 2799,
+    textColor: 'text-orange-700',
+    bgColor: 'bg-orange-50',
+    borderColor: 'border-orange-200',
+    barColor: 'bg-orange-600',
+  },
+  {
+    key: 'red',
+    label: '赤',
+    rangeLabel: '2800+',
+    min: 2800,
+    max: null,
+    textColor: 'text-red-700',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    barColor: 'bg-red-600',
+  },
+];
