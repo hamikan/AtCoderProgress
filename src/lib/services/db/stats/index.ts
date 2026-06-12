@@ -4,3 +4,4 @@ export * from './heatmap';
 export * from './activity';
 export * from './tags';
 export * from './recommendations';
+export * from './account-journey';
