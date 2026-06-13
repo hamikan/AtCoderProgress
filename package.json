@@ -2,12 +2,17 @@
   "name": "atcoderprogress",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev -p 1207",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "lint:strict": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
     "db:seed:tags": "ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed-tags.ts",
     "db:sync:latest": "ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/sync-latest.ts"
   },

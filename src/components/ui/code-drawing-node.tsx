@@ -518,7 +518,6 @@ function CodeDrawingPreviewArea({
   loading,
   code,
   viewMode,
-  readOnly: _readOnly = false,
   isMobile = false,
   showBorder = false,
   toolbar,
@@ -559,6 +558,7 @@ function CodeDrawingPreviewArea({
         >
           {loading && <div className="text-muted-foreground">Loading...</div>}
           {!loading && image && (
+            // eslint-disable-next-line @next/next/no-img-element -- code drawing previews render generated data URLs that are not Next-managed assets.
             <img
               src={image}
               alt="Code drawing"

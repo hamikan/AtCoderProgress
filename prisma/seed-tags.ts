@@ -101,7 +101,7 @@ async function main() {
             });
             count++;
         }
-        console.info(`  - Assigned.`);
+        console.info(`  - Assigned ${count} problem tags.`);
     }
 
     console.info('Seeding tags finished.');
