@@ -1,10 +1,7 @@
 import * as React from 'react';
 
 import type { OurFileRouter } from '@/lib/uploadthing';
-import type {
-  ClientUploadedFileData,
-  UploadFilesOptions,
-} from 'uploadthing/types';
+import type { ClientUploadedFileData } from 'uploadthing/types';
 
 import { generateReactHelpers } from '@uploadthing/react';
 import { toast } from 'sonner';
@@ -12,13 +9,15 @@ import { z } from 'zod';
 
 export type UploadedFile<T = unknown> = ClientUploadedFileData<T>;
 
-interface UseUploadFileProps
-  extends Pick<
-    UploadFilesOptions<OurFileRouter['editorUploader']>,
-    'headers' | 'onUploadBegin' | 'onUploadProgress' | 'skipPolling'
-  > {
+const mockUploadsEnabled = process.env.NEXT_PUBLIC_MOCK_UPLOADS === 'true';
+
+interface UseUploadFileProps {
+  headers?: HeadersInit | (() => HeadersInit | Promise<HeadersInit>);
+  onUploadBegin?: (opts: { file: string }) => void;
   onUploadComplete?: (file: UploadedFile) => void;
   onUploadError?: (error: unknown) => void;
+  onUploadProgress?: (opts: { file: string; progress: number }) => void;
+  skipPolling?: boolean;
 }
 
 export function useUploadFile({
@@ -48,7 +47,7 @@ export function useUploadFile({
 
       onUploadComplete?.(res[0]);
 
-      return uploadedFile;
+      return res[0];
     } catch (error) {
       const errorMessage = getErrorMessage(error);
 
@@ -61,12 +60,19 @@ export function useUploadFile({
 
       onUploadError?.(error);
 
-      // Mock upload for unauthenticated users
-      // toast.info('User not logged in. Mocking upload process.');
+      if (!mockUploadsEnabled) {
+        return undefined;
+      }
+
+      // Blob URLs are only useful for explicit local mock mode; they do not
+      // survive navigation and must not be treated as persisted uploads.
+      toast.info('Mocking upload. This file will not persist after navigation.');
+
       const mockUploadedFile = {
         key: 'mock-key-0',
-        appUrl: `https://mock-app-url.com/${file.name}`,
+        customId: null,
         name: file.name,
+        serverData: null,
         size: file.size,
         type: file.type,
         url: URL.createObjectURL(file),
