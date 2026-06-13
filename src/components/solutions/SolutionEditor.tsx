@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, Loader2, Plus, X } from 'lucide-react';
 import { Plate, usePlateEditor } from 'platejs/react';
@@ -77,7 +77,44 @@ function formatSolutionRecordLabel(record: SolutionRecordListItem, index: number
   return record.title?.trim() || `記録 ${index + 1}`;
 }
 
-export default function SolutionEditor({
+function subscribeHydration(onStoreChange: () => void) {
+  queueMicrotask(onStoreChange);
+  return () => {};
+}
+
+function getHydratedSnapshot() {
+  return true;
+}
+
+function getServerHydratedSnapshot() {
+  return false;
+}
+
+function useHydrated() {
+  return useSyncExternalStore(
+    subscribeHydration,
+    getHydratedSnapshot,
+    getServerHydratedSnapshot
+  );
+}
+
+function getSolutionEditorKey({
+  initialContestId,
+  initialSolution,
+  problem,
+}: SolutionEditorProps): string {
+  return [
+    initialSolution?.id ?? 'new',
+    problem?.id ?? 'no-problem',
+    initialContestId ?? 'no-contest',
+  ].join(':');
+}
+
+export default function SolutionEditor(props: SolutionEditorProps) {
+  return <SolutionEditorContent key={getSolutionEditorKey(props)} {...props} />;
+}
+
+function SolutionEditorContent({
   problem,
   initialSolution,
   initialContestId,
@@ -90,7 +127,7 @@ export default function SolutionEditor({
   onSelectSolution,
 }: SolutionEditorProps) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const [title, setTitle] = useState<string>(initialSolution?.title ?? draftState?.title ?? '');
   const [status, setStatus] = useState<SolutionStatus>(initialSolution?.status || draftState?.status || DEFAULT_STATUS);
   const [selectedTags, setSelectedTags] = useState<string[]>(
@@ -124,47 +161,11 @@ export default function SolutionEditor({
   });
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     isNavigatingRef.current = false;
     savedScopeRef.current = initialSolution
       ? { problemId: initialSolution.problemId, contestId: initialSolution.contestId }
       : null;
-  }, [initialSolution?.contestId, initialSolution?.id, initialSolution?.problemId]);
-
-  useEffect(() => {
-    setSavedSolutionId(initialSolution?.id ?? null);
-    setTitle(initialSolution?.title ?? draftState?.title ?? '');
-    setStatus(initialSolution?.status || draftState?.status || DEFAULT_STATUS);
-    setSelectedTags(initialSolution?.userTags.map((tag) => tag.userTag.name) || draftState?.tags || []);
-    setContestId(
-      initialSolution?.contestId ??
-        draftState?.contestId ??
-        getDefaultContestId(problem, initialContestId)
-    );
-  }, [
-    draftState?.contestId,
-    draftState?.status,
-    draftState?.tags,
-    draftState?.title,
-    initialContestId,
-    initialSolution,
-    problem,
-  ]);
-
-  useEffect(() => {
-    if (!problem) {
-      return;
-    }
-
-    if (contestId && problem.contests.some((contest) => contest.contestId === contestId)) {
-      return;
-    }
-
-    setContestId(getDefaultContestId(problem, initialContestId));
-  }, [contestId, initialContestId, problem]);
+  }, [initialSolution]);
 
   const debouncedContent = useDebounce(editorContent, 1000);
   const debouncedTitle = useDebounce(title.trim(), 300);

@@ -8,11 +8,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogIn } from 'lucide-react';
+import type { Session } from 'next-auth';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 interface AuthButtonsProps {
-  session: any;
+  session: Session | null;
 }
 
 export default function AuthButtons({ session }: AuthButtonsProps) {

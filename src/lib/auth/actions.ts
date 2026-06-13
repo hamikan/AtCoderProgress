@@ -1,6 +1,7 @@
 'use server';
 
 import { getServerSession } from 'next-auth/next';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from './options';
 import { revalidatePath } from 'next/cache';
@@ -32,9 +33,9 @@ export async function linkAtCoderId(atcoderId: string) {
 
     revalidatePath('/');
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating user with AtCoder ID:', error);
-    if (error.code === 'P2002') {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       throw new Error('This AtCoder ID is already taken.');
     }
     throw new Error('Failed to update AtCoder ID');

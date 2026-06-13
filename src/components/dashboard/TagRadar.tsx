@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Radar, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,35 +29,69 @@ const COLORS = [
   'text-pink-600',
 ];
 
+const SELECTED_TAGS_STORAGE_KEY = 'selectedTags';
+const SELECTED_TAGS_CHANGE_EVENT = 'selected-tags-change';
+
+function readSelectedTagsSnapshot(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return window.localStorage.getItem(SELECTED_TAGS_STORAGE_KEY);
+}
+
+function parseSelectedTagsSnapshot(snapshot: string | null): string[] | null {
+  if (!snapshot) {
+    return null;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(snapshot);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    return parsed.filter((tag): tag is string => typeof tag === 'string');
+  } catch {
+    return null;
+  }
+}
+
+function subscribeSelectedTags(onStoreChange: () => void) {
+  const handleStorageChange = (event: StorageEvent) => {
+    if (event.key === SELECTED_TAGS_STORAGE_KEY) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener('storage', handleStorageChange);
+  window.addEventListener(SELECTED_TAGS_CHANGE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener('storage', handleStorageChange);
+    window.removeEventListener(SELECTED_TAGS_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function writeSelectedTagsSnapshot(tags: string[]) {
+  window.localStorage.setItem(SELECTED_TAGS_STORAGE_KEY, JSON.stringify(tags));
+  window.dispatchEvent(new Event(SELECTED_TAGS_CHANGE_EVENT));
+}
+
 export default function TagRadar({ initialStats = [] }: TagRadarProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  // Default to top 8 tags if available
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    initialStats.slice(0, 8).map((s) => s.name)
+  const defaultSelectedTags = useMemo(
+    () => initialStats.slice(0, 8).map((s) => s.name),
+    [initialStats]
   );
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('selectedTags');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setSelectedTags(parsed);
-        }
-      } catch (e) {
-        console.error('Failed to parse saved tags', e);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
-
-  // Save to localStorage whenever changed
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('selectedTags', JSON.stringify(selectedTags));
-    }
-  }, [selectedTags, isLoaded]);
+  const savedSelectedTags = useSyncExternalStore(
+    subscribeSelectedTags,
+    readSelectedTagsSnapshot,
+    () => null
+  );
+  const selectedTags = useMemo(
+    () => parseSelectedTagsSnapshot(savedSelectedTags) ?? defaultSelectedTags,
+    [defaultSelectedTags, savedSelectedTags]
+  );
 
   const statsMap = new Map(initialStats.map((s) => [s.name, s]));
 
@@ -108,13 +142,11 @@ export default function TagRadar({ initialStats = [] }: TagRadarProps) {
   const gridLevels = [20, 40, 60, 80, 100];
 
   const handleToggleTag = (tagName: string) => {
-    setSelectedTags((prev) => {
-      if (prev.includes(tagName)) {
-        return prev.filter((t) => t !== tagName);
-      } else {
-        return [...prev, tagName];
-      }
-    });
+    const nextSelectedTags = selectedTags.includes(tagName)
+      ? selectedTags.filter((t) => t !== tagName)
+      : [...selectedTags, tagName];
+
+    writeSelectedTagsSnapshot(nextSelectedTags);
   };
 
   return (

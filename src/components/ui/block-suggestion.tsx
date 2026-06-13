@@ -257,7 +257,7 @@ export const useResolveSuggestion = (
 
   suggestionNodes.forEach(([node]) => {
     const id = api.suggestion.nodeId(node);
-    const map = getOption('uniquePathMap');
+    const map = getOption('uniquePathMap') ?? new Map<string, Path>();
 
     if (!id) return;
 
@@ -282,7 +282,7 @@ export const useResolveSuggestion = (
   });
 
   const resolvedSuggestion: ResolvedSuggestion[] = React.useMemo(() => {
-    const map = getOption('uniquePathMap');
+    const map = getOption('uniquePathMap') ?? new Map<string, Path>();
 
     if (suggestionNodes.length === 0) return [];
 
@@ -339,8 +339,8 @@ export const useResolveSuggestion = (
 
       let newText = '';
       let text = '';
-      let properties: any = {};
-      let newProperties: any = {};
+      let properties: Record<string, unknown> = {};
+      let newProperties: Record<string, unknown> = {};
 
       // overlapping suggestion
       entries.forEach(([node]) => {

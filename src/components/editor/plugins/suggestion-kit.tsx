@@ -1,6 +1,13 @@
 'use client';
 
-import type { ExtendConfig, Path } from 'platejs';
+import type {
+  ExtendConfig,
+  InferApi,
+  InferSelectors,
+  InferTransforms,
+  Path,
+  PluginConfig,
+} from 'platejs';
 
 import {
   type BaseSuggestionConfig,
@@ -16,13 +23,24 @@ import {
 
 import { discussionPlugin } from './discussion-kit';
 
+type SuggestionBaseConfig = PluginConfig<
+  'suggestion',
+  Partial<{
+    currentUserId: string | null;
+    isSuggesting: boolean;
+  }>,
+  InferApi<BaseSuggestionConfig>,
+  InferTransforms<BaseSuggestionConfig>,
+  InferSelectors<BaseSuggestionConfig>
+>;
+
 export type SuggestionConfig = ExtendConfig<
-  BaseSuggestionConfig,
-  {
+  SuggestionBaseConfig,
+  Partial<{
     activeId: string | null;
     hoverId: string | null;
     uniquePathMap: Map<string, Path>;
-  }
+  }>
 >;
 
 export const suggestionPlugin = toTPlatePlugin<SuggestionConfig>(
@@ -82,7 +100,7 @@ export const suggestionPlugin = toTPlatePlugin<SuggestionConfig>(
     },
   },
   render: {
-    belowNodes: SuggestionLineBreak as any,
+    belowNodes: SuggestionLineBreak,
     node: SuggestionLeaf,
   },
 });

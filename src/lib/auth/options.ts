@@ -18,9 +18,8 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user }) {
-      const u = user as any;
-      if (u.id && u.atcoderId) {
-        syncSubmission(u.id, u.atcoderId, 0).catch(err => {
+      if (user.id && user.atcoderId) {
+        syncSubmission(user.id, user.atcoderId, 0).catch(err => {
           console.error("Login-time sync failed:", err);
         });
       }
