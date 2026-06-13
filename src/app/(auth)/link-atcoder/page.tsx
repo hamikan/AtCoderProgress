@@ -28,8 +28,8 @@ export default function LinkAtCoderPage() {
       await linkAtCoderId(atcoderId);
       await update(); 
       router.push('/');
-    } catch (err: any) {
-      setError(err.message || '連携に失敗しました。');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '連携に失敗しました。');
     } finally {
       setIsLoading(false);
     }

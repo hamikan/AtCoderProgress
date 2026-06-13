@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,20 +16,39 @@ interface ProblemsFiltersProps {
   availableTags: AvailableTag[];
 }
 
+function DifficultyRangeFilter({
+  max,
+  min,
+  onCommit,
+}: {
+  max: number;
+  min: number;
+  onCommit: (range: [number, number]) => void;
+}) {
+  const [range, setRange] = useState<[number, number]>([min, max]);
+
+  return (
+    <div className="px-2">
+      <label className="block text-sm font-medium text-slate-700 mb-4">
+        難易度範囲: {range[0]} ~ {range[1]}
+      </label>
+      <Slider
+        min={0}
+        max={4000}
+        step={100}
+        value={range}
+        onValueChange={(value) => setRange([value[0] ?? min, value[1] ?? max])}
+        onValueCommit={(value) => onCommit([value[0] ?? min, value[1] ?? max])}
+      />
+    </div>
+  );
+}
+
 export default function ProblemsFilters({ filters, availableTags }: ProblemsFiltersProps) {
   const router = useRouter();
   const currentSearchParams = useSearchParams();
-
-  const [range, setRange] = useState([filters.difficulty_min ?? 0, filters.difficulty_max ?? 4000]);
-
-  useEffect(() => {
-    const min = filters.difficulty_min ?? 0;
-    const max = filters.difficulty_max ?? 4000;
-    setRange(prev => {
-      if (prev[0] === min && prev[1] === max) return prev;
-      return [min, max];
-    });
-  }, [filters.difficulty_min, filters.difficulty_max]);
+  const difficultyMin = filters.difficulty_min ?? 0;
+  const difficultyMax = filters.difficulty_max ?? 4000;
 
   const handleQueryChange = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(currentSearchParams.toString());
@@ -119,24 +138,17 @@ export default function ProblemsFilters({ filters, availableTags }: ProblemsFilt
           </Select>
         </div>
       </div>
-      <div className="px-2">
-        <label className="block text-sm font-medium text-slate-700 mb-4">
-          難易度範囲: {range[0]} ~ {range[1]}
-        </label>
-        <Slider
-          min={0}
-          max={4000}
-          step={100}
-          value={range}
-          onValueChange={setRange}
-          onValueCommit={(value) => {
-            handleQueryChange({
-              difficulty_min: value[0].toString(),
-              difficulty_max: value[1].toString()
-            });
-          }}
-        />
-      </div>
+      <DifficultyRangeFilter
+        key={`${difficultyMin}-${difficultyMax}`}
+        min={difficultyMin}
+        max={difficultyMax}
+        onCommit={(value) => {
+          handleQueryChange({
+            difficulty_min: value[0].toString(),
+            difficulty_max: value[1].toString()
+          });
+        }}
+      />
       <div className="space-y-2">
         <label className="block text-sm font-medium text-slate-700">タグで絞り込み</label>
         <div className="flex flex-wrap gap-2">

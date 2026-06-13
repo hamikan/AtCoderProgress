@@ -8,6 +8,10 @@ import { SlateElement } from 'platejs/static';
 
 import { cn } from '@/lib/utils';
 
+type ImageAttributes = {
+  alt?: string;
+};
+
 export function ImageElementStatic(
   props: SlateElementProps<TImageElement & TCaptionProps & TResizableProps>
 ) {
@@ -25,7 +29,7 @@ export function ImageElementStatic(
               'w-full max-w-full cursor-default object-cover px-0',
               'rounded-sm'
             )}
-            alt={(props.attributes as any).alt}
+            alt={(props.attributes as ImageAttributes).alt ?? ''}
             src={url}
           />
           {caption && (

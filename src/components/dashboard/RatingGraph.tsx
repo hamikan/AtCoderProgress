@@ -145,8 +145,8 @@ export default function RatingGraph({ data }: RatingGraphProps) {
                   padding: '12px',
                 }}
                 cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }}
-                formatter={(value: any) => [
-                  <span key="val" className="font-bold text-slate-900">{value}</span>,
+                formatter={(value: unknown) => [
+                  <span key="val" className="font-bold text-slate-900">{String(value)}</span>,
                   <span key="label" className="text-xs text-slate-500">Rating</span>
                 ]}
                 labelFormatter={(label) => (

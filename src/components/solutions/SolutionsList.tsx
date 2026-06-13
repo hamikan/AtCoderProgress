@@ -20,7 +20,7 @@ interface SolutionsListProps {
   statusFilter: string;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
-  onEditSolution: (solution: any) => void;
+  onEditSolution: (solution: Solution) => void;
 }
 
 interface Solution {

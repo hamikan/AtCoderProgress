@@ -71,15 +71,17 @@ export const BlockDiscussion: RenderNodeWrapper<AnyPluginConfig> = (props) => {
     return;
   }
 
-  return (props) => (
-    <BlockCommentContent
-      blockPath={blockPath}
-      commentNodes={commentNodes}
-      draftCommentNode={draftCommentNode}
-      suggestionNodes={suggestionNodes}
-      {...props}
-    />
-  );
+  return function BlockCommentContentWrapper(props) {
+    return (
+      <BlockCommentContent
+        blockPath={blockPath}
+        commentNodes={commentNodes}
+        draftCommentNode={draftCommentNode}
+        suggestionNodes={suggestionNodes}
+        {...props}
+      />
+    );
+  };
 };
 
 const BlockCommentContent = ({

@@ -10,11 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Menu, LogIn } from 'lucide-react';
+import type { Session } from 'next-auth';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 interface MobileMenuProps {
-  session: any;
+  session: Session | null;
   navigation: { name: string; href: string }[];
 }
 

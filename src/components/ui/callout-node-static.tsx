@@ -6,6 +6,11 @@ import { SlateElement } from 'platejs/static';
 
 import { cn } from '@/lib/utils';
 
+type CalloutElementData = {
+  backgroundColor?: React.CSSProperties['backgroundColor'];
+  icon?: React.ReactNode;
+};
+
 export function CalloutElementStatic({
   children,
   className,
@@ -15,7 +20,7 @@ export function CalloutElementStatic({
     <SlateElement
       className={cn('my-1 flex rounded-sm bg-muted p-4 pl-3', className)}
       style={{
-        backgroundColor: props.element.backgroundColor as any,
+        backgroundColor: (props.element as CalloutElementData).backgroundColor,
       }}
       {...props}
     >
@@ -28,7 +33,7 @@ export function CalloutElementStatic({
           }}
         >
           <span data-plate-prevent-deserialization>
-            {(props.element.icon as any) || '💡'}
+            {(props.element as CalloutElementData).icon || '💡'}
           </span>
         </div>
         <div className="w-full">{children}</div>
