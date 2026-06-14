@@ -13,13 +13,20 @@ import {
 import { ImageIcon, Loader2Icon } from 'lucide-react';
 import { KEYS } from 'platejs';
 import { PlateElement, useEditorPlugin, withHOC } from 'platejs/react';
+import { toast } from 'sonner';
 import { useFilePicker } from 'use-file-picker';
 
 import { cn } from '@/lib/utils';
 import { useUploadFile } from '@/hooks/use-upload-file';
+import {
+  createFileList,
+  EDITOR_IMAGE_ACCEPT,
+  filterValidEditorImageFiles,
+} from '@/components/editor/image-upload-files';
+import { validateEditorImageFile } from '@/lib/validation/editor-image-upload';
 
 const IMAGE_CONTENT = {
-  accept: ['image/*'],
+  accept: [...EDITOR_IMAGE_ACCEPT],
   content: 'Add an image',
   icon: <ImageIcon />,
 };
@@ -42,25 +49,29 @@ export const PlaceholderElement = withHOC(
       accept: IMAGE_CONTENT.accept,
       multiple: true,
       onFilesSelected: ({ plainFiles: updatedFiles }) => {
-        const imageFiles = updatedFiles.filter((file: File) =>
-          file.type.startsWith('image/')
-        );
-        const firstFile = imageFiles[0];
-        const restFiles = imageFiles.slice(1);
+        const { acceptedFiles, rejectedFiles } = filterValidEditorImageFiles(updatedFiles);
+        rejectedFiles.forEach(({ message }) => toast.error(message));
+
+        const firstFile = acceptedFiles[0];
+        const restFiles = acceptedFiles.slice(1);
 
         if (!firstFile) return;
 
         replaceCurrentPlaceholder(firstFile);
 
         if (restFiles.length > 0) {
-          editor.getTransforms(PlaceholderPlugin).insert.media(restFiles);
+          editor.getTransforms(PlaceholderPlugin).insert.media(createFileList(restFiles));
         }
       },
     });
 
     const replaceCurrentPlaceholder = React.useCallback(
       (file: File) => {
-        if (!file.type.startsWith('image/')) return;
+        const validation = validateEditorImageFile(file);
+        if (!validation.ok) {
+          toast.error(validation.message);
+          return;
+        }
 
         void uploadFile(file);
         api.placeholder.addUploadingFile(element.id as string, file);

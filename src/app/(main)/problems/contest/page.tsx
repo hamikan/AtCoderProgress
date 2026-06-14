@@ -2,11 +2,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/options';
 import ContestWorkspace from '@/components/problem/ContestWorkspace';
 import { getContestWorkspaceData } from '@/lib/services/db/contest';
-import {
-  isContestKind,
-  isContestOrder,
-} from '@/lib/services/db/contest-pagination';
 import type { ContestKind } from '@/types/contest';
+import { normalizeContestSearchParams } from './search-params';
 
 const getProblemIndexes = (contestType: ContestKind) => {
   switch (contestType) {
@@ -27,11 +24,7 @@ interface ContestPageProps {
 export default async function ContestPage({ searchParams }: ContestPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? undefined;
-  const params = await searchParams;
-
-  const contestTypeParam = params.contestType?.toLowerCase();
-  const contestType = isContestKind(contestTypeParam) ? contestTypeParam : 'abc';
-  const order = isContestOrder(params.order) ? params.order : 'desc';
+  const { contestType, order } = normalizeContestSearchParams(await searchParams);
 
   const contestPage = await getContestWorkspaceData(contestType, order, {
     userId,

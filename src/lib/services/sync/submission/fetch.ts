@@ -7,14 +7,24 @@ import {
   sleep,
   fetchJson
 } from '../utils'
+import { normalizeAtCoderId } from '@/lib/validation/atcoder-id';
 
 const limit = 500;
 const FETCH_DELAY_MS = 2000;
 
 export async function fetchSubmission(atcoderId: string, fromSecond: number): Promise<SubmissionResources> {
+  const normalizedAtCoderId = normalizeAtCoderId(atcoderId);
+  if (!Number.isInteger(fromSecond) || fromSecond < 0) {
+    throw new Error('Invalid submission cursor');
+  }
+
   const submissions: Array<RawSubmission> = [];
   while (true) {
-    const url = `${SUBMISSION_ENDPOINTS.SUBMISSIONS}?user=${atcoderId}&from_second=${fromSecond}`;
+    const params = new URLSearchParams({
+      from_second: String(fromSecond),
+      user: normalizedAtCoderId,
+    });
+    const url = `${SUBMISSION_ENDPOINTS.SUBMISSIONS}?${params.toString()}`;
     const newSubmissions: Array<RawSubmission> = await fetchJson<Array<RawSubmission>>(url);
     if (newSubmissions.length === 0) break;
     submissions.push(...newSubmissions);

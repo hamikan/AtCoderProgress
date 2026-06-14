@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { linkAtCoderId } from '@/lib/auth/actions';
+import { validateAtCoderId } from '@/lib/validation/atcoder-id';
 
 export default function LinkAtCoderPage() {
   const [atcoderId, setAtcoderId] = useState('');
@@ -18,14 +19,15 @@ export default function LinkAtCoderPage() {
     setIsLoading(true);
     setError(null);
 
-    if (!atcoderId.trim()) {
-      setError('AtCoder IDを入力してください。');
+    const validation = validateAtCoderId(atcoderId);
+    if (!validation.ok) {
+      setError(validation.error);
       setIsLoading(false);
       return;
     }
 
     try {
-      await linkAtCoderId(atcoderId);
+      await linkAtCoderId(validation.value);
       await update(); 
       router.push('/');
     } catch (err: unknown) {
@@ -42,7 +44,7 @@ export default function LinkAtCoderPage() {
           <h1 className="text-3xl font-bold text-gray-900">AtCoder IDを連携</h1>
           <p className="mt-2 text-gray-600">最後に、あなたのAtCoder IDを教えてください。</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div>
             <label htmlFor="atcoderId" className="block text-sm font-medium text-gray-700">
               AtCoder ID
@@ -54,6 +56,9 @@ export default function LinkAtCoderPage() {
                 type="text"
                 value={atcoderId}
                 onChange={(e) => setAtcoderId(e.target.value)}
+                maxLength={16}
+                minLength={3}
+                pattern="[A-Za-z0-9_]{3,16}"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="chokudai"

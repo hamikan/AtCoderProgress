@@ -9,6 +9,7 @@ import {
 } from '@/lib/services/db/solution';
 import { getAvailableTagsFromDB } from '@/lib/services/db/tag';
 import SolutionsWorkspace from '@/components/solutions/SolutionsWorkspace';
+import { normalizeSolutionRouteParams } from './params';
 
 interface SolutionPageProps {
   params: Promise<{
@@ -22,7 +23,14 @@ export default async function SolutionPage({ params }: SolutionPageProps) {
     redirect('/login');
   }
 
-  const { problemId: solutionId } = await params;
+  let solutionId: string;
+
+  try {
+    ({ solutionId } = normalizeSolutionRouteParams(await params));
+  } catch {
+    notFound();
+  }
+
   const [solution, solutions, availableTags] = await Promise.all([
     getSolutionById(session.user.id, solutionId),
     getUserSolutions(session.user.id),

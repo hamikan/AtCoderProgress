@@ -11,6 +11,10 @@ import {
   type ProblemDetail,
   type SolutionRecordListItem,
 } from '@/lib/services/db/solution';
+import {
+  normalizeContestId,
+  normalizeProblemId,
+} from '@/lib/validation/solution-input';
 
 export async function getProblemDetailAction(problemId: string): Promise<ProblemDetail | null> {
   const session = await getServerSession(authOptions);
@@ -18,7 +22,7 @@ export async function getProblemDetailAction(problemId: string): Promise<Problem
     throw new Error('Unauthorized');
   }
 
-  return await getProblemDetail(problemId);
+  return await getProblemDetail(normalizeProblemId(problemId));
 }
 
 export async function saveSolution(
@@ -60,5 +64,9 @@ export async function getSolutionRecordsAction(
     throw new Error('Unauthorized');
   }
 
-  return await getSolutionsByProblemAndContest(session.user.id, problemId, contestId);
+  return await getSolutionsByProblemAndContest(
+    session.user.id,
+    normalizeProblemId(problemId),
+    normalizeContestId(contestId)
+  );
 }

@@ -1,12 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma, SolutionStatus } from '@prisma/client';
-
-const MAX_SOLUTION_TITLE_LENGTH = 120;
-const MAX_TAGS = 20;
-const MAX_TAG_NAME_LENGTH = 50;
-const VALID_SOLUTION_STATUSES = new Set<SolutionStatus>(
-  Object.values(SolutionStatus) as SolutionStatus[]
-);
+import { normalizeSolutionInput } from '@/lib/validation/solution-input';
 
 export type SolutionWithTags = Prisma.SolutionGetPayload<{
   include: {
@@ -50,88 +44,6 @@ export interface SolutionRecordListItem {
   createdAt: Date;
   updatedAt: Date;
   status: SolutionStatus;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isValidPlateTextNode(node: unknown): boolean {
-  return isRecord(node) && typeof node.text === 'string';
-}
-
-function isValidPlateElementNode(node: unknown): boolean {
-  if (!isRecord(node) || typeof node.type !== 'string' || !Array.isArray(node.children)) {
-    return false;
-  }
-
-  return node.children.every((child) => isValidPlateTextNode(child) || isValidPlateElementNode(child));
-}
-
-function normalizeSolutionContent(content: string): string {
-  let parsed: unknown;
-
-  try {
-    parsed = JSON.parse(content);
-  } catch {
-    throw new Error('Invalid solution content');
-  }
-
-  if (!Array.isArray(parsed) || !parsed.every(isValidPlateElementNode)) {
-    throw new Error('Invalid solution content');
-  }
-
-  return JSON.stringify(parsed);
-}
-
-function normalizeSolutionTitle(title: string | null): string | null {
-  const normalizedTitle = title?.trim() || null;
-  if (normalizedTitle && normalizedTitle.length > MAX_SOLUTION_TITLE_LENGTH) {
-    throw new Error('Title is too long');
-  }
-
-  return normalizedTitle;
-}
-
-function normalizeSolutionStatus(status: SolutionStatus): SolutionStatus {
-  if (!VALID_SOLUTION_STATUSES.has(status)) {
-    throw new Error('Invalid solution status');
-  }
-
-  return status;
-}
-
-function normalizeSolutionTagNames(tagNames: string[]): string[] {
-  if (!Array.isArray(tagNames)) {
-    throw new Error('Invalid solution tags');
-  }
-
-  const normalizedTagNames = tagNames.reduce<string[]>((tags, tagName) => {
-    if (typeof tagName !== 'string') {
-      throw new Error('Invalid solution tag');
-    }
-
-    const normalizedTagName = tagName.trim().replace(/\s+/g, ' ');
-    if (!normalizedTagName) {
-      return tags;
-    }
-
-    if (normalizedTagName.length > MAX_TAG_NAME_LENGTH) {
-      throw new Error('Tag name is too long');
-    }
-
-    const hasSameTag = tags.some(
-      (tag) => tag.toLocaleLowerCase() === normalizedTagName.toLocaleLowerCase()
-    );
-
-    return hasSameTag ? tags : [...tags, normalizedTagName];
-  }, []);
-
-  if (normalizedTagNames.length > MAX_TAGS) {
-    throw new Error('Too many tags');
-  }
-
-  return normalizedTagNames;
 }
 
 export async function getProblemDetail(problemId: string): Promise<ProblemDetail | null> {
@@ -229,17 +141,22 @@ export async function saveSolutionRecord(
     tagNames: string[];
   }
 ): Promise<string> {
-  const normalizedTitle = normalizeSolutionTitle(title);
-  const normalizedContent = normalizeSolutionContent(content);
-  const normalizedStatus = normalizeSolutionStatus(status);
-  const normalizedTagNames = normalizeSolutionTagNames(tagNames);
+  const normalizedInput = normalizeSolutionInput({
+    contestId,
+    content,
+    problemId,
+    solutionId,
+    status,
+    tagNames,
+    title,
+  });
 
   return prisma.$transaction(async (tx) => {
     const contestProblem = await tx.contestProblem.findUnique({
       where: {
         contestId_problemId: {
-          contestId,
-          problemId,
+          contestId: normalizedInput.contestId,
+          problemId: normalizedInput.problemId,
         },
       },
       select: {
@@ -252,7 +169,7 @@ export async function saveSolutionRecord(
       throw new Error('Invalid contest for problem');
     }
 
-    let savedSolutionId = solutionId ?? null;
+    let savedSolutionId = normalizedInput.solutionId;
 
     if (savedSolutionId) {
       const existingSolution = await tx.solution.findFirst({
@@ -270,22 +187,22 @@ export async function saveSolutionRecord(
       await tx.solution.update({
         where: { id: savedSolutionId },
         data: {
-          problemId,
-          contestId,
-          title: normalizedTitle,
-          content: normalizedContent,
-          status: normalizedStatus,
+          contestId: normalizedInput.contestId,
+          content: normalizedInput.content,
+          problemId: normalizedInput.problemId,
+          status: normalizedInput.status,
+          title: normalizedInput.title,
         },
       });
     } else {
       const created = await tx.solution.create({
         data: {
+          contestId: normalizedInput.contestId,
+          content: normalizedInput.content,
+          problemId: normalizedInput.problemId,
+          status: normalizedInput.status,
+          title: normalizedInput.title,
           userId,
-          problemId,
-          contestId,
-          title: normalizedTitle,
-          content: normalizedContent,
-          status: normalizedStatus,
         },
       });
 
@@ -296,9 +213,9 @@ export async function saveSolutionRecord(
       where: { solutionId: savedSolutionId },
     });
 
-    if (normalizedTagNames.length > 0) {
+    if (normalizedInput.tagNames.length > 0) {
       const userTags = await Promise.all(
-        normalizedTagNames.map((name) =>
+        normalizedInput.tagNames.map((name) =>
           tx.userTag.upsert({
             where: {
               createdById_name: {

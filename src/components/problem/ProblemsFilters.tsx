@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 import { ProblemListFilters } from '@/lib/services/db/problem';
+import { MAX_PROBLEM_SEARCH_QUERY_LENGTH } from '@/lib/validation/problem-search';
 import { AvailableTag } from '@/lib/services/db/tag'
 
 
@@ -77,6 +78,7 @@ export default function ProblemsFilters({ filters, availableTags }: ProblemsFilt
         <Input
           placeholder="問題名 / IDで検索..."
           defaultValue={filters.search || ''}
+          maxLength={MAX_PROBLEM_SEARCH_QUERY_LENGTH}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               handleQueryChange({ search: (e.target as HTMLInputElement).value });

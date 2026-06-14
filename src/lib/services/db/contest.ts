@@ -3,7 +3,7 @@ import {
   DEFAULT_CONTEST_PAGE_SIZE,
   MAX_CONTEST_PAGE_SIZE,
   validateContestCursor,
-} from './contest-pagination';
+} from '@/lib/validation/contest-page';
 import { getSubmissionSummaryByProblemIds } from './submission';
 import type { Contest, ContestKind, ContestOrder } from '@/types/contest';
 import type { Problem } from '@/types/problem';
