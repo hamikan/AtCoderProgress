@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import ContestTable from '@/components/problem/ContestTable';
 import ProblemStats from '@/components/problem/ProblemStats';
 import { loadContestPageAction } from '@/lib/actions/contest';
-import { DEFAULT_CONTEST_PAGE_SIZE } from '@/lib/services/db/contest-pagination';
+import { DEFAULT_CONTEST_PAGE_SIZE } from '@/lib/validation/contest-page';
 import type { Contest, ContestKind, ContestOrder } from '@/types/contest';
 import type { ContestStats } from '@/lib/services/db/contest';
 import type { SubmissionStatus } from '@/types/submission';
@@ -111,7 +111,9 @@ export default function ContestWorkspace({
     <div className="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
       <div className="flex-1">
         <ContestTable
+          contestType={contestType}
           contests={state.contests}
+          order={order}
           problemIndexes={problemIndexes}
           submissionStatusMap={state.submissionStatusMap}
           footer={

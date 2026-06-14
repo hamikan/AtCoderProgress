@@ -4,7 +4,14 @@ import { PlaceholderPlugin } from '@platejs/media/react';
 import { ImageIcon } from 'lucide-react';
 import { KEYS } from 'platejs';
 import { useEditorRef } from 'platejs/react';
+import { toast } from 'sonner';
 import { useFilePicker } from 'use-file-picker';
+
+import {
+  createFileList,
+  EDITOR_IMAGE_ACCEPT,
+  filterValidEditorImageFiles,
+} from '@/components/editor/image-upload-files';
 
 import { ToolbarButton } from './toolbar';
 
@@ -16,15 +23,14 @@ export function MediaToolbarButton({
   const editor = useEditorRef();
 
   const { openFilePicker } = useFilePicker({
-    accept: ['image/*'],
+    accept: [...EDITOR_IMAGE_ACCEPT],
     multiple: true,
     onFilesSelected: ({ plainFiles: updatedFiles }) => {
-      const imageFiles = updatedFiles.filter((file: File) =>
-        file.type.startsWith('image/')
-      );
+      const { acceptedFiles, rejectedFiles } = filterValidEditorImageFiles(updatedFiles);
+      rejectedFiles.forEach(({ message }) => toast.error(message));
 
-      if (imageFiles.length > 0) {
-        editor.getTransforms(PlaceholderPlugin).insert.media(imageFiles);
+      if (acceptedFiles.length > 0) {
+        editor.getTransforms(PlaceholderPlugin).insert.media(createFileList(acceptedFiles));
       }
     },
   });

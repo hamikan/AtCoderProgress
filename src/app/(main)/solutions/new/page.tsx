@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { getProblemDetail, getUserSolutions } from '@/lib/services/db/solution';
 import { getAvailableTagsFromDB } from '@/lib/services/db/tag';
 import SolutionsWorkspace from '@/components/solutions/SolutionsWorkspace';
+import { normalizeNewSolutionSearchParams } from './search-params';
 
 interface NewSolutionPageProps {
   searchParams: Promise<{
@@ -18,7 +19,7 @@ export default async function NewSolutionPage({ searchParams }: NewSolutionPageP
     redirect('/login');
   }
 
-  const { problemId, contestId } = await searchParams;
+  const { problemId, contestId } = normalizeNewSolutionSearchParams(await searchParams);
 
   const [solutions, availableTags, initialProblem] = await Promise.all([
     getUserSolutions(session.user.id),
@@ -32,7 +33,7 @@ export default async function NewSolutionPage({ searchParams }: NewSolutionPageP
       availableTags={availableTags}
       initialProblem={initialProblem}
       initialSolution={null}
-      initialContestId={contestId ?? null}
+      initialContestId={contestId}
       initialRelatedSolutions={[]}
     />
   );

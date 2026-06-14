@@ -1,7 +1,14 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma, SolutionStatus } from '@prisma/client';
 import type { ProblemListItem } from '@/types/problem';
-import type { ContestType } from '@/types/contest';
+import {
+  normalizeProblemListFilters,
+  type NormalizedProblemListFilters,
+} from '@/lib/validation/problem-list-filters';
+import {
+  normalizeProblemSearchLimit,
+  normalizeProblemSearchQuery,
+} from '@/lib/validation/problem-search';
 
 const TAG_THRESHOLD = 1;
 
@@ -14,33 +21,22 @@ const STATUS_PRIORITY: Record<SolutionStatus, number> = {
   UNSOLVED: 1,
 };
 
-export interface ProblemListFilters {
-  search?: string;
-  tags?: Array<string>;
-  difficulty_min?: number;
-  difficulty_max?: number;
-  status?: string;
-  contestType?: ContestType;
-  order?: 'asc' | 'desc';
-  orderBy?: 'difficulty' | 'contestDate';
-  page: number;
-  pageSize?: number;
-  userId?: string;
-}
+export type ProblemListFilters = NormalizedProblemListFilters;
 
-export async function getProblemListFromDB({
-  search,
-  tags,
-  difficulty_min,
-  difficulty_max,
-  status,
-  contestType,
-  order = 'asc',
-  orderBy,
-  page = 1,
-  pageSize = 50,
-  userId,
-}: ProblemListFilters): Promise<{ problems: Array<ProblemListItem>; totalProblems: number; }> {
+export async function getProblemListFromDB(input: ProblemListFilters): Promise<{ problems: Array<ProblemListItem>; totalProblems: number; }> {
+  const {
+    search,
+    tags,
+    difficulty_min,
+    difficulty_max,
+    status,
+    contestType,
+    order = 'asc',
+    orderBy,
+    page = 1,
+    pageSize = 50,
+    userId,
+  } = normalizeProblemListFilters(input);
   const skip = (page - 1) * pageSize;
 
   const where: Prisma.ProblemWhereInput = {};
@@ -186,13 +182,14 @@ export async function getProblemListFromDB({
 }
 
 export async function searchProblemsFromDB(query: string, limit: number = 10) {
-  if (!query || query.length < 2) return [];
+  const normalizedQuery = normalizeProblemSearchQuery(query);
+  if (!normalizedQuery) return [];
 
   return await prisma.problem.findMany({
     where: {
       OR: [
-        { id: { contains: query, mode: 'insensitive' } },
-        { name: { contains: query, mode: 'insensitive' } },
+        { id: { contains: normalizedQuery, mode: 'insensitive' } },
+        { name: { contains: normalizedQuery, mode: 'insensitive' } },
       ],
     },
     select: {
@@ -200,6 +197,6 @@ export async function searchProblemsFromDB(query: string, limit: number = 10) {
       name: true,
       firstContestId: true,
     },
-    take: limit,
+    take: normalizeProblemSearchLimit(limit),
   });
 }

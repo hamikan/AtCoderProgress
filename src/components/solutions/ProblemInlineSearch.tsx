@@ -5,6 +5,7 @@ import { Loader2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/use-debounce';
 import { searchProblems } from '@/lib/actions/problem';
+import { MAX_PROBLEM_SEARCH_QUERY_LENGTH } from '@/lib/validation/problem-search';
 
 interface ProblemSearchResult {
   id: string;
@@ -85,6 +86,7 @@ export default function ProblemInlineSearch({
           placeholder={placeholder}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
+          maxLength={MAX_PROBLEM_SEARCH_QUERY_LENGTH}
           className="pl-9"
           autoFocus
         />

@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { authOptions } from './options';
 import { revalidatePath } from 'next/cache';
 import { syncSubmission } from '@/lib/services/sync/submission';
+import { normalizeAtCoderId } from '@/lib/validation/atcoder-id';
 
 export async function linkAtCoderId(atcoderId: string) {
   const session = await getServerSession(authOptions);
@@ -14,20 +15,18 @@ export async function linkAtCoderId(atcoderId: string) {
     throw new Error('Unauthorized');
   }
 
-  if (!atcoderId || typeof atcoderId !== 'string') {
-    throw new Error('AtCoder ID is required');
-  }
+  const normalizedAtCoderId = normalizeAtCoderId(atcoderId);
 
   try {
     const userId = session.user.id;
     await prisma.user.update({
       where: { id: userId },
-      data: { atcoderId: atcoderId },
+      data: { atcoderId: normalizedAtCoderId },
     });
     
     // 初回同期をバックグラウンドで開始 (awaitしない)
     // ユーザーは即座にダッシュボードへ遷移できる
-    syncSubmission(userId, atcoderId, 0).catch(error => {
+    syncSubmission(userId, normalizedAtCoderId, 0).catch(error => {
       console.error('Background initial sync failed:', error);
     });
 

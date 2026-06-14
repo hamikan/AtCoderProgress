@@ -7,6 +7,8 @@ import { generateReactHelpers } from '@uploadthing/react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { validateEditorImageFile } from '@/lib/validation/editor-image-upload';
+
 export type UploadedFile<T = unknown> = ClientUploadedFileData<T>;
 
 const mockUploadsEnabled = process.env.NEXT_PUBLIC_MOCK_UPLOADS === 'true';
@@ -31,6 +33,14 @@ export function useUploadFile({
   const [isUploading, setIsUploading] = React.useState(false);
 
   async function uploadThing(file: File) {
+    const validation = validateEditorImageFile(file);
+    if (!validation.ok) {
+      const error = new Error(validation.message);
+      toast.error(validation.message);
+      onUploadError?.(error);
+      return undefined;
+    }
+
     setIsUploading(true);
     setUploadingFile(file);
 

@@ -5,12 +5,13 @@ import { createUploadthing } from 'uploadthing/next';
 import { UploadThingError } from 'uploadthing/server';
 
 import { authOptions } from '@/lib/auth/options';
+import { EDITOR_IMAGE_UPLOAD_MAX_FILE_SIZE } from '@/lib/validation/editor-image-upload';
 
-const f = createUploadthing();
+const uploadThing = createUploadthing();
 
 export const ourFileRouter = {
-  editorUploader: f({
-    image: { maxFileSize: '4MB', maxFileCount: 1 },
+  editorUploader: uploadThing({
+    image: { maxFileSize: EDITOR_IMAGE_UPLOAD_MAX_FILE_SIZE, maxFileCount: 1 },
   })
     .middleware(async () => {
       const session = await getServerSession(authOptions);

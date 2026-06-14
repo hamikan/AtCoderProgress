@@ -26,6 +26,8 @@
     "lint": "eslint .",
     "lint:strict": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
+    "test": "npm run test:unit",
+    "test:unit": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"CommonJS\"}' node --test -r ts-node/register -r tsconfig-paths/register 'src/**/*.test.ts'",
     "typecheck": "tsc --noEmit",
     "db:seed:tags": "ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed-tags.ts",
     "db:sync:latest": "ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/sync-latest.ts"

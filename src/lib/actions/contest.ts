@@ -7,7 +7,7 @@ import {
   isContestOrder,
   parseContestPageSize,
   validateContestCursor,
-} from '@/lib/services/db/contest-pagination';
+} from '@/lib/validation/contest-page';
 import { getContestPageWithSubmissions, type ContestPageResult } from '@/lib/services/db/contest';
 
 interface LoadContestPageInput {

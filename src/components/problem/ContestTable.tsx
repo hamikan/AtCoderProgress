@@ -9,23 +9,29 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getDifficultyColor } from '@/lib/utils';
 import { Problem } from '@/types/problem'
-import { Contest } from '@/types/contest';
+import { Contest, ContestKind, ContestOrder } from '@/types/contest';
 import { SubmissionStatus } from '@/types/submission';
 
 interface ContestTableProps {
   contests: Contest[];
+  contestType: ContestKind;
+  order: ContestOrder;
   problemIndexes: string[];
   submissionStatusMap: Record<string, SubmissionStatus>;
   footer?: ReactNode;
 }
 
-export default function ContestTable({ contests, problemIndexes, submissionStatusMap, footer }: ContestTableProps) {
+export default function ContestTable({
+  contests,
+  contestType,
+  footer,
+  order,
+  problemIndexes,
+  submissionStatusMap,
+}: ContestTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  const contestType = searchParams.get('contestType') || 'abc';
-  const sortOrder = searchParams.get('order') || 'desc';
 
   const handleValueChange = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
@@ -92,7 +98,7 @@ export default function ContestTable({ contests, problemIndexes, submissionStatu
               </SelectContent>
             </Select>
             <Select
-              value={sortOrder}
+              value={order}
               onValueChange={(value) => handleValueChange('order', value)}
             >
               <SelectTrigger>
