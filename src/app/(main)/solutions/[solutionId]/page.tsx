@@ -13,7 +13,7 @@ import { normalizeSolutionRouteParams } from './params';
 
 interface SolutionPageProps {
   params: Promise<{
-    problemId: string;
+    solutionId: string;
   }>;
 }
 
