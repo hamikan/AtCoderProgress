@@ -4,9 +4,9 @@ export const MAX_SOLUTION_TITLE_LENGTH = 120;
 export const MAX_SOLUTION_TAGS = 20;
 export const MAX_SOLUTION_TAG_NAME_LENGTH = 50;
 export const MAX_SOLUTION_CONTENT_LENGTH = 1_000_000;
+export const MAX_SOLUTION_CONTENT_NODE_DEPTH = 20;
+export const MAX_SOLUTION_CONTENT_NODE_COUNT = 5000;
 
-const MAX_PLATE_NODE_DEPTH = 20;
-const MAX_PLATE_NODE_COUNT = 5000;
 const DATABASE_ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 const VALID_SOLUTION_STATUSES = new Set<SolutionStatus>(
   Object.values(SolutionStatus) as SolutionStatus[]
@@ -66,12 +66,12 @@ function isValidPlateNode(
   depth: number,
   state: { count: number }
 ): boolean {
-  if (depth > MAX_PLATE_NODE_DEPTH) {
+  if (depth > MAX_SOLUTION_CONTENT_NODE_DEPTH) {
     return false;
   }
 
   state.count += 1;
-  if (state.count > MAX_PLATE_NODE_COUNT) {
+  if (state.count > MAX_SOLUTION_CONTENT_NODE_COUNT) {
     return false;
   }
 
