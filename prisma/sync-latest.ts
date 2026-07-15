@@ -23,14 +23,26 @@ async function main() {
   await syncContestAndProblems();
 
   console.log('2/3 Syncing submissions...');
-  await syncSubmission(user.id, user.atcoderId, 0);
-  await prisma.user.update({
-    where: { id: user.id },
+  const submissionsSynced = await syncSubmission(user.id, user.atcoderId, 0);
+  if (!submissionsSynced) {
+    throw new Error('AtCoder ID changed while submissions were syncing.');
+  }
+  const fetchTimestampUpdated = await prisma.user.updateMany({
+    where: {
+      id: user.id,
+      atcoderId: user.atcoderId,
+    },
     data: { submissionsLastFetchedAt: new Date() },
   });
+  if (fetchTimestampUpdated.count !== 1) {
+    throw new Error('AtCoder ID changed while submissions were syncing.');
+  }
 
   console.log('3/3 Syncing rating history...');
-  await syncRatingHistory(user.id, user.atcoderId);
+  const ratingSynced = await syncRatingHistory(user.id, user.atcoderId);
+  if (!ratingSynced) {
+    throw new Error('AtCoder ID changed while rating history was syncing.');
+  }
 
   console.log(`Manual sync finished for ${user.name ?? user.atcoderId}.`);
 }
