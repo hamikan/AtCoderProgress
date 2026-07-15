@@ -48,6 +48,7 @@ model User {
   emailVerified             DateTime?   @map("email_verified")
   image                     String?
   atcoderId                 String?     @unique @map("atcoder_id")
+  atcoderIdChangedAt        DateTime?   @map("atcoder_id_changed_at")
   submissionsLastFetchedAt  DateTime?   @map("submissions_last_fetched_at")
 
   accounts                  Account[]

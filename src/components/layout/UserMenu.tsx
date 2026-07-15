@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Settings, LogOut, User } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import Link from 'next/link';
 
 interface UserMenuProps {
   user: {
@@ -43,7 +44,9 @@ export default function UserMenu({ user }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem><User className="mr-2 h-4 w-4" /><span>プロフィール</span></DropdownMenuItem>
-        <DropdownMenuItem><Settings className="mr-2 h-4 w-4" /><span>設定</span></DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/link-atcoder"><Settings className="mr-2 h-4 w-4" /><span>AtCoder ID設定</span></Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
           <LogOut className="mr-2 h-4 w-4" /><span>ログアウト</span>
