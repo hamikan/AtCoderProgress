@@ -1,10 +1,11 @@
+import 'server-only';
+
 import type { FileRouter } from 'uploadthing/next';
 
-import { getServerSession } from 'next-auth/next';
 import { createUploadthing } from 'uploadthing/next';
 import { UploadThingError } from 'uploadthing/server';
 
-import { authOptions } from '@/lib/auth/options';
+import { getAuthSession } from '@/lib/auth/session';
 import { EDITOR_IMAGE_UPLOAD_MAX_FILE_SIZE } from '@/lib/validation/editor-image-upload';
 
 const uploadThing = createUploadthing();
@@ -14,7 +15,7 @@ export const ourFileRouter = {
     image: { maxFileSize: EDITOR_IMAGE_UPLOAD_MAX_FILE_SIZE, maxFileCount: 1 },
   })
     .middleware(async () => {
-      const session = await getServerSession(authOptions);
+      const session = await getAuthSession();
 
       if (!session?.user?.id) {
         throw new UploadThingError('Unauthorized');

@@ -1,25 +1,18 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { LogIn } from 'lucide-react';
-import type { Session } from 'next-auth';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 interface AuthButtonsProps {
-  session: Session | null;
+  isAuthenticated: boolean;
 }
 
-export default function AuthButtons({ session }: AuthButtonsProps) {
+export default function AuthButtons({ isAuthenticated }: AuthButtonsProps) {
   const router = useRouter();
 
-  if (session) {
+  if (isAuthenticated) {
     return (
       <Button
         size="sm"
@@ -33,45 +26,23 @@ export default function AuthButtons({ session }: AuthButtonsProps) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden md:flex items-center space-x-2 text-slate-600 hover:text-slate-900"
-          >
-            <LogIn className="h-4 w-4" />
-            <span>ログイン</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
-          <DropdownMenuItem onClick={() => signIn('google')}>
-            Googleでログイン
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => signIn('github', { callbackUrl: '/link-atcoder' })}>
-            GitHubでログイン
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="hidden items-center space-x-2 text-slate-600 hover:text-slate-900 md:flex"
+        onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
+      >
+        <LogIn className="h-4 w-4" />
+        <span>ログイン</span>
+      </Button>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="sm"
-            className="bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900"
-          >
-            始める
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
-          <DropdownMenuItem onClick={() => signIn('google')}>
-            Googleで始める
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => signIn('github', { callbackUrl: '/link-atcoder' })}>
-            GitHubで始める
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        size="sm"
+        className="bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900"
+        onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
+      >
+        始める
+      </Button>
     </>
   );
 }

@@ -1,37 +1,36 @@
-import { NextAuthOptions } from "next-auth"
-import GithubProvider from "next-auth/providers/github"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
-import { syncSubmission } from "@/lib/services/sync/submission";
+import 'server-only';
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_ID ?? "",
-      clientSecret: process.env.GITHUB_SECRET ?? "",
-    }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    signIn: '/login',
-  },
-  events: {
-    async signIn({ user }) {
-      if (user.id && user.atcoderId) {
-        syncSubmission(user.id, user.atcoderId, 0).catch(err => {
-          console.error("Login-time sync failed:", err);
-        });
-      }
-    }
-  },
-  callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        session.user.atcoderId = user.atcoderId;
-      }
-      return session;
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import type { NextAuthOptions } from 'next-auth';
+import GithubProvider from 'next-auth/providers/github';
+
+import { getRequiredAuthEnvironmentVariable } from '@/lib/auth/environment';
+import type { AuthEnvironment } from '@/lib/auth/environment';
+import { prisma } from '@/lib/prisma';
+
+export function createAuthOptions(
+  environment: AuthEnvironment = process.env
+): NextAuthOptions {
+  return {
+    adapter: PrismaAdapter(prisma),
+    providers: [
+      GithubProvider({
+        clientId: getRequiredAuthEnvironmentVariable('GITHUB_ID', environment),
+        clientSecret: getRequiredAuthEnvironmentVariable('GITHUB_SECRET', environment),
+      }),
+    ],
+    secret: getRequiredAuthEnvironmentVariable('NEXTAUTH_SECRET', environment),
+    pages: {
+      signIn: '/login',
     },
-  },
-};
+    callbacks: {
+      async session({ session, user }) {
+        if (session.user) {
+          session.user.id = user.id;
+          session.user.atcoderId = user.atcoderId;
+        }
+        return session;
+      },
+    },
+  };
+}

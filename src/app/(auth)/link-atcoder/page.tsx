@@ -1,88 +1,20 @@
+import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import LinkAtCoderForm from '@/features/auth/components/LinkAtCoderForm';
+import LoginPrompt from '@/features/auth/components/LoginPrompt';
 
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { linkAtCoderId } from '@/lib/auth/actions';
-import { validateAtCoderId } from '@/lib/validation/atcoder-id';
-
-export default function LinkAtCoderPage() {
-  const [atcoderId, setAtcoderId] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-  const { update } = useSession();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    const validation = validateAtCoderId(atcoderId);
-    if (!validation.ok) {
-      setError(validation.error);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const result = await linkAtCoderId(validation.value);
-      if (!result.success) {
-        setError(result.error ?? 'AtCoder IDの更新に失敗しました。');
-        return;
-      }
-      await update(); 
-      router.push('/');
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '連携に失敗しました。');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export default async function LinkAtCoderPage() {
+  const user = await getCurrentUser();
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">メインAtCoder IDを設定</h1>
-          <p className="mt-2 text-gray-600">あなたの分析に使うAtCoder IDを入力してください。</p>
-          <p className="mt-2 text-sm text-gray-500">設定後7日間は別のIDへ変更できません。</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-          <div>
-            <label htmlFor="atcoderId" className="block text-sm font-medium text-gray-700">
-              AtCoder ID
-            </label>
-            <div className="mt-1">
-              <input
-                id="atcoderId"
-                name="atcoderId"
-                type="text"
-                value={atcoderId}
-                onChange={(e) => setAtcoderId(e.target.value)}
-                maxLength={16}
-                minLength={3}
-                pattern="[A-Za-z0-9_]{3,16}"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="chokudai"
-              />
-            </div>
-          </div>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400"
-            >
-              {isLoading ? '設定中...' : '設定して始める'}
-            </button>
-          </div>
-        </form>
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
+      <div className="mx-auto max-w-md space-y-4">
+        {!user && (
+          <LoginPrompt
+            returnTo="/link-atcoder"
+            description="AtCoder IDを保存するにはログインが必要です。"
+          />
+        )}
+        <LinkAtCoderForm canSubmit={Boolean(user)} />
       </div>
     </div>
   );

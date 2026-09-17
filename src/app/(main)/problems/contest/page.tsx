@@ -1,35 +1,24 @@
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth/options';
-import ContestWorkspace from '@/components/problem/ContestWorkspace';
-import { getContestWorkspaceData } from '@/lib/services/db/contest';
-import type { ContestKind } from '@/types/contest';
-import { normalizeContestSearchParams } from './search-params';
-
-const getProblemIndexes = (contestType: ContestKind) => {
-  switch (contestType) {
-    case 'abc': return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex'];
-    case 'arc': return ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
-    case 'agc': return ['A', 'B', 'C', 'D', 'E', 'F', 'F2'];
-    default: return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H/Ex'];
-  }
-};
+import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import ContestWorkspace from '@/features/problems/components/ContestWorkspace';
+import { getContestWorkspace } from '@/features/problems/api/get-contest-workspace';
+import { getContestProblemIndexes } from '@/features/problems/functions/get-contest-problem-indexes';
+import { normalizeContestSearchParams } from '@/features/problems/functions/normalize-contest-search-params';
+import type { ContestSearchParamsInput } from '@/features/problems/types';
 
 interface ContestPageProps {
-  searchParams: Promise<{
-    contestType?: string;
-    order?: string;
-  }>;
+  searchParams: Promise<ContestSearchParamsInput>;
 }
 
 export default async function ContestPage({ searchParams }: ContestPageProps) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ?? undefined;
-  const { contestType, order } = normalizeContestSearchParams(await searchParams);
+  const user = await getCurrentUser();
+  const userId = user?.id;
+  const { contestType, cursor, order } = normalizeContestSearchParams(await searchParams);
 
-  const contestPage = await getContestWorkspaceData(contestType, order, {
+  const contestPage = await getContestWorkspace(contestType, order, {
+    cursor,
     userId,
   });
-  const problemIndexes = getProblemIndexes(contestType);
+  const problemIndexes = getContestProblemIndexes(contestType);
 
   return (
     <div className="bg-slate-50 h-full overflow-y-auto">

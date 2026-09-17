@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
-import { syncContestAndProblems } from '@/lib/services/sync/contest';
-import { syncRatingHistory } from '@/lib/services/sync/rating';
-import { syncSubmission } from '@/lib/services/sync/submission';
+import { syncContestsAndProblems } from '@/features/problems/sync/sync-contests-and-problems';
+import { syncRatingHistory } from '@/features/ratings/sync/sync-rating-history';
+import { syncSubmissions } from '@/features/submissions/sync/sync-submissions';
 
 const DEFAULT_ATCODER_ID = 'Mikankyan';
 
@@ -20,24 +20,13 @@ async function main() {
   }
 
   console.log('1/3 Syncing contests and problems...');
-  await syncContestAndProblems();
+  await syncContestsAndProblems();
 
   console.log('2/3 Syncing submissions...');
-  const submissionsSynced = await syncSubmission(user.id, user.atcoderId, 0);
+  const submissionsSynced = await syncSubmissions(user.id, user.atcoderId, 0);
   if (!submissionsSynced) {
     throw new Error('AtCoder ID changed while submissions were syncing.');
   }
-  const fetchTimestampUpdated = await prisma.user.updateMany({
-    where: {
-      id: user.id,
-      atcoderId: user.atcoderId,
-    },
-    data: { submissionsLastFetchedAt: new Date() },
-  });
-  if (fetchTimestampUpdated.count !== 1) {
-    throw new Error('AtCoder ID changed while submissions were syncing.');
-  }
-
   console.log('3/3 Syncing rating history...');
   const ratingSynced = await syncRatingHistory(user.id, user.atcoderId);
   if (!ratingSynced) {

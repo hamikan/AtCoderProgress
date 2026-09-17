@@ -3,23 +3,16 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Menu, LogIn } from 'lucide-react';
-import type { Session } from 'next-auth';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 interface MobileMenuProps {
-  session: Session | null;
+  isAuthenticated: boolean;
   navigation: { name: string; href: string }[];
 }
 
-export default function MobileMenu({ session, navigation }: MobileMenuProps) {
+export default function MobileMenu({ isAuthenticated, navigation }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
@@ -42,7 +35,7 @@ export default function MobileMenu({ session, navigation }: MobileMenuProps) {
               {item.name}
             </a>
           ))}
-          {session ? (
+          {isAuthenticated ? (
             <Button
               variant="ghost"
               className="justify-start p-0 text-slate-600"
@@ -54,22 +47,14 @@ export default function MobileMenu({ session, navigation }: MobileMenuProps) {
               始める
             </Button>
           ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="justify-start p-0 text-slate-600">
-                  <LogIn className="h-4 w-4 mr-2" />
-                  ログイン
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuItem onClick={() => signIn('google')}>
-                  Googleでログイン
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => signIn('github', { callbackUrl: '/link-atcoder' })}>
-                  GitHubでログイン
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              className="justify-start p-0 text-slate-600"
+              onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
+            >
+              <LogIn className="mr-2 h-4 w-4" />
+              GitHubでログイン
+            </Button>
           )}
         </div>
       </SheetContent>

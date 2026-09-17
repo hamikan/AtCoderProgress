@@ -1,22 +1,16 @@
 
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth/options';
-import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import Header from '@/components/landing/Header';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
 import Footer from '@/components/landing/Footer';
 
 export default async function TopPage() {
-  const session = await getServerSession(authOptions);
-
-  if (session) {
-    redirect('/dashboard');
-  }
+  const user = await getCurrentUser();
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <Header />
+      <Header isAuthenticated={Boolean(user)} />
       <Hero />
       <Features />
       <Footer />

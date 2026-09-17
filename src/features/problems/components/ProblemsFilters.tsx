@@ -1,0 +1,184 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
+import { MAX_PROBLEM_SEARCH_QUERY_LENGTH } from '@/features/problems/functions/normalize-problem-search';
+import type {
+  NormalizedProblemListFilters,
+  SelectableTag,
+} from '@/features/problems/types';
+
+interface ProblemsFiltersProps {
+  filters: NormalizedProblemListFilters;
+  availableTags: SelectableTag[];
+  isAuthenticated: boolean;
+}
+
+function DifficultyRangeFilter({
+  max,
+  min,
+  onCommit,
+}: {
+  max: number;
+  min: number;
+  onCommit: (range: [number, number]) => void;
+}) {
+  const [range, setRange] = useState<[number, number]>([min, max]);
+
+  return (
+    <div className="px-2">
+      <label className="block text-sm font-medium text-slate-700 mb-4">
+        難易度範囲: {range[0]} ~ {range[1]}
+      </label>
+      <Slider
+        min={0}
+        max={4000}
+        step={100}
+        value={range}
+        onValueChange={(value) => setRange([value[0] ?? min, value[1] ?? max])}
+        onValueCommit={(value) => onCommit([value[0] ?? min, value[1] ?? max])}
+      />
+    </div>
+  );
+}
+
+export default function ProblemsFilters({
+  filters,
+  availableTags,
+  isAuthenticated,
+}: ProblemsFiltersProps) {
+  const router = useRouter();
+  const currentSearchParams = useSearchParams();
+  const difficultyMin = filters.difficultyMin ?? 0;
+  const difficultyMax = filters.difficultyMax ?? 4000;
+
+  const handleQueryChange = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(currentSearchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+    params.set('page', '1');
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleTagToggle = (tagName: string) => {
+    const currentTags = filters.tags || [];
+    const newTags = currentTags.includes(tagName)
+      ? currentTags.filter(t => t !== tagName)
+      : [...currentTags, tagName];
+    handleQueryChange({ tags: newTags.length > 0 ? newTags.join(',') : null });
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-sm ring-1 ring-slate-200 space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Input
+          placeholder="問題名 / IDで検索..."
+          defaultValue={filters.search || ''}
+          maxLength={MAX_PROBLEM_SEARCH_QUERY_LENGTH}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleQueryChange({ search: (e.target as HTMLInputElement).value });
+            }
+          }}
+        />
+        <Select
+          value={filters.status || 'ALL'}
+          disabled={!isAuthenticated}
+          onValueChange={(value) => handleQueryChange({ status: value === 'ALL' ? null : value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="解答ステータス" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">全てのステータス</SelectItem>
+            <SelectItem value="AC">AC</SelectItem>
+            <SelectItem value="TRYING">挑戦中</SelectItem>
+            <SelectItem value="UNSOLVED">未解答</SelectItem>
+            <div className="h-px bg-slate-100 my-1" />
+            <SelectItem value="SELF_AC">自力AC</SelectItem>
+            <SelectItem value="EXPLANATION_AC">解説AC</SelectItem>
+            <SelectItem value="REVIEW_AC">復習AC</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.contestType || 'ALL'}
+          onValueChange={(value) => handleQueryChange({ contestType: value === 'ALL' ? null : value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="コンテストタイプ" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">全てのコンテスト</SelectItem>
+            <SelectItem value="ABC">ABC</SelectItem>
+            <SelectItem value="ARC">ARC</SelectItem>
+            <SelectItem value="AGC">AGC</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center space-x-2">
+          <Select
+            value={filters.orderBy || 'contestDate'}
+            onValueChange={(value) => handleQueryChange({ orderBy: value })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="difficulty">難易度</SelectItem>
+              <SelectItem value="contestDate">新着順</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters.order || 'desc'}
+            onValueChange={(value) => handleQueryChange({ order: value })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">昇順</SelectItem>
+              <SelectItem value="desc">降順</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      {!isAuthenticated && (
+        <p className="text-xs text-slate-500">
+          解答ステータスの絞り込みはログイン後に利用できます。
+        </p>
+      )}
+      <DifficultyRangeFilter
+        key={`${difficultyMin}-${difficultyMax}`}
+        min={difficultyMin}
+        max={difficultyMax}
+        onCommit={(value) => {
+          handleQueryChange({
+            difficulty_min: value[0].toString(),
+            difficulty_max: value[1].toString()
+          });
+        }}
+      />
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">タグで絞り込み</label>
+        <div className="flex flex-wrap gap-2">
+          {availableTags.map((tag) => (
+            <Badge
+              key={tag.id}
+              variant={(filters.tags || []).includes(tag.name) ? 'default' : 'outline'}
+              className="cursor-pointer transition-colors"
+              onClick={() => handleTagToggle(tag.name)}
+            >
+              {tag.name}
+              {(filters.tags || []).includes(tag.name) && <X className="ml-1.5 h-3 w-3" />}
+            </Badge>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
