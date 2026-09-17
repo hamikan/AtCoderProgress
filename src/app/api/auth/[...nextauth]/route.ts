@@ -1,7 +1,14 @@
 import NextAuth from 'next-auth';
+import type { NextRequest } from 'next/server';
 
-import { authOptions } from '@/lib/auth/options';
+import { createAuthOptions } from '@/lib/auth/options';
 
-const handler = NextAuth(authOptions);
+type AuthRouteContext = {
+  params: Promise<{ nextauth: string[] }>;
+};
+
+function handler(request: NextRequest, context: AuthRouteContext) {
+  return NextAuth(request, context, createAuthOptions());
+}
 
 export { handler as GET, handler as POST };

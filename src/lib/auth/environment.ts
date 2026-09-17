@@ -5,7 +5,7 @@ type AuthEnvironmentVariable =
   | 'GITHUB_SECRET'
   | 'NEXTAUTH_SECRET';
 
-type AuthEnvironment = Readonly<
+export type AuthEnvironment = Readonly<
   Partial<Record<AuthEnvironmentVariable, string | undefined>>
 >;
 

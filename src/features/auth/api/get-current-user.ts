@@ -1,12 +1,10 @@
 import 'server-only';
 
-import { getServerSession } from 'next-auth/next';
-
-import { authOptions } from '@/lib/auth/options';
 import type { CurrentUser } from '@/features/auth/types';
+import { getAuthSession } from '@/lib/auth/session';
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const session = await getServerSession(authOptions);
+  const session = await getAuthSession();
   const user = session?.user;
 
   if (!user?.id) {

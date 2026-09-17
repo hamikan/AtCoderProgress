@@ -18,6 +18,7 @@ const allowedFeatureDirectories = new Set([
 const serverInfrastructurePaths = new Set([
   'src/lib/auth/environment.ts',
   'src/lib/auth/options.ts',
+  'src/lib/auth/session.ts',
   'src/lib/uploadthing.ts',
 ]);
 const errors = [];
