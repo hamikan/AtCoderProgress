@@ -1,42 +1,43 @@
 import { Suspense } from 'react';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth/options';
-import { getProblemListFromDB } from '@/lib/services/db/problem';
-import { normalizeProblemListSearchParams } from './search-params';
-import { getAvailableTagsFromDB } from '@/lib/services/db/tag';
-import ProblemsFilters from '@/components/problem/ProblemsFilters';
-import ProblemsList from '@/components/problem/ProblemsList';
+import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import LoginPrompt from '@/features/auth/components/LoginPrompt';
+import { getProblemList } from '@/features/problems/api/get-problem-list';
+import { normalizeProblemListSearchParams } from '@/features/problems/functions/normalize-problem-list-search-params';
+import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
+import ProblemsFilters from '@/features/problems/components/ProblemsFilters';
+import ProblemsList from '@/features/problems/components/ProblemsList';
+import type { ProblemListSearchParamsInput } from '@/features/problems/types';
 
 interface ProblemListPageProps {
-  searchParams: Promise<{
-    search?: string;
-    tags?: string;
-    difficulty_min?: string;
-    difficulty_max?: string;
-    status?: string;
-    contestType?: string;
-    orderBy?: string;
-    order?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<ProblemListSearchParamsInput>;
 }
 
 export default async function ProblemListPage({ searchParams }: ProblemListPageProps) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ?? undefined;
+  const user = await getCurrentUser();
+  const userId = user?.id;
   const params = await searchParams;
   const filters = normalizeProblemListSearchParams(params, userId);
 
   const [{ problems, totalProblems }, availableTags] = await Promise.all([
-    getProblemListFromDB(filters),
-    getAvailableTagsFromDB(userId),
+    getProblemList(filters),
+    getSelectableTags(userId),
   ]);
 
   return (
     <div className="bg-gradient-to-br from-slate-50 to-blue-50 h-full">
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="space-y-6">
-          <ProblemsFilters filters={filters} availableTags={availableTags} />
+          {!user && (
+            <LoginPrompt
+              returnTo="/problems/list"
+              description="ログインすると、問題ごとの挑戦状況や解法ステータスを表示できます。"
+            />
+          )}
+          <ProblemsFilters
+            filters={filters}
+            availableTags={availableTags}
+            isAuthenticated={Boolean(user)}
+          />
           <Suspense fallback={<div className="text-center p-8">Loading problems...</div>}>
             <ProblemsList items={problems} totalCount={totalProblems} />
           </Suspense>

@@ -1,11 +1,8 @@
 import { Code2 } from 'lucide-react';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth/options';
 import AuthButtons from './AuthButtons';
 import MobileMenu from './MobileMenu';
 
-export default async function Header() {
-  const session = await getServerSession(authOptions);
+export default function Header({ isAuthenticated }: { isAuthenticated: boolean }) {
 
   const navigation = [
     { name: '機能', href: '#features' },
@@ -38,8 +35,8 @@ export default async function Header() {
         </nav>
 
         <div className="flex items-center space-x-4">
-          <AuthButtons session={session} />
-          <MobileMenu session={session} navigation={navigation} />
+          <AuthButtons isAuthenticated={isAuthenticated} />
+          <MobileMenu isAuthenticated={isAuthenticated} navigation={navigation} />
         </div>
       </div>
     </header>

@@ -26,11 +26,13 @@
     "lint": "eslint .",
     "lint:strict": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
-    "test": "npm run test:unit",
-    "test:unit": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"CommonJS\"}' node --test -r ts-node/register -r tsconfig-paths/register 'src/**/*.test.ts'",
+    "test": "npm run test:unit && npm run test:architecture",
+    "test:unit": "NODE_OPTIONS=--conditions=react-server TS_NODE_FILES=true TS_NODE_COMPILER_OPTIONS='{\"module\":\"CommonJS\"}' node --test -r ts-node/register -r tsconfig-paths/register 'src/**/*.test.ts'",
+    "test:coverage": "c8 --all --include='src/features/**/functions/**/*.ts' --include='src/features/**/schemas/**/*.ts' --include='src/lib/validation/**/*.ts' --include='src/lib/atcoder/difficulty.ts' --include='src/lib/atcoder/user-id.ts' --include='src/lib/auth/environment.ts' --exclude='**/*.test.ts' --reporter=text --check-coverage --lines 80 --functions 80 --branches 80 --statements 80 npm run test:unit",
+    "test:architecture": "node scripts/check-architecture.mjs",
     "typecheck": "tsc --noEmit",
     "db:seed:tags": "ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed-tags.ts",
-    "db:sync:latest": "ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/sync-latest.ts"
+    "db:sync:latest": "NODE_OPTIONS=--conditions=react-server ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/sync-latest.ts"
   },
   "prisma": {
     "seed": "ts-node -r tsconfig-paths/register --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

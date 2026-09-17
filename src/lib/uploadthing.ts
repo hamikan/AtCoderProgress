@@ -1,3 +1,5 @@
+import 'server-only';
+
 import type { FileRouter } from 'uploadthing/next';
 
 import { getServerSession } from 'next-auth/next';

@@ -1,5 +1,5 @@
 
-import type { DefaultSession, DefaultUser } from "next-auth"
+import type { DefaultSession, DefaultUser } from 'next-auth';
 
 declare module "next-auth" {
   /**
@@ -9,7 +9,7 @@ declare module "next-auth" {
     user?: {
       id?: string | null
       atcoderId?: string | null
-    } & DefaultSession["user"]
+    } & DefaultSession['user'];
   }
 
   interface User extends DefaultUser {

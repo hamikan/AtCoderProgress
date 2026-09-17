@@ -1,13 +1,18 @@
 import { Button } from '@/components/ui/button';
 import { Bell, Code2, Home } from 'lucide-react';
-import { getServerSession } from 'next-auth/next';
 import Link from 'next/link';
-import { authOptions } from '@/lib/auth/options';
+import LoginLink from './LoginLink';
 import UserMenu from './UserMenu';
 
-export default async function Header() {
-  const session = await getServerSession(authOptions);
-  const user = session?.user;
+interface HeaderProps {
+  user: {
+    name: string | null;
+    image: string | null;
+    atcoderId: string | null;
+  } | null;
+}
+
+export default function Header({ user }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
@@ -34,7 +39,7 @@ export default async function Header() {
             <Bell className="h-4 w-4" />
             <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
           </Button>
-          {user && <UserMenu user={user} />}
+          {user ? <UserMenu user={user} /> : <LoginLink />}
         </div>
       </div>
     </header>

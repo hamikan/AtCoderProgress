@@ -1,46 +1,48 @@
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth/options';
-import { redirect } from 'next/navigation';
-import {
-  getUserSolutions,
-  getSolutionById,
-  getProblemDetail,
-  getSolutionsByProblemAndContest,
-  type ProblemDetail,
-  type SolutionRecordListItem,
-  type SolutionWithTags,
-} from '@/lib/services/db/solution';
-import { getAvailableTagsFromDB } from '@/lib/services/db/tag';
-import SolutionsWorkspace from '@/components/solutions/SolutionsWorkspace';
+import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import LoginPrompt from '@/features/auth/components/LoginPrompt';
+import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
+import { getProblemDetail } from '@/features/problems/api/get-problem-detail';
+import { searchProblems } from '@/features/problems/api/search-problems';
+import { getSolutionById } from '@/features/solutions/api/get-solution-by-id';
+import { getSolutionRecords } from '@/features/solutions/api/get-solution-records';
+import { getUserSolutions } from '@/features/solutions/api/get-user-solutions';
+import SolutionsWorkspace from '@/features/solutions/components/SolutionsWorkspace';
+import { normalizeSolutionSearchParams } from '@/features/solutions/functions/normalize-solution-search-params';
+import type {
+  SolutionRecordListItem,
+  SolutionSearchParamsInput,
+  SolutionWithTags,
+} from '@/features/solutions/types';
+import type { ProblemDetail } from '@/features/problems/types';
 
-export default async function SolutionsPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    redirect('/login');
-  }
+interface SolutionsPageProps {
+  searchParams: Promise<SolutionSearchParamsInput>;
+}
 
-  const userId = session.user.id;
-
-  const [solutions, availableTags] = await Promise.all([
+export default async function SolutionsPage({ searchParams }: SolutionsPageProps) {
+  const user = await getCurrentUser();
+  const userId = user?.id;
+  const { problemSearch } = normalizeSolutionSearchParams(await searchParams);
+  const [solutions, availableTags, problemSearchResults] = await Promise.all([
     getUserSolutions(userId),
-    getAvailableTagsFromDB(userId),
+    getSelectableTags(userId),
+    searchProblems(problemSearch),
   ]);
 
-  // 最新の解法をデフォルトで表示
   let initialProblem: ProblemDetail | null = null;
   let initialSolution: SolutionWithTags | null = null;
   let initialContestId: string | null = null;
   let initialRelatedSolutions: SolutionRecordListItem[] = [];
 
-  if (solutions.length > 0) {
-    const firstSolutionId = solutions[0].latestSolutionId;
-    const solution = await getSolutionById(userId, firstSolutionId);
-    const firstProblemId = solution?.problemId;
-
-    if (firstProblemId && solution) {
+  const firstSolutionId = solutions[0]?.latestSolutionId;
+  if (firstSolutionId) {
+    const solution = userId
+      ? await getSolutionById(userId, firstSolutionId)
+      : null;
+    if (solution) {
       const [problem, relatedSolutions] = await Promise.all([
-        getProblemDetail(firstProblemId),
-        getSolutionsByProblemAndContest(userId, firstProblemId, solution.contestId),
+        getProblemDetail(solution.problemId),
+        getSolutionRecords(userId, solution.problemId),
       ]);
       initialProblem = problem;
       initialSolution = solution;
@@ -57,6 +59,10 @@ export default async function SolutionsPage() {
       initialSolution={initialSolution}
       initialContestId={initialContestId}
       initialRelatedSolutions={initialRelatedSolutions}
+      problemSearchQuery={problemSearch}
+      problemSearchResults={problemSearchResults}
+      isAuthenticated={Boolean(user)}
+      notice={!user ? <LoginPrompt returnTo="/solutions" /> : null}
     />
   );
 }
