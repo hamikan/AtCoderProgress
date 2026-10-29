@@ -5,17 +5,14 @@ import * as React from 'react';
 import type { PlateEditor, PlateElementProps } from 'platejs/react';
 
 import {
-  CalendarIcon,
   ChevronRightIcon,
   Code2,
-  Columns3Icon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
   LightbulbIcon,
   ListIcon,
   ListOrdered,
-  PenToolIcon,
   PilcrowIcon,
   Quote,
   RadicalIcon,
@@ -148,35 +145,11 @@ const groups: Group[] = [
         value: KEYS.toc,
       },
       {
-        icon: <Columns3Icon />,
-        label: '3 columns',
-        value: 'action_three_columns',
-      },
-      {
         focusEditor: false,
         icon: <RadicalIcon />,
         keywords: ['math', 'block'],
         label: 'Math (block)',
         value: KEYS.equation,
-      },
-      {
-        icon: <PenToolIcon />,
-        keywords: ['excalidraw'],
-        label: 'Excalidraw',
-        value: KEYS.excalidraw,
-      },
-      {
-        icon: <Code2 />,
-        keywords: [
-          'code-drawing',
-          'diagram',
-          'plantuml',
-          'graphviz',
-          'flowchart',
-          'mermaid',
-        ],
-        label: 'Code Drawing',
-        value: KEYS.codeDrawing,
       },
     ].map((item) => ({
       ...item,
@@ -188,13 +161,6 @@ const groups: Group[] = [
   {
     group: 'Inline',
     items: [
-      {
-        focusEditor: true,
-        icon: <CalendarIcon />,
-        keywords: ['time'],
-        label: 'Date',
-        value: KEYS.date,
-      },
       {
         focusEditor: false,
         icon: <RadicalIcon />,
