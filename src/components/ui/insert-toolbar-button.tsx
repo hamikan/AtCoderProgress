@@ -5,10 +5,7 @@ import * as React from 'react';
 import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu';
 
 import {
-  CalendarIcon,
   ChevronRightIcon,
-  Code2,
-  Columns3Icon,
   FileCodeIcon,
   Heading1Icon,
   Heading2Icon,
@@ -18,7 +15,6 @@ import {
   ListIcon,
   ListOrderedIcon,
   MinusIcon,
-  PenToolIcon,
   PilcrowIcon,
   PlusIcon,
   QuoteIcon,
@@ -161,25 +157,10 @@ const groups: Group[] = [
         value: KEYS.toc,
       },
       {
-        icon: <Columns3Icon />,
-        label: '3 columns',
-        value: 'action_three_columns',
-      },
-      {
         focusEditor: false,
         icon: <RadicalIcon />,
         label: 'Equation',
         value: KEYS.equation,
-      },
-      {
-        icon: <PenToolIcon />,
-        label: 'Excalidraw',
-        value: KEYS.excalidraw,
-      },
-      {
-        icon: <Code2 />,
-        label: 'Code Drawing',
-        value: KEYS.codeDrawing,
       },
     ].map((item) => ({
       ...item,
@@ -195,12 +176,6 @@ const groups: Group[] = [
         icon: <Link2Icon />,
         label: 'Link',
         value: KEYS.link,
-      },
-      {
-        focusEditor: true,
-        icon: <CalendarIcon />,
-        label: 'Date',
-        value: KEYS.date,
       },
       {
         focusEditor: false,
