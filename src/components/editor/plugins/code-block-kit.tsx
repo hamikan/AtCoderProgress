@@ -18,7 +18,7 @@ const lowlight = createLowlight(all);
 export const CodeBlockKit = [
   CodeBlockPlugin.configure({
     node: { component: CodeBlockElement },
-    options: { lowlight },
+    options: { defaultLanguage: 'auto', lowlight },
     shortcuts: { toggle: { keys: 'mod+alt+8' } },
   }),
   CodeLinePlugin.withComponent(CodeLineElement),
