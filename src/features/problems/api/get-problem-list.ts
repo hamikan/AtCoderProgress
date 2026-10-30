@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/generated/prisma/client';
 
 import { buildProblemListItems } from '@/features/problems/functions/build-problem-list-items';
 import { normalizeProblemListFilters } from '@/features/problems/functions/normalize-problem-list-filters';
