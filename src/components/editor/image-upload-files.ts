@@ -1,6 +1,6 @@
 import {
   EDITOR_IMAGE_ACCEPT,
-  validateEditorImageFile,
+  validateEditorImageFileBeforeCompression,
 } from '@/lib/validation/editor-image-upload';
 
 export { EDITOR_IMAGE_ACCEPT };
@@ -14,7 +14,7 @@ export function filterValidEditorImageFiles(files: ArrayLike<File> | Iterable<Fi
     rejectedFiles: Array<{ file: File; message: string }>;
   }>(
     (result, file) => {
-      const validation = validateEditorImageFile(file);
+      const validation = validateEditorImageFileBeforeCompression(file);
 
       if (validation.ok) {
         return {
