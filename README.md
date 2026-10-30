@@ -88,4 +88,4 @@ features/<feature>/
 
 ### Unit Testカバレッジ
 
-`npm run test:coverage` は、Unit Testの対象である `features/*/functions`、`features/*/schemas` と共有の検証・AtCoder変換関数を `--all` で数え、未実行ファイルも含めて80%以上を要求します。Reactコンポーネント、DB、Server Actionなどを含むプロジェクト全体のカバレッジを意味するものではありません。
+`npm run test:coverage` は、Unit Testの対象である `features/*/functions`、`features/*/schemas` と共有の検証・AtCoder変換・コードハイライト処理を `--all` で数え、未実行ファイルも含めて80%以上を要求します。Reactコンポーネント、DB、Server Actionなどを含むプロジェクト全体のカバレッジを意味するものではありません。

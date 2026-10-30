@@ -58,7 +58,7 @@ const groups: Group[] = [
     items: [
       {
         icon: <PilcrowIcon />,
-        label: 'Paragraph',
+        label: 'Text',
         value: KEYS.p,
       },
       {
@@ -83,12 +83,12 @@ const groups: Group[] = [
       },
       {
         icon: <FileCodeIcon />,
-        label: 'Code',
+        label: 'Code Block',
         value: KEYS.codeBlock,
       },
       {
         icon: <QuoteIcon />,
-        label: 'Quote',
+        label: 'Blockquote',
         value: KEYS.blockquote,
       },
       {
@@ -123,7 +123,7 @@ const groups: Group[] = [
       },
       {
         icon: <ChevronRightIcon />,
-        label: 'Toggle list',
+        label: 'Toggle',
         value: KEYS.toggle,
       },
     ].map((item) => ({
@@ -159,7 +159,7 @@ const groups: Group[] = [
       {
         focusEditor: false,
         icon: <RadicalIcon />,
-        label: 'Equation',
+        label: 'Math (block)',
         value: KEYS.equation,
       },
     ].map((item) => ({
@@ -180,7 +180,7 @@ const groups: Group[] = [
       {
         focusEditor: false,
         icon: <RadicalIcon />,
-        label: 'Inline Equation',
+        label: 'Math (inline)',
         value: KEYS.inlineEquation,
       },
     ].map((item) => ({
