@@ -1,236 +1,123 @@
 'use client';
 
-import type { AutoformatRule } from '@platejs/autoformat';
-
 import {
-  autoformatArrow,
-  autoformatLegal,
-  autoformatLegalHtml,
-  autoformatMath,
-  AutoformatPlugin,
-  autoformatPunctuation,
-  autoformatSmartQuotes,
-} from '@platejs/autoformat';
-import { insertEmptyCodeBlock } from '@platejs/code-block';
-import { toggleList } from '@platejs/list';
-import { KEYS } from 'platejs';
+  createSlatePlugin,
+  createTextSubstitutionInputRule,
+  type TextSubstitutionPattern,
+} from 'platejs';
 
-const autoformatMarks: AutoformatRule[] = [
-  {
-    match: '***',
-    mode: 'mark',
-    type: [KEYS.bold, KEYS.italic],
-  },
-  {
-    match: '__*',
-    mode: 'mark',
-    type: [KEYS.underline, KEYS.italic],
-  },
-  {
-    match: '__**',
-    mode: 'mark',
-    type: [KEYS.underline, KEYS.bold],
-  },
-  {
-    match: '___***',
-    mode: 'mark',
-    type: [KEYS.underline, KEYS.bold, KEYS.italic],
-  },
-  {
-    match: '**',
-    mode: 'mark',
-    type: KEYS.bold,
-  },
-  {
-    match: '__',
-    mode: 'mark',
-    type: KEYS.underline,
-  },
-  {
-    match: '*',
-    mode: 'mark',
-    type: KEYS.italic,
-  },
-  {
-    match: '_',
-    mode: 'mark',
-    type: KEYS.italic,
-  },
-  {
-    match: '~~',
-    mode: 'mark',
-    type: KEYS.strikethrough,
-  },
-  {
-    match: '^',
-    mode: 'mark',
-    type: KEYS.sup,
-  },
-  {
-    match: '~',
-    mode: 'mark',
-    type: KEYS.sub,
-  },
-  {
-    match: '==',
-    mode: 'mark',
-    type: KEYS.highlight,
-  },
-  {
-    match: '≡',
-    mode: 'mark',
-    type: KEYS.highlight,
-  },
-  {
-    match: '`',
-    mode: 'mark',
-    type: KEYS.code,
-  },
-];
+import { notInCodeBlock } from './input-rule-guard';
 
-const autoformatBlocks: AutoformatRule[] = [
-  {
-    match: '# ',
-    mode: 'block',
-    type: KEYS.h1,
-  },
-  {
-    match: '## ',
-    mode: 'block',
-    type: KEYS.h2,
-  },
-  {
-    match: '### ',
-    mode: 'block',
-    type: KEYS.h3,
-  },
-  {
-    match: '#### ',
-    mode: 'block',
-    type: KEYS.h4,
-  },
-  {
-    match: '##### ',
-    mode: 'block',
-    type: KEYS.h5,
-  },
-  {
-    match: '###### ',
-    mode: 'block',
-    type: KEYS.h6,
-  },
-  {
-    match: '> ',
-    mode: 'block',
-    type: KEYS.blockquote,
-  },
-  {
-    match: '```',
-    mode: 'block',
-    type: KEYS.codeBlock,
-    format: (editor) => {
-      insertEmptyCodeBlock(editor, {
-        defaultType: KEYS.p,
-        insertNodesOptions: { select: true },
-      });
-    },
-  },
-  // {
-  //   match: '+ ',
-  //   mode: 'block',
-  //   preFormat: openNextToggles,
-  //   type: KEYS.toggle,
-  // },
-  {
-    match: ['---', '—-', '___ '],
-    mode: 'block',
-    type: KEYS.hr,
-    format: (editor) => {
-      editor.tf.setNodes({ type: KEYS.hr });
-      editor.tf.insertNodes({
-        children: [{ text: '' }],
-        type: KEYS.p,
-      });
-    },
-  },
-];
-
-const autoformatLists: AutoformatRule[] = [
-  {
-    match: ['* ', '- '],
-    mode: 'block',
-    type: 'list',
-    format: (editor) => {
-      toggleList(editor, {
-        listStyleType: KEYS.ul,
-      });
-    },
-  },
-  {
-    match: [String.raw`^\d+\.$ `, String.raw`^\d+\)$ `],
-    matchByRegex: true,
-    mode: 'block',
-    type: 'list',
-    format: (editor, { matchString }) => {
-      toggleList(editor, {
-        listRestartPolite: Number(matchString) || 1,
-        listStyleType: KEYS.ol,
-      });
-    },
-  },
-  {
-    match: ['[] '],
-    mode: 'block',
-    type: 'list',
-    format: (editor) => {
-      toggleList(editor, {
-        listStyleType: KEYS.listTodo,
-      });
-      editor.tf.setNodes({
-        checked: false,
-        listStyleType: KEYS.listTodo,
-      });
-    },
-  },
-  {
-    match: ['[x] '],
-    mode: 'block',
-    type: 'list',
-    format: (editor) => {
-      toggleList(editor, {
-        listStyleType: KEYS.listTodo,
-      });
-      editor.tf.setNodes({
-        checked: true,
-        listStyleType: KEYS.listTodo,
-      });
-    },
-  },
+/**
+ * Text substitutions (formerly the `mode: 'text'` rules of
+ * `@platejs/autoformat`, deprecated in Plate 53).
+ *
+ * The pattern sets below are the old package's `autoformatSmartQuotes`,
+ * `autoformatPunctuation`, `autoformatLegal`, `autoformatLegalHtml`,
+ * `autoformatArrow` and `autoformatMath` data, in the same order, registered
+ * as a single text-substitution input rule. Block and mark markdown shortcuts
+ * now live as `inputRules` on their owning plugins (see basic-blocks-kit,
+ * basic-marks-kit, code-block-kit and list-kit).
+ */
+const textSubstitutionPatterns: TextSubstitutionPattern[] = [
+  // Smart quotes
+  { format: ['“', '”'], match: '"' },
+  { format: ['‘', '’'], match: "'" },
+  // Punctuation
+  { format: '—', match: '--' },
+  { format: '…', match: '...' },
+  { format: '»', match: '>>' },
+  { format: '«', match: '<<' },
+  // Legal
+  { format: '™', match: ['(tm)', '(TM)'] },
+  { format: '®', match: ['(r)', '(R)'] },
+  { format: '©', match: ['(c)', '(C)'] },
+  // Legal (HTML entities)
+  { format: '™', match: '&trade;' },
+  { format: '®', match: '&reg;' },
+  { format: '©', match: '&copy;' },
+  { format: '§', match: '&sect;' },
+  // Arrows
+  { format: '→', match: '->' },
+  { format: '←', match: '<-' },
+  { format: '⇒', match: '=>' },
+  { format: '⇐', match: ['<=', '≤='] },
+  // Math: comparison
+  { format: '≯', match: '!>' },
+  { format: '≮', match: '!<' },
+  { format: '≥', match: '>=' },
+  { format: '≤', match: '<=' },
+  { format: '≱', match: '!>=' },
+  { format: '≰', match: '!<=' },
+  // Math: equality
+  { format: '≠', match: '!=' },
+  { format: '≡', match: '==' },
+  { format: '≢', match: ['!==', '≠='] },
+  { format: '≈', match: '~=' },
+  { format: '≉', match: '!~=' },
+  // Math: operations
+  { format: '±', match: '+-' },
+  { format: '‰', match: '%%' },
+  { format: '‱', match: ['%%%', '‰%'] },
+  { format: '÷', match: '//' },
+  // Math: fractions
+  { format: '½', match: '1/2' },
+  { format: '⅓', match: '1/3' },
+  { format: '¼', match: '1/4' },
+  { format: '⅕', match: '1/5' },
+  { format: '⅙', match: '1/6' },
+  { format: '⅐', match: '1/7' },
+  { format: '⅛', match: '1/8' },
+  { format: '⅑', match: '1/9' },
+  { format: '⅒', match: '1/10' },
+  { format: '⅔', match: '2/3' },
+  { format: '⅖', match: '2/5' },
+  { format: '¾', match: '3/4' },
+  { format: '⅗', match: '3/5' },
+  { format: '⅜', match: '3/8' },
+  { format: '⅘', match: '4/5' },
+  { format: '⅚', match: '5/6' },
+  { format: '⅝', match: '5/8' },
+  { format: '⅞', match: '7/8' },
+  // Math: superscript symbols
+  { format: '°', match: '^o' },
+  { format: '⁺', match: '^+' },
+  { format: '⁻', match: '^-' },
+  // Math: subscript symbols
+  { format: '₊', match: '~+' },
+  { format: '₋', match: '~-' },
+  // Math: superscript numbers
+  { format: '⁰', match: '^0' },
+  { format: '¹', match: '^1' },
+  { format: '²', match: '^2' },
+  { format: '³', match: '^3' },
+  { format: '⁴', match: '^4' },
+  { format: '⁵', match: '^5' },
+  { format: '⁶', match: '^6' },
+  { format: '⁷', match: '^7' },
+  { format: '⁸', match: '^8' },
+  { format: '⁹', match: '^9' },
+  // Math: subscript numbers
+  { format: '₀', match: '~0' },
+  { format: '₁', match: '~1' },
+  { format: '₂', match: '~2' },
+  { format: '₃', match: '~3' },
+  { format: '₄', match: '~4' },
+  { format: '₅', match: '~5' },
+  { format: '₆', match: '~6' },
+  { format: '₇', match: '~7' },
+  { format: '₈', match: '~8' },
+  { format: '₉', match: '~9' },
 ];
 
 export const AutoformatKit = [
-  AutoformatPlugin.configure({
-    options: {
-      enableUndoOnDelete: true,
-      rules: [
-        ...autoformatBlocks,
-        ...autoformatMarks,
-        ...autoformatSmartQuotes,
-        ...autoformatPunctuation,
-        ...autoformatLegal,
-        ...autoformatLegalHtml,
-        ...autoformatArrow,
-        ...autoformatMath,
-        ...autoformatLists,
-      ].map(
-        (rule): AutoformatRule => ({
-          ...rule,
-          query: (editor) =>
-            !editor.api.some({
-              match: { type: editor.getType(KEYS.codeBlock) },
-            }),
-        })
-      ),
-    },
+  createSlatePlugin({
+    inputRules: [
+      createTextSubstitutionInputRule({
+        enabled: notInCodeBlock,
+        patterns: textSubstitutionPatterns,
+      }),
+    ],
+    key: 'autoformat',
   }),
 ];
