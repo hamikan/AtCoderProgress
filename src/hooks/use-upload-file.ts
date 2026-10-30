@@ -7,7 +7,11 @@ import { generateReactHelpers } from '@uploadthing/react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-import { validateEditorImageFile } from '@/lib/validation/editor-image-upload';
+import { compressEditorImageFile } from '@/lib/validation/editor-image-compression';
+import {
+  validateEditorImageFile,
+  validateEditorImageFileBeforeCompression,
+} from '@/lib/validation/editor-image-upload';
 
 export type UploadedFile<T = unknown> = ClientUploadedFileData<T>;
 
@@ -31,23 +35,39 @@ export function useUploadFile({
   const [uploadingFile, setUploadingFile] = React.useState<File>();
   const [progress, setProgress] = React.useState<number>(0);
   const [isUploading, setIsUploading] = React.useState(false);
+  const uploadInProgress = React.useRef(false);
 
   async function uploadThing(file: File) {
-    const validation = validateEditorImageFile(file);
-    if (!validation.ok) {
-      const error = new Error(validation.message);
-      toast.error(validation.message);
+    if (uploadInProgress.current) return undefined;
+
+    const inputValidation = validateEditorImageFileBeforeCompression(file);
+    if (!inputValidation.ok) {
+      const error = new Error(inputValidation.message);
+      toast.error(inputValidation.message);
       onUploadError?.(error);
       return undefined;
     }
 
+    uploadInProgress.current = true;
     setIsUploading(true);
     setUploadingFile(file);
+    let preparedFile = file;
 
     try {
+      preparedFile = await compressEditorImageFile(file);
+
+      const validation = validateEditorImageFile(preparedFile);
+      if (!validation.ok) {
+        const error = new Error(validation.message);
+        toast.error(validation.message);
+        onUploadError?.(error);
+        return undefined;
+      }
+
+      setUploadingFile(preparedFile);
       const res = await uploadFiles('editorUploader', {
         ...props,
-        files: [file],
+        files: [preparedFile],
         onUploadProgress: ({ progress }) => {
           setProgress(Math.min(progress, 100));
         },
@@ -81,11 +101,11 @@ export function useUploadFile({
       const mockUploadedFile = {
         key: 'mock-key-0',
         customId: null,
-        name: file.name,
+        name: preparedFile.name,
         serverData: null,
-        size: file.size,
-        type: file.type,
-        url: URL.createObjectURL(file),
+        size: preparedFile.size,
+        type: preparedFile.type,
+        url: URL.createObjectURL(preparedFile),
       } as UploadedFile;
 
       // Simulate upload progress
@@ -105,6 +125,7 @@ export function useUploadFile({
 
       return mockUploadedFile;
     } finally {
+      uploadInProgress.current = false;
       setProgress(0);
       setIsUploading(false);
       setUploadingFile(undefined);

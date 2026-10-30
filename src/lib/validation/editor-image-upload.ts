@@ -1,6 +1,9 @@
 export const EDITOR_IMAGE_UPLOAD_MAX_BYTES = 4 * 1024 * 1024;
 export const EDITOR_IMAGE_UPLOAD_MAX_FILE_SIZE = '4MB';
+export const EDITOR_IMAGE_UPLOAD_SOURCE_MAX_BYTES = 64 * 1024 * 1024;
+export const EDITOR_IMAGE_UPLOAD_SOURCE_MAX_FILE_SIZE = '64MB';
 export const EDITOR_IMAGE_ACCEPT = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'] as const;
+export const EDITOR_IMAGE_COMPRESSIBLE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
 const EDITOR_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'] as const;
 
@@ -26,14 +29,7 @@ function getFileExtension(fileName: string): string {
   return match?.[0] ?? '';
 }
 
-export function validateEditorImageFile(file: FileLike): EditorImageValidationResult {
-  if (file.size > EDITOR_IMAGE_UPLOAD_MAX_BYTES) {
-    return {
-      message: '画像サイズは4MB以下にしてください。',
-      ok: false,
-    };
-  }
-
+function validateEditorImageFormat(file: FileLike): EditorImageValidationResult {
   if (file.type === SVG_MIME_TYPE) {
     return {
       message: 'SVG画像はアップロードできません。PNG、JPEG、WebP、GIFを使用してください。',
@@ -57,4 +53,30 @@ export function validateEditorImageFile(file: FileLike): EditorImageValidationRe
   }
 
   return { ok: true };
+}
+
+export function validateEditorImageFile(file: FileLike): EditorImageValidationResult {
+  const formatValidation = validateEditorImageFormat(file);
+  if (!formatValidation.ok) return formatValidation;
+
+  if (file.size > EDITOR_IMAGE_UPLOAD_MAX_BYTES) {
+    return { message: '画像サイズは4MB以下にしてください。', ok: false };
+  }
+
+  return { ok: true };
+}
+
+export function validateEditorImageFileBeforeCompression(file: FileLike): EditorImageValidationResult {
+  const formatValidation = validateEditorImageFormat(file);
+  if (!formatValidation.ok) return formatValidation;
+
+  if (file.size > EDITOR_IMAGE_UPLOAD_SOURCE_MAX_BYTES) {
+    return { message: '圧縮前の画像サイズは64MB以下にしてください。', ok: false };
+  }
+
+  if (EDITOR_IMAGE_COMPRESSIBLE_TYPES.includes(file.type as (typeof EDITOR_IMAGE_COMPRESSIBLE_TYPES)[number])) {
+    return { ok: true };
+  }
+
+  return validateEditorImageFile(file);
 }

@@ -23,7 +23,7 @@ import {
   EDITOR_IMAGE_ACCEPT,
   filterValidEditorImageFiles,
 } from '@/components/editor/image-upload-files';
-import { validateEditorImageFile } from '@/lib/validation/editor-image-upload';
+import { validateEditorImageFileBeforeCompression } from '@/lib/validation/editor-image-upload';
 
 const IMAGE_CONTENT = {
   accept: [...EDITOR_IMAGE_ACCEPT],
@@ -67,7 +67,7 @@ export const PlaceholderElement = withHOC(
 
     const replaceCurrentPlaceholder = React.useCallback(
       (file: File) => {
-        const validation = validateEditorImageFile(file);
+        const validation = validateEditorImageFileBeforeCompression(file);
         if (!validation.ok) {
           toast.error(validation.message);
           return;
