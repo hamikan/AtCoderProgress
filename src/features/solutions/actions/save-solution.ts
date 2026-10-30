@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/generated/prisma/client';
 
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { parseSolutionInput } from '@/features/solutions/schemas/solution';

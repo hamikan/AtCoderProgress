@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { SolutionStatus } from '@prisma/client';
+import { SolutionStatus } from '@/generated/prisma/client';
 import { subDays } from 'date-fns';
 
 import { getTagStatistics } from '@/features/problems/api/get-tag-statistics';

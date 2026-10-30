@@ -24,6 +24,9 @@ const serverInfrastructurePaths = new Set([
 const errors = [];
 
 async function collectSourceFiles(directory) {
+  // src/generated holds the generated Prisma Client (build output, gitignored)
+  // and is not hand-written source, so it is out of scope for these rules.
+  if (directory === path.join(sourceRoot, 'generated')) return [];
   const entries = await readdir(directory, { withFileTypes: true });
   const nestedFiles = await Promise.all(
     entries.map(async (entry) => {

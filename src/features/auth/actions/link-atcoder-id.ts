@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/generated/prisma/client';
 
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { parseAtCoderId } from '@/features/auth/schemas/atcoder-id';
