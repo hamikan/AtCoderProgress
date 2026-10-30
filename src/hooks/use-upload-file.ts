@@ -7,6 +7,7 @@ import { generateReactHelpers } from '@uploadthing/react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { compressEditorImageFile } from '@/lib/validation/editor-image-compression';
 import { validateEditorImageFile } from '@/lib/validation/editor-image-upload';
 
 export type UploadedFile<T = unknown> = ClientUploadedFileData<T>;
@@ -33,7 +34,11 @@ export function useUploadFile({
   const [isUploading, setIsUploading] = React.useState(false);
 
   async function uploadThing(file: File) {
-    const validation = validateEditorImageFile(file);
+    // Compress large photos before validation so that images over the 4MB
+    // limit can still be uploaded once compressed (see issue #68).
+    const preparedFile = await compressEditorImageFile(file);
+
+    const validation = validateEditorImageFile(preparedFile);
     if (!validation.ok) {
       const error = new Error(validation.message);
       toast.error(validation.message);
@@ -42,12 +47,12 @@ export function useUploadFile({
     }
 
     setIsUploading(true);
-    setUploadingFile(file);
+    setUploadingFile(preparedFile);
 
     try {
       const res = await uploadFiles('editorUploader', {
         ...props,
-        files: [file],
+        files: [preparedFile],
         onUploadProgress: ({ progress }) => {
           setProgress(Math.min(progress, 100));
         },
@@ -81,11 +86,11 @@ export function useUploadFile({
       const mockUploadedFile = {
         key: 'mock-key-0',
         customId: null,
-        name: file.name,
+        name: preparedFile.name,
         serverData: null,
-        size: file.size,
-        type: file.type,
-        url: URL.createObjectURL(file),
+        size: preparedFile.size,
+        type: preparedFile.type,
+        url: URL.createObjectURL(preparedFile),
       } as UploadedFile;
 
       // Simulate upload progress
