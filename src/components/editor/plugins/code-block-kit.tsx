@@ -1,5 +1,6 @@
 'use client';
 
+import { CodeBlockRules } from '@platejs/code-block';
 import {
   CodeBlockPlugin,
   CodeLinePlugin,
@@ -13,10 +14,15 @@ import {
 } from '@/components/ui/code-block-node';
 import { createCodeBlockHighlighter } from '@/lib/plate/code-block-highlighter';
 
+import { notInCodeBlock } from './input-rule-guard';
+
 const lowlight = createCodeBlockHighlighter();
 
 export const CodeBlockKit = [
   CodeBlockPlugin.configure({
+    inputRules: [
+      CodeBlockRules.markdown({ enabled: notInCodeBlock, on: 'match' }),
+    ],
     node: { component: CodeBlockElement },
     options: { defaultLanguage: 'auto', lowlight },
     shortcuts: { toggle: { keys: 'mod+alt+8' } },
