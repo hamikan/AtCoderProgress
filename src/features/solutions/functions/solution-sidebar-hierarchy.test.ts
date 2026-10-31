@@ -4,7 +4,10 @@ import test from 'node:test';
 import {
   buildSolutionSidebarHierarchy,
   buildSolutionSidebarProblemOptions,
+  buildSidebarTypeContestOptions,
+  filterSidebarContestOptions,
   getSelectedSidebarGroupKeys,
+  getSidebarContestIdPrefix,
   getSidebarContestKey,
   getSidebarProblemKey,
   getSidebarTypeKey,
@@ -228,4 +231,50 @@ test('sidebar group keys do not collide across levels', () => {
     ]).size,
     3
   );
+});
+
+test('buildSidebarTypeContestOptions keeps contests of the type, newest first', () => {
+  assert.deepEqual(
+    buildSidebarTypeContestOptions(
+      ['abc100', 'abc446', 'abc_extra', 'abc420'],
+      'ABC'
+    ),
+    [
+      { contestId: 'abc446', label: '446' },
+      { contestId: 'abc420', label: '420' },
+      { contestId: 'abc100', label: '100' },
+    ]
+  );
+  assert.deepEqual(
+    buildSidebarTypeContestOptions(
+      ['adt_all_20261030_1', 'adt_all_20261030_2', 'adt_easy_20261030_2'],
+      'ADT_ALL'
+    ),
+    [
+      { contestId: 'adt_all_20261030_2', label: '2026/10/30 #2' },
+      { contestId: 'adt_all_20261030_1', label: '2026/10/30 #1' },
+    ]
+  );
+});
+
+test('getSidebarContestIdPrefix maps a sidebar type back to its contest ID prefix', () => {
+  assert.equal(getSidebarContestIdPrefix('ABC'), 'abc');
+  assert.equal(getSidebarContestIdPrefix('ADT_ALL'), 'adt_all');
+});
+
+test('filterSidebarContestOptions matches contest IDs and labels', () => {
+  const options = [
+    { contestId: 'adt_all_20261030_2', label: '2026/10/30 #2' },
+    { contestId: 'adt_all_20261029_1', label: '2026/10/29 #1' },
+  ];
+
+  assert.deepEqual(
+    filterSidebarContestOptions(options, ' 1030 ').map((option) => option.contestId),
+    ['adt_all_20261030_2']
+  );
+  assert.deepEqual(
+    filterSidebarContestOptions(options, '10/29').map((option) => option.contestId),
+    ['adt_all_20261029_1']
+  );
+  assert.equal(filterSidebarContestOptions(options, '').length, 2);
 });

@@ -28,6 +28,7 @@ import {
   getSidebarTypeKey,
 } from '@/features/solutions/functions/solution-sidebar-hierarchy';
 import ContestProblemPicker from '@/features/solutions/components/ContestProblemPicker';
+import TypeContestPicker from '@/features/solutions/components/TypeContestPicker';
 import { useSolutionsSidebarState } from '@/features/solutions/components/SolutionsSidebarStateProvider';
 import type {
   SolutionListItem,
@@ -166,12 +167,19 @@ export default function SolutionsSidebar({
               onOpenChange={(open) => setGroupOpen(getSidebarTypeKey(typeGroup.type), open)}
             >
               <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton className="font-semibold">
-                    <ChevronRight className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/type:rotate-90" />
-                    <span>{typeGroup.type}</span>
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
+                <div className="group/sidebar-row relative">
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="pr-8 font-semibold">
+                      <ChevronRight className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/type:rotate-90" />
+                      <span>{typeGroup.type}</span>
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <TypeContestPicker
+                    type={typeGroup.type}
+                    solutions={solutions}
+                    onSelectProblem={onNewDraftForProblem}
+                  />
+                </div>
 
                 <CollapsibleContent>
                   <SidebarMenuSub className="mr-px pr-0">
@@ -185,7 +193,7 @@ export default function SolutionsSidebar({
                         }
                       >
                         <SidebarMenuSubItem>
-                          <div className="group/contest-row relative">
+                          <div className="group/sidebar-row relative">
                             <CollapsibleTrigger asChild>
                               <SidebarMenuSubButton className="pr-7 font-medium">
                                 <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/contest:rotate-90" />

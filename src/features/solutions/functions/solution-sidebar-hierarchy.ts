@@ -1,5 +1,6 @@
 import type {
   SolutionListItem,
+  SolutionSidebarContestOption,
   SolutionSidebarContestProblem,
   SolutionSidebarProblemOption,
   SolutionSidebarTypeGroup,
@@ -150,4 +151,34 @@ export function getSelectedSidebarGroupKeys(
     getSidebarContestKey(selected.contestId),
     getSidebarProblemKey(selected.contestId, selected.problemId),
   ];
+}
+
+export function getSidebarContestIdPrefix(type: string): string {
+  return type.toLowerCase();
+}
+
+export function buildSidebarTypeContestOptions(
+  contestIds: string[],
+  type: string
+): SolutionSidebarContestOption[] {
+  return contestIds
+    .map((contestId) => ({ contestId, ...parseContestId(contestId) }))
+    .filter((contest) => contest.type === type)
+    .sort((a, b) => b.sortKey - a.sortKey)
+    .map(({ contestId, label }) => ({ contestId, label }));
+}
+
+export function filterSidebarContestOptions(
+  options: SolutionSidebarContestOption[],
+  query: string
+): SolutionSidebarContestOption[] {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return options;
+  }
+
+  return options.filter(
+    (option) =>
+      option.contestId.includes(normalizedQuery) || option.label.includes(normalizedQuery)
+  );
 }

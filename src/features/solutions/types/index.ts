@@ -9,6 +9,7 @@ export type {
   SolutionSearchParamsInput,
 } from './input/solution-navigation';
 export type { SaveSolutionError } from './error/save-solution-error';
+export type { SolutionSidebarLookupError } from './error/solution-sidebar-lookup-error';
 export type {
   SolutionListItem,
   SolutionRecordListItem,
@@ -17,6 +18,7 @@ export type {
 } from './output/solution';
 export type {
   SolutionSidebarContestGroup,
+  SolutionSidebarContestOption,
   SolutionSidebarContestProblem,
   SolutionSidebarProblemOption,
   SolutionSidebarTypeGroup,

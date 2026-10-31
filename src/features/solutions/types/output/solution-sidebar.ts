@@ -12,6 +12,11 @@ export interface SolutionSidebarProblemOption extends SolutionSidebarContestProb
   recorded: boolean;
 }
 
+export interface SolutionSidebarContestOption {
+  contestId: string;
+  label: string;
+}
+
 export interface SolutionSidebarContestGroup {
   contestId: string;
   label: string;

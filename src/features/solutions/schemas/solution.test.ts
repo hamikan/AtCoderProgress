@@ -8,6 +8,7 @@ import {
   MAX_SOLUTION_TAGS,
   MAX_SOLUTION_TAG_NAME_LENGTH,
   MAX_SOLUTION_TITLE_LENGTH,
+  parseContestType,
   parseSolutionContent,
   parseSolutionInput,
   normalizeSolutionTagNames,
@@ -197,4 +198,10 @@ test('normalizeSolutionTagNames enforces tag boundaries', () => {
   assert.throws(() => normalizeSolutionTagNames(['a'.repeat(MAX_SOLUTION_TAG_NAME_LENGTH + 1)]), {
     message: 'Tag name is too long',
   });
+});
+
+test('parseContestType accepts sidebar contest types and rejects unsafe values', () => {
+  assert.equal(parseContestType('ADT_ALL'), 'ADT_ALL');
+  assert.throws(() => parseContestType('abc%'), { message: 'Invalid contest type' });
+  assert.throws(() => parseContestType(''), { message: 'Invalid contest type' });
 });
