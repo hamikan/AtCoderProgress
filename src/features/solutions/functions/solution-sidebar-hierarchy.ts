@@ -1,5 +1,7 @@
 import type {
   SolutionListItem,
+  SolutionSidebarContestProblem,
+  SolutionSidebarProblemOption,
   SolutionSidebarTypeGroup,
 } from '@/features/solutions/types';
 
@@ -54,9 +56,44 @@ function compareTypes(a: string, b: string): number {
   return a.localeCompare(b);
 }
 
-export function buildSolutionSidebarHierarchy(
+function contestProblemKey(contestId: string, problemId: string): string {
+  return `${contestId}:${problemId}`;
+}
+
+function groupProblemOptions(
+  problemOptions: SolutionSidebarProblemOption[]
+): Map<string, SolutionSidebarProblemOption[]> {
+  const optionMap = new Map<string, SolutionSidebarProblemOption[]>();
+
+  for (const option of problemOptions) {
+    const options = optionMap.get(option.contestId) ?? [];
+    optionMap.set(option.contestId, [...options, option]);
+  }
+
+  return optionMap;
+}
+
+export function buildSolutionSidebarProblemOptions(
+  contestProblems: SolutionSidebarContestProblem[],
   solutions: SolutionListItem[]
+): SolutionSidebarProblemOption[] {
+  const recordedKeys = new Set(
+    solutions.map((solution) => contestProblemKey(solution.contestId, solution.problemId))
+  );
+
+  return contestProblems.map((contestProblem) => ({
+    ...contestProblem,
+    recorded: recordedKeys.has(
+      contestProblemKey(contestProblem.contestId, contestProblem.problemId)
+    ),
+  }));
+}
+
+export function buildSolutionSidebarHierarchy(
+  solutions: SolutionListItem[],
+  problemOptions: SolutionSidebarProblemOption[] = []
 ): SolutionSidebarTypeGroup[] {
+  const optionMap = groupProblemOptions(problemOptions);
   const typeMap = new Map<string, Map<string, SolutionListItem[]>>();
 
   for (const solution of solutions) {
@@ -79,6 +116,9 @@ export function buildSolutionSidebarHierarchy(
           contestId,
           label,
           problems: [...problems].sort((a, b) => a.problemIndex.localeCompare(b.problemIndex)),
+          problemOptions: [...(optionMap.get(contestId) ?? [])].sort((a, b) =>
+            a.problemIndex.localeCompare(b.problemIndex)
+          ),
         })),
     }));
 }

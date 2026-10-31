@@ -17,5 +17,7 @@ export type {
 } from './output/solution';
 export type {
   SolutionSidebarContestGroup,
+  SolutionSidebarContestProblem,
+  SolutionSidebarProblemOption,
   SolutionSidebarTypeGroup,
 } from './output/solution-sidebar';

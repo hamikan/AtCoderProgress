@@ -19,14 +19,23 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getDifficultyColor, getDifficultyOrbColor } from '@/lib/atcoder/difficulty';
 import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
-import { buildSolutionSidebarHierarchy } from '@/features/solutions/functions/solution-sidebar-hierarchy';
-import type { SolutionListItem } from '@/features/solutions/types';
+import {
+  buildSolutionSidebarHierarchy,
+  buildSolutionSidebarProblemOptions,
+} from '@/features/solutions/functions/solution-sidebar-hierarchy';
+import ContestProblemPicker from '@/features/solutions/components/ContestProblemPicker';
+import type {
+  SolutionListItem,
+  SolutionSidebarContestProblem,
+} from '@/features/solutions/types';
 
 interface SolutionsSidebarProps {
   solutions: SolutionListItem[];
+  contestProblems: SolutionSidebarContestProblem[];
   selectedSolutionId: string | null;
   onSelectSolution: (solutionId: string) => void;
   onNewDraft: () => void;
+  onNewDraftForProblem: (contestId: string, problemId: string) => void;
 }
 
 function problemContainsSelected(
@@ -38,9 +47,11 @@ function problemContainsSelected(
 
 export default function SolutionsSidebar({
   solutions,
+  contestProblems,
   selectedSolutionId,
   onSelectSolution,
   onNewDraft,
+  onNewDraftForProblem,
 }: SolutionsSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
@@ -57,9 +68,14 @@ export default function SolutionsSidebar({
     );
   }, [normalizedSearchQuery, solutions]);
 
+  const problemOptions = useMemo(
+    () => buildSolutionSidebarProblemOptions(contestProblems, solutions),
+    [contestProblems, solutions]
+  );
+
   const hierarchy = useMemo(
-    () => buildSolutionSidebarHierarchy(filteredSolutions),
-    [filteredSolutions]
+    () => buildSolutionSidebarHierarchy(filteredSolutions, problemOptions),
+    [filteredSolutions, problemOptions]
   );
 
   return (
@@ -141,12 +157,23 @@ export default function SolutionsSidebar({
                         )}
                       >
                         <SidebarMenuSubItem>
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuSubButton className="font-medium">
-                              <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/contest:rotate-90" />
-                              <span>{contest.label}</span>
-                            </SidebarMenuSubButton>
-                          </CollapsibleTrigger>
+                          <div className="group/contest-row relative">
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuSubButton className="pr-7 font-medium">
+                                <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/contest:rotate-90" />
+                                <span>{contest.label}</span>
+                              </SidebarMenuSubButton>
+                            </CollapsibleTrigger>
+                            {contest.problemOptions.length > 0 && (
+                              <ContestProblemPicker
+                                contestName={[typeGroup.type, contest.label].filter(Boolean).join(' ')}
+                                options={contest.problemOptions}
+                                onSelectProblem={(problemId) =>
+                                  onNewDraftForProblem(contest.contestId, problemId)
+                                }
+                              />
+                            )}
+                          </div>
 
                           <CollapsibleContent>
                             <SidebarMenuSub className="ml-2 mr-px pr-0">
