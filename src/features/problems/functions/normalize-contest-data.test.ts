@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { mergedProblemsSchema, problemModelsSchema } from '@/lib/atcoder/contests/schemas';
 import { normalizeContestData } from './normalize-contest-data';
 
 test('normalizeContestData converts provider fields and clips low difficulty', () => {
@@ -88,4 +89,36 @@ test('normalizeContestData preserves missing difficulty', () => {
   });
 
   assert.equal(normalized.problems[0].difficulty, null);
+});
+
+test('normalizeContestData accepts nullable API fields and preserves unknown difficulty', () => {
+  const mergedProblems = mergedProblemsSchema.parse(
+    ['abc049_a', 'abc049_b', 'abc049_c', 'arc230_a'].map((id) => ({
+      id,
+      name: id,
+      contest_id: id.split('_')[0],
+      first_contest_id: null,
+    }))
+  );
+  const problemModels = problemModelsSchema.parse({
+    abc049_a: {},
+    abc049_b: { difficulty: null },
+  });
+  const normalized = normalizeContestData({
+    contests: [], contestProblems: [], mergedProblems, problemModels,
+  });
+
+  assert.deepEqual(
+    normalized.problems.map(({ id, firstContestId, difficulty }) => [id, firstContestId, difficulty]),
+    [
+      ['abc049_a', 'abc049', null],
+      ['abc049_b', 'abc049', null],
+      ['abc049_c', 'abc049', null],
+      ['arc230_a', 'arc230', 1818],
+    ]
+  );
+  assert.equal(mergedProblemsSchema.safeParse([
+    { id: 'a', name: 'A', contest_id: 'abc049', first_contest_id: 123 },
+  ]).success, false);
+  assert.equal(problemModelsSchema.safeParse({ a: { difficulty: 'unknown' } }).success, false);
 });

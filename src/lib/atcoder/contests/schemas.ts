@@ -10,7 +10,7 @@ export const rawMergedProblemSchema = z.object({
   id: z.string().min(1),
   name: z.string(),
   contest_id: z.string().min(1),
-  first_contest_id: z.string(),
+  first_contest_id: z.string().nullable(),
 });
 
 export const rawContestProblemSchema = z.object({
@@ -20,7 +20,7 @@ export const rawContestProblemSchema = z.object({
 });
 
 export const rawProblemModelSchema = z.object({
-  difficulty: z.number().nullable(),
+  difficulty: z.number().nullable().default(null),
 });
 
 export const contestsSchema = z.array(rawContestSchema);
