@@ -4,6 +4,7 @@ import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
 import { getProblemDetail } from '@/features/problems/api/get-problem-detail';
 import { searchProblems } from '@/features/problems/api/search-problems';
 import { getSolutionRecords } from '@/features/solutions/api/get-solution-records';
+import { getSidebarContestProblems } from '@/features/solutions/api/get-sidebar-contest-problems';
 import { getUserSolutions } from '@/features/solutions/api/get-user-solutions';
 import SolutionsWorkspace from '@/features/solutions/components/SolutionsWorkspace';
 import { normalizeSolutionSearchParams } from '@/features/solutions/functions/normalize-solution-search-params';
@@ -20,9 +21,10 @@ export default async function NewSolutionPage({ searchParams }: NewSolutionPageP
     await searchParams
   );
 
-  const [solutions, availableTags, initialProblem, problemSearchResults] =
+  const [solutions, contestProblems, availableTags, initialProblem, problemSearchResults] =
     await Promise.all([
       getUserSolutions(userId),
+      getSidebarContestProblems(userId),
       getSelectableTags(userId),
       problemId ? getProblemDetail(problemId) : Promise.resolve(null),
       searchProblems(problemSearch),
@@ -34,6 +36,7 @@ export default async function NewSolutionPage({ searchParams }: NewSolutionPageP
   return (
     <SolutionsWorkspace
       solutions={solutions}
+      contestProblems={contestProblems}
       availableTags={availableTags}
       initialProblem={initialProblem}
       initialSolution={null}

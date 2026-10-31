@@ -7,6 +7,7 @@ import { getProblemDetail } from '@/features/problems/api/get-problem-detail';
 import { searchProblems } from '@/features/problems/api/search-problems';
 import { getSolutionById } from '@/features/solutions/api/get-solution-by-id';
 import { getSolutionRecords } from '@/features/solutions/api/get-solution-records';
+import { getSidebarContestProblems } from '@/features/solutions/api/get-sidebar-contest-problems';
 import { getUserSolutions } from '@/features/solutions/api/get-user-solutions';
 import SolutionsWorkspace from '@/features/solutions/components/SolutionsWorkspace';
 import { parseSolutionRouteParams } from '@/features/solutions/functions/parse-solution-route-params';
@@ -33,12 +34,14 @@ export default async function SolutionPage({ params, searchParams }: SolutionPag
   }
 
   const { problemId, problemSearch } = normalizeSolutionSearchParams(await searchParams);
-  const [solution, solutions, availableTags, problemSearchResults] = await Promise.all([
-    userId ? getSolutionById(userId, solutionId) : Promise.resolve(null),
-    getUserSolutions(userId),
-    getSelectableTags(userId),
-    searchProblems(problemSearch),
-  ]);
+  const [solution, solutions, contestProblems, availableTags, problemSearchResults] =
+    await Promise.all([
+      userId ? getSolutionById(userId, solutionId) : Promise.resolve(null),
+      getUserSolutions(userId),
+      getSidebarContestProblems(userId),
+      getSelectableTags(userId),
+      searchProblems(problemSearch),
+    ]);
 
   if (userId && !solution) {
     notFound();
@@ -58,6 +61,7 @@ export default async function SolutionPage({ params, searchParams }: SolutionPag
   return (
     <SolutionsWorkspace
       solutions={solutions}
+      contestProblems={contestProblems}
       availableTags={availableTags}
       initialProblem={problem}
       initialSolution={solution}
