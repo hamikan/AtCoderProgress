@@ -3,6 +3,8 @@ import type {
 } from '@/lib/atcoder/contests/types';
 import type { NormalizedContestData } from '@/features/problems/types/input/normalized-contest-data';
 
+import { ESTIMATED_DIFFICULTIES } from './estimated-difficulties';
+
 // 次のコードを引用・編集して使用しています。
 // https://github.com/kenkoooo/AtCoderProblems/blob/master/atcoder-problems-frontend/src/utils/index.ts
 const clipDifficulty = (difficulty: number | null) => {
@@ -24,7 +26,11 @@ export function normalizeContestData(resources: ContestResources): NormalizedCon
   const normalizedProblems = mergedProblems.map((problem) => ({
     id: problem.id,
     name: problem.name,
-    difficulty: clipDifficulty(problemModels[problem.id]?.difficulty),
+    // ABC212以降 / ARC104以降の問題は独自推定（irt5_time）の値を使う。
+    // それ以外は AtCoder Problems の difficulty を使う（issue #78）。
+    difficulty: clipDifficulty(
+      ESTIMATED_DIFFICULTIES[problem.id] ?? problemModels[problem.id]?.difficulty
+    ),
     firstContestId: problem.first_contest_id || problem.contest_id,
   }));
 
