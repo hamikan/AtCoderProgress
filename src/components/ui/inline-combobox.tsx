@@ -356,15 +356,37 @@ const InlineComboboxItem = ({
     [filter, group, keywords, label, value, search]
   );
 
+  // Select on mousedown, not only on click. A click completes on mouseup, but
+  // the combobox input cancels itself when it blurs or loses the editor
+  // selection (useComboboxInput), which can remove this item before the click
+  // lands and silently drop the selection, leaving the typed trigger text
+  // (e.g. "/he") behind as plain text (issue #91). Keyboard selection (Enter)
+  // still arrives as a click with no preceding mousedown, so keep the click
+  // handler as a fallback and run the selection at most once.
+  const selectedRef = React.useRef(false);
+
+  const handleSelect = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (selectedRef.current) return;
+
+    selectedRef.current = true;
+    removeInput(focusEditor);
+    onClick?.(event);
+  };
+
   if (!visible) return null;
 
   return (
     <ComboboxItem
       className={cn(comboboxItemVariants(), className)}
-      onClick={(event) => {
-        removeInput(focusEditor);
-        onClick?.(event);
+      onMouseDown={(event) => {
+        if (event.button !== 0) return;
+
+        // Keep the editor focus/selection (and with it the combobox input)
+        // alive until the selection has run.
+        event.preventDefault();
+        handleSelect(event);
       }}
+      onClick={handleSelect}
       {...props}
     />
   );
