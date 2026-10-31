@@ -114,11 +114,6 @@ function problemContainsSelected(
   return problem.records.some((record) => record.id === selectedSolutionId);
 }
 
-function formatRecordDate(isoDate: string): string {
-  const date = new Date(isoDate);
-  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-}
-
 export default function SolutionsSidebar({
   solutions,
   selectedSolutionId,
@@ -293,9 +288,6 @@ export default function SolutionsSidebar({
                                               )}
                                               <span className="min-w-0 flex-1 truncate pl-1">
                                                 {formatSolutionRecordLabel(record, index)}
-                                              </span>
-                                              <span className="shrink-0 text-[10px] text-slate-400">
-                                                {formatRecordDate(record.createdAt)}
                                               </span>
                                             </SidebarMenuSubButton>
                                           </SidebarMenuSubItem>
