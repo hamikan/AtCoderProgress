@@ -1,6 +1,11 @@
 'use client';
 
 import {
+  BlockquoteRules,
+  HeadingRules,
+  HorizontalRuleRules,
+} from '@platejs/basic-nodes';
+import {
   BlockquotePlugin,
   H1Plugin,
   H2Plugin,
@@ -11,6 +16,8 @@ import {
   HorizontalRulePlugin,
 } from '@platejs/basic-nodes/react';
 import { ParagraphPlugin } from 'platejs/react';
+
+import { notInCodeBlock } from './input-rule-guard';
 
 import { BlockquoteElement } from '@/components/ui/blockquote-node';
 import {
@@ -27,6 +34,7 @@ import { ParagraphElement } from '@/components/ui/paragraph-node';
 export const BasicBlocksKit = [
   ParagraphPlugin.withComponent(ParagraphElement),
   H1Plugin.configure({
+    inputRules: [HeadingRules.markdown({ enabled: notInCodeBlock })],
     node: {
       component: H1Element,
     },
@@ -36,6 +44,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+1' } },
   }),
   H2Plugin.configure({
+    inputRules: [HeadingRules.markdown({ enabled: notInCodeBlock })],
     node: {
       component: H2Element,
     },
@@ -45,6 +54,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+2' } },
   }),
   H3Plugin.configure({
+    inputRules: [HeadingRules.markdown({ enabled: notInCodeBlock })],
     node: {
       component: H3Element,
     },
@@ -54,6 +64,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+3' } },
   }),
   H4Plugin.configure({
+    inputRules: [HeadingRules.markdown({ enabled: notInCodeBlock })],
     node: {
       component: H4Element,
     },
@@ -63,6 +74,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+4' } },
   }),
   H5Plugin.configure({
+    inputRules: [HeadingRules.markdown({ enabled: notInCodeBlock })],
     node: {
       component: H5Element,
     },
@@ -72,6 +84,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+5' } },
   }),
   H6Plugin.configure({
+    inputRules: [HeadingRules.markdown({ enabled: notInCodeBlock })],
     node: {
       component: H6Element,
     },
@@ -81,8 +94,15 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+6' } },
   }),
   BlockquotePlugin.configure({
+    inputRules: [BlockquoteRules.markdown({ enabled: notInCodeBlock })],
     node: { component: BlockquoteElement },
     shortcuts: { toggle: { keys: 'mod+shift+period' } },
   }),
-  HorizontalRulePlugin.withComponent(HrElement),
+  HorizontalRulePlugin.configure({
+    inputRules: [
+      HorizontalRuleRules.markdown({ enabled: notInCodeBlock, variant: '-' }),
+      HorizontalRuleRules.markdown({ enabled: notInCodeBlock, variant: '_' }),
+    ],
+    node: { component: HrElement },
+  }),
 ];

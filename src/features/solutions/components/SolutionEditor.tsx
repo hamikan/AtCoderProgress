@@ -122,6 +122,7 @@ function SolutionEditorContent({
 
   const editor = usePlateEditor({
     plugins: EditorKit,
+    shouldNormalizeEditor: true,
     value: initialSolution?.content
       ? JSON.parse(initialSolution.content)
       : draftState?.content

@@ -9,7 +9,7 @@ import {
   BlockSelectionPlugin,
   useBlockSelected,
 } from '@platejs/selection/react';
-import { setCellBackground } from '@platejs/table';
+import { isSelectingCell as isSelectingCellApi, setCellBackground } from '@platejs/table';
 import {
   TablePlugin,
   TableProvider,
@@ -110,11 +110,13 @@ export const TableElement = withHOC(
       'isSelectionAreaVisible'
     );
     const hasControls = !readOnly && !isSelectionAreaVisible;
-    const {
-      isSelectingCell,
-      marginLeft,
-      props: tableProps,
-    } = useTableElement();
+    const { marginLeft, props: tableProps } = useTableElement();
+    // Plate 53 removed `isSelectingCell` from `useTableElement`; read the
+    // same state through the table API with a reactive editor selector.
+    const isSelectingCell = useEditorSelector(
+      (editor) => isSelectingCellApi(editor),
+      []
+    );
 
     const isSelectingTable = useBlockSelected(props.element.id as string);
 
@@ -446,6 +448,8 @@ export function TableRowElement({
     element,
     type: element.type,
     canDropNode: ({ dragEntry, dropEntry }) =>
+      !!dragEntry &&
+      !!dropEntry &&
       PathApi.equals(
         PathApi.parent(dragEntry[1]),
         PathApi.parent(dropEntry[1])
