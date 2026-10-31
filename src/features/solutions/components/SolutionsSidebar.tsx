@@ -17,7 +17,8 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { getDifficultyColor } from '@/lib/atcoder/difficulty';
+import { getDifficultyColor, getDifficultyOrbColor } from '@/lib/atcoder/difficulty';
+import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
 import type { SolutionListItem } from '@/features/solutions/types';
 
 interface SolutionsSidebarProps {
@@ -106,6 +107,18 @@ function buildHierarchy(solutions: SolutionListItem[]): TypeGroup[] {
   });
 }
 
+function problemContainsSelected(
+  problem: SolutionListItem,
+  selectedSolutionId: string | null
+): boolean {
+  return problem.records.some((record) => record.id === selectedSolutionId);
+}
+
+function formatRecordDate(isoDate: string): string {
+  const date = new Date(isoDate);
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+}
+
 export default function SolutionsSidebar({
   solutions,
   selectedSolutionId,
@@ -182,8 +195,11 @@ export default function SolutionsSidebar({
           {hierarchy.map((typeGroup) => (
             <Collapsible
               key={typeGroup.type}
+              className="group/collapsible"
               defaultOpen={typeGroup.contests.some((contest) =>
-                contest.problems.some((problem) => problem.latestSolutionId === selectedSolutionId)
+                contest.problems.some((problem) =>
+                  problemContainsSelected(problem, selectedSolutionId)
+                )
               )}
             >
               <SidebarMenuItem>
@@ -191,6 +207,13 @@ export default function SolutionsSidebar({
                   <SidebarMenuButton className="font-semibold">
                     <ChevronRight className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     <span>{typeGroup.type}</span>
+                    <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 group-data-[collapsible=icon]:hidden">
+                      {typeGroup.contests.reduce(
+                        (count, contest) => count + contest.problems.length,
+                        0
+                      )}
+                      件
+                    </span>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
 
@@ -199,40 +222,88 @@ export default function SolutionsSidebar({
                     {typeGroup.contests.map((contest) => (
                       <Collapsible
                         key={contest.contestId}
-                        defaultOpen={contest.problems.some((problem) => problem.latestSolutionId === selectedSolutionId)}
+                        className="group/collapsible"
+                        defaultOpen={contest.problems.some((problem) =>
+                          problemContainsSelected(problem, selectedSolutionId)
+                        )}
                       >
                         <SidebarMenuSubItem>
                           <CollapsibleTrigger asChild>
                             <SidebarMenuSubButton className="font-medium">
                               <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                               <span>{contest.contestNumber}</span>
+                              <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                                {contest.problems.length}問
+                              </span>
                             </SidebarMenuSubButton>
                           </CollapsibleTrigger>
 
                           <CollapsibleContent>
                             <SidebarMenuSub className="ml-2">
-                              {contest.problems.map((solution) => (
-                                <SidebarMenuSubItem key={`${solution.contestId}:${solution.problemId}`}>
-                                  <SidebarMenuSubButton
-                                    isActive={solution.latestSolutionId === selectedSolutionId}
-                                    onClick={() => onSelectSolution(solution.latestSolutionId)}
-                                    className="cursor-pointer"
-                                  >
-                                    <span className="truncate">
-                                      {solution.problemIndex} - {solution.problemName}
-                                    </span>
-                                    {solution.solutionCount > 1 && (
-                                      <span className="ml-auto shrink-0 text-[10px] font-bold text-slate-400">
-                                        {solution.solutionCount}
-                                      </span>
-                                    )}
-                                    {solution.difficulty !== null && (
-                                      <span className={`shrink-0 text-[10px] font-bold ${getDifficultyColor(solution.difficulty)}`}>
-                                        {solution.difficulty}
-                                      </span>
-                                    )}
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
+                              {contest.problems.map((problem) => (
+                                <Collapsible
+                                  key={`${problem.contestId}:${problem.problemId}`}
+                                  className="group/collapsible"
+                                  defaultOpen={problemContainsSelected(
+                                    problem,
+                                    selectedSolutionId
+                                  )}
+                                >
+                                  <SidebarMenuSubItem>
+                                    <CollapsibleTrigger asChild>
+                                      <SidebarMenuSubButton className="cursor-pointer">
+                                        <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                        <span
+                                          aria-hidden
+                                          className={`size-2.5 shrink-0 rounded-full border border-black/15 ${getDifficultyOrbColor(problem.difficulty)}`}
+                                        />
+                                        <span className="min-w-0 flex-1 truncate">
+                                          {problem.problemIndex} - {problem.problemName}
+                                        </span>
+                                        {problem.solutionCount > 1 && (
+                                          <span className="shrink-0 text-[10px] font-bold text-slate-400">
+                                            {problem.solutionCount}
+                                          </span>
+                                        )}
+                                        {problem.difficulty !== null && (
+                                          <span
+                                            className={`shrink-0 text-[10px] font-bold ${getDifficultyColor(problem.difficulty)}`}
+                                          >
+                                            {problem.difficulty}
+                                          </span>
+                                        )}
+                                      </SidebarMenuSubButton>
+                                    </CollapsibleTrigger>
+
+                                    <CollapsibleContent>
+                                      <SidebarMenuSub className="ml-2">
+                                        {problem.records.map((record, index) => (
+                                          <SidebarMenuSubItem key={record.id}>
+                                            <SidebarMenuSubButton
+                                              size="sm"
+                                              isActive={record.id === selectedSolutionId}
+                                              onClick={() => onSelectSolution(record.id)}
+                                              className="relative cursor-pointer data-[active=true]:bg-emerald-50 data-[active=true]:text-emerald-950"
+                                            >
+                                              {record.id === selectedSolutionId && (
+                                                <span
+                                                  aria-hidden
+                                                  className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-emerald-600"
+                                                />
+                                              )}
+                                              <span className="min-w-0 flex-1 truncate pl-1">
+                                                {formatSolutionRecordLabel(record, index)}
+                                              </span>
+                                              <span className="shrink-0 text-[10px] text-slate-400">
+                                                {formatRecordDate(record.createdAt)}
+                                              </span>
+                                            </SidebarMenuSubButton>
+                                          </SidebarMenuSubItem>
+                                        ))}
+                                      </SidebarMenuSub>
+                                    </CollapsibleContent>
+                                  </SidebarMenuSubItem>
+                                </Collapsible>
                               ))}
                             </SidebarMenuSub>
                           </CollapsibleContent>
