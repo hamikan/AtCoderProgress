@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import ContestWorkspace from '@/features/problems/components/ContestWorkspace';
 import { getContestWorkspace } from '@/features/problems/api/get-contest-workspace';
+import { INITIAL_CONTEST_PAGE_SIZE } from '@/features/problems/functions/contest-page-params';
 import { getContestProblemIndexes } from '@/features/problems/functions/get-contest-problem-indexes';
 import { normalizeContestSearchParams } from '@/features/problems/functions/normalize-contest-search-params';
 import type { ContestSearchParamsInput } from '@/features/problems/types';
@@ -12,11 +13,11 @@ interface ContestPageProps {
 export default async function ContestPage({ searchParams }: ContestPageProps) {
   const user = await getCurrentUser();
   const userId = user?.id;
-  const { contestType, cursor, order } = normalizeContestSearchParams(await searchParams);
+  const { contestType, order } = normalizeContestSearchParams(await searchParams);
 
   const contestPage = await getContestWorkspace(contestType, order, {
-    cursor,
     userId,
+    pageSize: INITIAL_CONTEST_PAGE_SIZE,
   });
   const problemIndexes = getContestProblemIndexes(contestType);
 
@@ -30,6 +31,7 @@ export default async function ContestPage({ searchParams }: ContestPageProps) {
           contests={contestPage.contests}
           submissionStatusMap={contestPage.submissionStatusMap}
           stats={contestPage.stats}
+          totalContests={contestPage.totalContests}
           nextCursor={contestPage.nextCursor}
           hasMore={contestPage.hasMore}
         />
