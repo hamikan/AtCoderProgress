@@ -308,10 +308,10 @@ function SolutionEditorContent({
         <div className="min-h-0 flex-1 overflow-hidden px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-4">
           <div
             onMouseDown={handleEditorSurfaceMouseDown}
-            className="mx-auto flex h-full min-h-0 max-w-3xl cursor-text flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+            className="mx-auto flex h-full min-h-0 max-w-3xl cursor-text flex-col rounded-2xl border border-slate-200 bg-white shadow-sm"
           >
             {!mounted ? (
-              <div className="animate-pulse space-y-6">
+              <div className="animate-pulse space-y-6 p-4 sm:p-6">
                 <div className="h-4 w-full rounded bg-slate-50" />
                 <div className="h-4 w-5/6 rounded bg-slate-50" />
                 <div className="h-4 w-4/6 rounded bg-slate-50" />
@@ -326,7 +326,7 @@ function SolutionEditorContent({
                 <EditorContainer className="min-h-0 flex-1 overflow-x-auto overflow-y-auto border-none p-0 shadow-none">
                   <Editor
                     variant="none"
-                    className="min-h-full max-w-none p-0 pb-32 text-base leading-relaxed text-slate-700 prose prose-slate"
+                    className="min-h-full max-w-none px-4 pb-32 pt-4 text-base leading-relaxed text-slate-700 prose prose-slate sm:px-6 sm:pt-6"
                   />
                 </EditorContainer>
               </Plate>
