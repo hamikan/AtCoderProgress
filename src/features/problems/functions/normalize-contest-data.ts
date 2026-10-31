@@ -29,7 +29,7 @@ export function normalizeContestData(resources: ContestResources): NormalizedCon
     // ABC212以降 / ARC104以降の問題は独自推定（irt5_time）の値を使う。
     // それ以外は AtCoder Problems の difficulty を使う（issue #78）。
     difficulty: clipDifficulty(
-      ESTIMATED_DIFFICULTIES[problem.id] ?? problemModels[problem.id]?.difficulty
+      ESTIMATED_DIFFICULTIES[problem.id] ?? problemModels[problem.id]?.difficulty ?? null
     ),
     firstContestId: problem.first_contest_id || problem.contest_id,
   }));
