@@ -20,12 +20,21 @@ export async function getUserSolutions(userId?: string): Promise<SolutionListIte
 
   for (const solution of solutions) {
     const key = `${solution.contestId}:${solution.problemId}`;
+    const record = {
+      id: solution.id,
+      contestId: solution.contestId,
+      title: solution.title,
+      createdAt: solution.createdAt.toISOString(),
+      updatedAt: solution.updatedAt.toISOString(),
+      status: solution.status,
+    };
     const existing = groupedSolutions.get(key);
 
     if (existing) {
       groupedSolutions.set(key, {
         ...existing,
         solutionCount: existing.solutionCount + 1,
+        records: [...existing.records, record],
       });
       continue;
     }
@@ -44,8 +53,15 @@ export async function getUserSolutions(userId?: string): Promise<SolutionListIte
       difficulty: solution.problem.difficulty,
       updatedAt: solution.updatedAt.toISOString(),
       solutionCount: 1,
+      records: [record],
     });
   }
 
-  return [...groupedSolutions.values()];
+  return [...groupedSolutions.values()].map((item) => ({
+    ...item,
+    records: [...item.records].sort(
+      (a, b) =>
+        a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)
+    ),
+  }));
 }

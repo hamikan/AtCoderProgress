@@ -56,6 +56,10 @@ export function parseContestId(value: unknown): string {
   return parseDatabaseId(value, 'Invalid contest ID');
 }
 
+export function parseContestType(value: unknown): string {
+  return parseDatabaseId(value, 'Invalid contest type');
+}
+
 export function parseProblemId(value: unknown): string {
   return parseDatabaseId(value, 'Invalid problem ID');
 }
