@@ -29,7 +29,7 @@ export default function Header({ user }: HeaderProps) {
               <Home className="h-4 w-4" />
               <span>ダッシュボード</span>
             </Link>
-            <Link href="/problems" className="text-sm font-medium text-slate-600 hover:text-slate-900">問題一覧</Link>
+            <Link href="/problems/contest" className="text-sm font-medium text-slate-600 hover:text-slate-900">問題一覧</Link>
             <Link href="/solutions" className="text-sm font-medium text-slate-600 hover:text-slate-900">解法記録</Link>
             <Link href="/analytics" className="text-sm font-medium text-slate-600 hover:text-slate-900">分析</Link>
           </nav>
