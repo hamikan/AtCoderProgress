@@ -15,3 +15,7 @@ export type {
   SolutionStatus,
   SolutionWithTags,
 } from './output/solution';
+export type {
+  SolutionSidebarContestGroup,
+  SolutionSidebarTypeGroup,
+} from './output/solution-sidebar';

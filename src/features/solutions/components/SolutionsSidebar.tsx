@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getDifficultyColor, getDifficultyOrbColor } from '@/lib/atcoder/difficulty';
 import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
+import { buildSolutionSidebarHierarchy } from '@/features/solutions/functions/solution-sidebar-hierarchy';
 import type { SolutionListItem } from '@/features/solutions/types';
 
 interface SolutionsSidebarProps {
@@ -26,85 +27,6 @@ interface SolutionsSidebarProps {
   selectedSolutionId: string | null;
   onSelectSolution: (solutionId: string) => void;
   onNewDraft: () => void;
-}
-
-interface ContestGroup {
-  contestId: string;
-  contestNumber: string;
-  problems: SolutionListItem[];
-}
-
-interface TypeGroup {
-  type: string;
-  contests: ContestGroup[];
-}
-
-function parseContestId(contestId: string): { type: string; number: string } {
-  const match = contestId.match(/^([a-zA-Z]+)(\d+)$/);
-  if (!match) {
-    return { type: contestId.toUpperCase(), number: '' };
-  }
-
-  return {
-    type: match[1].toUpperCase(),
-    number: match[2],
-  };
-}
-
-function buildHierarchy(solutions: SolutionListItem[]): TypeGroup[] {
-  const typeMap = new Map<string, Map<string, SolutionListItem[]>>();
-
-  for (const solution of solutions) {
-    const { type } = parseContestId(solution.contestId);
-
-    if (!typeMap.has(type)) {
-      typeMap.set(type, new Map());
-    }
-
-    const contestMap = typeMap.get(type)!;
-    if (!contestMap.has(solution.contestId)) {
-      contestMap.set(solution.contestId, []);
-    }
-
-    contestMap.get(solution.contestId)!.push(solution);
-  }
-
-  const priority = ['ABC', 'ARC', 'AGC'];
-  const sortedTypes = [...typeMap.keys()].sort((a, b) => {
-    const priorityA = priority.indexOf(a);
-    const priorityB = priority.indexOf(b);
-
-    if (priorityA !== -1 && priorityB !== -1) {
-      return priorityA - priorityB;
-    }
-
-    if (priorityA !== -1) {
-      return -1;
-    }
-
-    if (priorityB !== -1) {
-      return 1;
-    }
-
-    return a.localeCompare(b);
-  });
-
-  return sortedTypes.map((type) => {
-    const contestMap = typeMap.get(type)!;
-    const contests = [...contestMap.entries()]
-      .sort((a, b) => {
-        const contestA = parseInt(parseContestId(a[0]).number, 10) || 0;
-        const contestB = parseInt(parseContestId(b[0]).number, 10) || 0;
-        return contestB - contestA;
-      })
-      .map(([contestId, problems]) => ({
-        contestId,
-        contestNumber: parseContestId(contestId).number,
-        problems: [...problems].sort((a, b) => a.problemIndex.localeCompare(b.problemIndex)),
-      }));
-
-    return { type, contests };
-  });
 }
 
 function problemContainsSelected(
@@ -135,7 +57,10 @@ export default function SolutionsSidebar({
     );
   }, [normalizedSearchQuery, solutions]);
 
-  const hierarchy = useMemo(() => buildHierarchy(filteredSolutions), [filteredSolutions]);
+  const hierarchy = useMemo(
+    () => buildSolutionSidebarHierarchy(filteredSolutions),
+    [filteredSolutions]
+  );
 
   return (
     <Sidebar collapsible="icon" className="!top-0 !pt-0">
@@ -226,7 +151,7 @@ export default function SolutionsSidebar({
                           <CollapsibleTrigger asChild>
                             <SidebarMenuSubButton className="font-medium">
                               <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/contest:rotate-90" />
-                              <span>{contest.contestNumber}</span>
+                              <span>{contest.label}</span>
                               <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
                                 {contest.problems.length}問
                               </span>
