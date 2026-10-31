@@ -356,15 +356,28 @@ const InlineComboboxItem = ({
     [filter, group, keywords, label, value, search]
   );
 
+  const selectedRef = React.useRef(false);
+
+  const handleSelect = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (selectedRef.current) return;
+
+    selectedRef.current = true;
+    removeInput(focusEditor);
+    onClick?.(event);
+  };
+
   if (!visible) return null;
 
   return (
     <ComboboxItem
       className={cn(comboboxItemVariants(), className)}
-      onClick={(event) => {
-        removeInput(focusEditor);
-        onClick?.(event);
+      onMouseDown={(event) => {
+        if (event.button !== 0) return;
+
+        event.preventDefault();
+        handleSelect(event);
       }}
+      onClick={handleSelect}
       {...props}
     />
   );
