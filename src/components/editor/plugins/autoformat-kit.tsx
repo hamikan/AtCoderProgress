@@ -118,6 +118,6 @@ export const AutoformatKit = [
         patterns: textSubstitutionPatterns,
       }),
     ],
-    key: 'autoformat',
+    key: 'textSubstitution',
   }),
 ];

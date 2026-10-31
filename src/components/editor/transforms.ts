@@ -132,41 +132,74 @@ const setBlockMap: Record<
   [KEYS.codeBlock]: (editor) => toggleCodeBlock(editor),
 };
 
+const setBlockEntry = (
+  editor: PlateEditor,
+  type: string,
+  entry: NodeEntry<TElement>
+) => {
+  const [node, path] = entry;
+
+  if (node[KEYS.listType]) {
+    editor.tf.unsetNodes([KEYS.listType, 'indent'], { at: path });
+  }
+  if (type in setBlockMap) {
+    return setBlockMap[type](editor, type, entry);
+  }
+  if (node.type !== type) {
+    editor.tf.setNodes({ type }, { at: path });
+  }
+};
+
+const setBlockEntries = (
+  editor: PlateEditor,
+  type: string,
+  entries: NodeEntry<TElement>[]
+) => {
+  const pathRefs = entries.map(([, path]) => editor.api.pathRef(path));
+  try {
+    pathRefs.forEach((pathRef) => {
+      const entry = pathRef.current && editor.api.node<TElement>(pathRef.current);
+      if (entry) setBlockEntry(editor, type, entry);
+    });
+  } finally {
+    pathRefs.forEach((pathRef) => pathRef.unref());
+  }
+};
+
 export const setBlockType = (
   editor: PlateEditor,
   type: string,
   { at }: { at?: Path } = {}
 ) => {
+  if (type === KEYS.blockquote) {
+    editor.tf.toggleBlock(type, { ...(at ? { at } : {}), wrap: true });
+    return;
+  }
+
   editor.tf.withoutNormalizing(() => {
-    const setEntry = (entry: NodeEntry<TElement>) => {
-      const [node, path] = entry;
+    const location = at ?? editor.selection;
+    if (!location) return;
 
-      if (node[KEYS.listType]) {
-        editor.tf.unsetNodes([KEYS.listType, 'indent'], { at: path });
-      }
-      if (type in setBlockMap) {
-        return setBlockMap[type](editor, type, entry);
-      }
-      if (node.type !== type) {
-        editor.tf.setNodes({ type }, { at: path });
-      }
-    };
+    const initialRange = editor.api.range(location);
+    if (!initialRange) return;
 
-    if (at) {
-      const entry = editor.api.node<TElement>(at);
+    const rangeRef = editor.api.rangeRef(initialRange);
+    try {
+      // Lift only the selected blocks out of quote containers, keeping neighbors quoted.
+      editor.tf.unwrapNodes({
+        at: location,
+        match: { type: editor.getType(KEYS.blockquote) },
+        mode: 'all',
+        split: true,
+      });
 
-      if (entry) {
-        setEntry(entry);
+      const range = rangeRef.current;
+      if (!range) return;
 
-        return;
-      }
+      setBlockEntries(editor, type, editor.api.blocks({ at: range, mode: 'lowest' }));
+    } finally {
+      rangeRef.unref();
     }
-
-    const entries = editor.api.blocks({ mode: 'lowest' });
-
-    entries.forEach((entry) => {
-      setEntry(entry);
-    });
   });
 };
 

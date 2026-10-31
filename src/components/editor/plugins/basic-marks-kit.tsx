@@ -5,7 +5,6 @@ import {
   CodeRules,
   HighlightRules,
   ItalicRules,
-  MarkComboRules,
   StrikethroughRules,
   SubscriptRules,
   SuperscriptRules,
@@ -22,6 +21,7 @@ import {
   SuperscriptPlugin,
   UnderlinePlugin,
 } from '@platejs/basic-nodes/react';
+import { createMarkInputRule, KEYS } from 'platejs';
 
 import { CodeLeaf } from '@/components/ui/code-node';
 import { HighlightLeaf } from '@/components/ui/highlight-node';
@@ -33,21 +33,34 @@ export const BasicMarksKit = [
   BoldPlugin.configure({
     inputRules: [
       BoldRules.markdown({ enabled: notInCodeBlock, variant: '*' }),
-      MarkComboRules.markdown({
+      // Keep the legacy compound delimiters; Plate 53's combo factories differ.
+      createMarkInputRule({
         enabled: notInCodeBlock,
-        variant: 'boldItalic',
+        end: '**',
+        marks: [KEYS.bold, KEYS.italic],
+        start: '***',
+        trigger: '*',
       }),
-      MarkComboRules.markdown({
+      createMarkInputRule({
         enabled: notInCodeBlock,
-        variant: 'boldUnderline',
+        end: '**_',
+        marks: [KEYS.underline, KEYS.bold],
+        start: '__**',
+        trigger: '_',
       }),
-      MarkComboRules.markdown({
+      createMarkInputRule({
         enabled: notInCodeBlock,
-        variant: 'boldItalicUnderline',
+        end: '***__',
+        marks: [KEYS.underline, KEYS.bold, KEYS.italic],
+        start: '___***',
+        trigger: '_',
       }),
-      MarkComboRules.markdown({
+      createMarkInputRule({
         enabled: notInCodeBlock,
-        variant: 'italicUnderline',
+        end: '*_',
+        marks: [KEYS.underline, KEYS.italic],
+        start: '__*',
+        trigger: '_',
       }),
     ],
   }),
