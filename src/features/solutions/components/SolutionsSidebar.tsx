@@ -213,7 +213,7 @@ export default function SolutionsSidebar({
                 </CollapsibleTrigger>
 
                 <CollapsibleContent>
-                  <SidebarMenuSub>
+                  <SidebarMenuSub className="mr-px pr-0">
                     {typeGroup.contests.map((contest) => (
                       <Collapsible
                         key={contest.contestId}
@@ -234,7 +234,7 @@ export default function SolutionsSidebar({
                           </CollapsibleTrigger>
 
                           <CollapsibleContent>
-                            <SidebarMenuSub className="ml-2">
+                            <SidebarMenuSub className="ml-2 mr-px pr-0">
                               {contest.problems.map((problem) => (
                                 <Collapsible
                                   key={`${problem.contestId}:${problem.problemId}`}
@@ -271,7 +271,7 @@ export default function SolutionsSidebar({
                                     </CollapsibleTrigger>
 
                                     <CollapsibleContent>
-                                      <SidebarMenuSub className="ml-2">
+                                      <SidebarMenuSub className="ml-2 mr-px pr-0">
                                         {problem.records.map((record, index) => (
                                           <SidebarMenuSubItem key={record.id}>
                                             <SidebarMenuSubButton
