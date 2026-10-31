@@ -42,6 +42,36 @@ test('normalizeContestData converts provider fields and clips low difficulty', (
   });
 });
 
+test('normalizeContestData prefers the custom estimate for ABC212+/ARC104+ problems', () => {
+  const normalized = normalizeContestData({
+    contests: [],
+    mergedProblems: [
+      {
+        id: 'arc230_a',
+        name: 'A',
+        contest_id: 'arc230',
+        first_contest_id: 'arc230',
+      },
+      {
+        id: 'abc214_a',
+        name: 'A',
+        contest_id: 'abc214',
+        first_contest_id: 'abc214',
+      },
+    ],
+    contestProblems: [],
+    problemModels: {
+      arc230_a: { difficulty: 900 },
+      abc214_a: { difficulty: 100 },
+    },
+  });
+
+  // 独自推定（irt5_time）の生値 1818 が使われる
+  assert.equal(normalized.problems[0].difficulty, 1818);
+  // 生値 -1000 は clipDifficulty で表示値 12 になる
+  assert.equal(normalized.problems[1].difficulty, 12);
+});
+
 test('normalizeContestData preserves missing difficulty', () => {
   const normalized = normalizeContestData({
     contests: [],
