@@ -190,7 +190,7 @@ export default function SolutionsSidebar({
           {hierarchy.map((typeGroup) => (
             <Collapsible
               key={typeGroup.type}
-              className="group/collapsible"
+              className="group/type"
               defaultOpen={typeGroup.contests.some((contest) =>
                 contest.problems.some((problem) =>
                   problemContainsSelected(problem, selectedSolutionId)
@@ -200,7 +200,7 @@ export default function SolutionsSidebar({
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton className="font-semibold">
-                    <ChevronRight className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    <ChevronRight className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/type:rotate-90" />
                     <span>{typeGroup.type}</span>
                     <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 group-data-[collapsible=icon]:hidden">
                       {typeGroup.contests.reduce(
@@ -217,7 +217,7 @@ export default function SolutionsSidebar({
                     {typeGroup.contests.map((contest) => (
                       <Collapsible
                         key={contest.contestId}
-                        className="group/collapsible"
+                        className="group/contest"
                         defaultOpen={contest.problems.some((problem) =>
                           problemContainsSelected(problem, selectedSolutionId)
                         )}
@@ -225,7 +225,7 @@ export default function SolutionsSidebar({
                         <SidebarMenuSubItem>
                           <CollapsibleTrigger asChild>
                             <SidebarMenuSubButton className="font-medium">
-                              <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                              <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/contest:rotate-90" />
                               <span>{contest.contestNumber}</span>
                               <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
                                 {contest.problems.length}問
@@ -238,7 +238,7 @@ export default function SolutionsSidebar({
                               {contest.problems.map((problem) => (
                                 <Collapsible
                                   key={`${problem.contestId}:${problem.problemId}`}
-                                  className="group/collapsible"
+                                  className="group/problem"
                                   defaultOpen={problemContainsSelected(
                                     problem,
                                     selectedSolutionId
@@ -247,7 +247,7 @@ export default function SolutionsSidebar({
                                   <SidebarMenuSubItem>
                                     <CollapsibleTrigger asChild>
                                       <SidebarMenuSubButton className="cursor-pointer">
-                                        <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                        <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/problem:rotate-90" />
                                         <span
                                           aria-hidden
                                           className={`size-2.5 shrink-0 rounded-full border border-black/15 ${getDifficultyOrbColor(problem.difficulty)}`}
