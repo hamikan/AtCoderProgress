@@ -15,6 +15,7 @@ export interface SolutionListItem {
   difficulty: number | null;
   updatedAt: string;
   solutionCount: number;
+  records: SolutionRecordListItem[];
 }
 
 export interface SolutionRecordListItem {

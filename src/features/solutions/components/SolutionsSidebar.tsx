@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BookOpen, ChevronRight, Plus, Search } from 'lucide-react';
 import {
   Sidebar,
@@ -17,102 +17,50 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { getDifficultyColor } from '@/lib/atcoder/difficulty';
-import type { SolutionListItem } from '@/features/solutions/types';
+import { getDifficultyColor, getDifficultyOrbColor } from '@/lib/atcoder/difficulty';
+import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
+import {
+  buildSolutionSidebarHierarchy,
+  buildSolutionSidebarProblemOptions,
+  getSelectedSidebarGroupKeys,
+  getSidebarContestKey,
+  getSidebarProblemKey,
+  getSidebarTypeKey,
+} from '@/features/solutions/functions/solution-sidebar-hierarchy';
+import ContestProblemPicker from '@/features/solutions/components/ContestProblemPicker';
+import TypeContestPicker from '@/features/solutions/components/TypeContestPicker';
+import { useSolutionsSidebarState } from '@/features/solutions/components/SolutionsSidebarStateProvider';
+import type {
+  SolutionListItem,
+  SolutionSidebarContestProblem,
+} from '@/features/solutions/types';
 
 interface SolutionsSidebarProps {
   solutions: SolutionListItem[];
+  contestProblems: SolutionSidebarContestProblem[];
   selectedSolutionId: string | null;
   onSelectSolution: (solutionId: string) => void;
   onNewDraft: () => void;
-}
-
-interface ContestGroup {
-  contestId: string;
-  contestNumber: string;
-  problems: SolutionListItem[];
-}
-
-interface TypeGroup {
-  type: string;
-  contests: ContestGroup[];
-}
-
-function parseContestId(contestId: string): { type: string; number: string } {
-  const match = contestId.match(/^([a-zA-Z]+)(\d+)$/);
-  if (!match) {
-    return { type: contestId.toUpperCase(), number: '' };
-  }
-
-  return {
-    type: match[1].toUpperCase(),
-    number: match[2],
-  };
-}
-
-function buildHierarchy(solutions: SolutionListItem[]): TypeGroup[] {
-  const typeMap = new Map<string, Map<string, SolutionListItem[]>>();
-
-  for (const solution of solutions) {
-    const { type } = parseContestId(solution.contestId);
-
-    if (!typeMap.has(type)) {
-      typeMap.set(type, new Map());
-    }
-
-    const contestMap = typeMap.get(type)!;
-    if (!contestMap.has(solution.contestId)) {
-      contestMap.set(solution.contestId, []);
-    }
-
-    contestMap.get(solution.contestId)!.push(solution);
-  }
-
-  const priority = ['ABC', 'ARC', 'AGC'];
-  const sortedTypes = [...typeMap.keys()].sort((a, b) => {
-    const priorityA = priority.indexOf(a);
-    const priorityB = priority.indexOf(b);
-
-    if (priorityA !== -1 && priorityB !== -1) {
-      return priorityA - priorityB;
-    }
-
-    if (priorityA !== -1) {
-      return -1;
-    }
-
-    if (priorityB !== -1) {
-      return 1;
-    }
-
-    return a.localeCompare(b);
-  });
-
-  return sortedTypes.map((type) => {
-    const contestMap = typeMap.get(type)!;
-    const contests = [...contestMap.entries()]
-      .sort((a, b) => {
-        const contestA = parseInt(parseContestId(a[0]).number, 10) || 0;
-        const contestB = parseInt(parseContestId(b[0]).number, 10) || 0;
-        return contestB - contestA;
-      })
-      .map(([contestId, problems]) => ({
-        contestId,
-        contestNumber: parseContestId(contestId).number,
-        problems: [...problems].sort((a, b) => a.problemIndex.localeCompare(b.problemIndex)),
-      }));
-
-    return { type, contests };
-  });
+  onNewDraftForProblem: (contestId: string, problemId: string) => void;
 }
 
 export default function SolutionsSidebar({
   solutions,
+  contestProblems,
   selectedSolutionId,
   onSelectSolution,
   onNewDraft,
+  onNewDraftForProblem,
 }: SolutionsSidebarProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    openGroupKeys,
+    setGroupOpen,
+    revealGroups,
+    searchQuery,
+    setSearchQuery,
+    scrollTopRef,
+  } = useSolutionsSidebarState();
+  const contentRef = useRef<HTMLDivElement>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
   const filteredSolutions = useMemo(() => {
@@ -127,7 +75,34 @@ export default function SolutionsSidebar({
     );
   }, [normalizedSearchQuery, solutions]);
 
-  const hierarchy = useMemo(() => buildHierarchy(filteredSolutions), [filteredSolutions]);
+  const problemOptions = useMemo(
+    () => buildSolutionSidebarProblemOptions(contestProblems, solutions),
+    [contestProblems, solutions]
+  );
+
+  const hierarchy = useMemo(
+    () => buildSolutionSidebarHierarchy(filteredSolutions, problemOptions),
+    [filteredSolutions, problemOptions]
+  );
+
+  const selectedGroupKeys = useMemo(
+    () => getSelectedSidebarGroupKeys(solutions, selectedSolutionId),
+    [selectedSolutionId, solutions]
+  );
+  const visibleOpenGroupKeys = useMemo(
+    () => openGroupKeys ?? new Set(selectedGroupKeys),
+    [openGroupKeys, selectedGroupKeys]
+  );
+
+  useEffect(() => {
+    revealGroups(selectedGroupKeys);
+  }, [revealGroups, selectedGroupKeys]);
+
+  useLayoutEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = scrollTopRef.current;
+    }
+  }, [scrollTopRef]);
 
   return (
     <Sidebar collapsible="icon" className="!top-0 !pt-0">
@@ -171,7 +146,12 @@ export default function SolutionsSidebar({
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent
+        ref={contentRef}
+        onScroll={(event) => {
+          scrollTopRef.current = event.currentTarget.scrollTop;
+        }}
+      >
         {hierarchy.length === 0 && (
           <div className="px-4 py-8 text-center text-sm text-slate-400 group-data-[collapsible=icon]:hidden">
             {normalizedSearchQuery ? '一致する解法が見つかりません' : '解法がまだありません'}
@@ -182,57 +162,118 @@ export default function SolutionsSidebar({
           {hierarchy.map((typeGroup) => (
             <Collapsible
               key={typeGroup.type}
-              defaultOpen={typeGroup.contests.some((contest) =>
-                contest.problems.some((problem) => problem.latestSolutionId === selectedSolutionId)
-              )}
+              className="group/type"
+              open={visibleOpenGroupKeys.has(getSidebarTypeKey(typeGroup.type))}
+              onOpenChange={(open) => setGroupOpen(getSidebarTypeKey(typeGroup.type), open)}
             >
               <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton className="font-semibold">
-                    <ChevronRight className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                    <span>{typeGroup.type}</span>
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
+                <div className="group/sidebar-row relative">
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="pr-8 font-semibold">
+                      <ChevronRight className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/type:rotate-90" />
+                      <span>{typeGroup.type}</span>
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <TypeContestPicker
+                    type={typeGroup.type}
+                    solutions={solutions}
+                    onSelectProblem={onNewDraftForProblem}
+                  />
+                </div>
 
                 <CollapsibleContent>
-                  <SidebarMenuSub>
+                  <SidebarMenuSub className="mr-px pr-0">
                     {typeGroup.contests.map((contest) => (
                       <Collapsible
                         key={contest.contestId}
-                        defaultOpen={contest.problems.some((problem) => problem.latestSolutionId === selectedSolutionId)}
+                        className="group/contest"
+                        open={visibleOpenGroupKeys.has(getSidebarContestKey(contest.contestId))}
+                        onOpenChange={(open) =>
+                          setGroupOpen(getSidebarContestKey(contest.contestId), open)
+                        }
                       >
                         <SidebarMenuSubItem>
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuSubButton className="font-medium">
-                              <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                              <span>{contest.contestNumber}</span>
-                            </SidebarMenuSubButton>
-                          </CollapsibleTrigger>
+                          <div className="group/sidebar-row relative">
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuSubButton className="pr-7 font-medium">
+                                <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/contest:rotate-90" />
+                                <span>{contest.label}</span>
+                              </SidebarMenuSubButton>
+                            </CollapsibleTrigger>
+                            {contest.problemOptions.length > 0 && (
+                              <ContestProblemPicker
+                                contestName={[typeGroup.type, contest.label].filter(Boolean).join(' ')}
+                                options={contest.problemOptions}
+                                onSelectProblem={(problemId) =>
+                                  onNewDraftForProblem(contest.contestId, problemId)
+                                }
+                              />
+                            )}
+                          </div>
 
                           <CollapsibleContent>
-                            <SidebarMenuSub className="ml-2">
-                              {contest.problems.map((solution) => (
-                                <SidebarMenuSubItem key={`${solution.contestId}:${solution.problemId}`}>
-                                  <SidebarMenuSubButton
-                                    isActive={solution.latestSolutionId === selectedSolutionId}
-                                    onClick={() => onSelectSolution(solution.latestSolutionId)}
-                                    className="cursor-pointer"
-                                  >
-                                    <span className="truncate">
-                                      {solution.problemIndex} - {solution.problemName}
-                                    </span>
-                                    {solution.solutionCount > 1 && (
-                                      <span className="ml-auto shrink-0 text-[10px] font-bold text-slate-400">
-                                        {solution.solutionCount}
-                                      </span>
-                                    )}
-                                    {solution.difficulty !== null && (
-                                      <span className={`shrink-0 text-[10px] font-bold ${getDifficultyColor(solution.difficulty)}`}>
-                                        {solution.difficulty}
-                                      </span>
-                                    )}
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
+                            <SidebarMenuSub className="ml-2 mr-px pr-0">
+                              {contest.problems.map((problem) => (
+                                <Collapsible
+                                  key={`${problem.contestId}:${problem.problemId}`}
+                                  className="group/problem"
+                                  open={visibleOpenGroupKeys.has(
+                                    getSidebarProblemKey(problem.contestId, problem.problemId)
+                                  )}
+                                  onOpenChange={(open) =>
+                                    setGroupOpen(
+                                      getSidebarProblemKey(problem.contestId, problem.problemId),
+                                      open
+                                    )
+                                  }
+                                >
+                                  <SidebarMenuSubItem>
+                                    <CollapsibleTrigger asChild>
+                                      <SidebarMenuSubButton className="cursor-pointer">
+                                        <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/problem:rotate-90" />
+                                        <span
+                                          aria-hidden
+                                          className={`size-2.5 shrink-0 rounded-full border border-black/15 ${getDifficultyOrbColor(problem.difficulty)}`}
+                                        />
+                                        <span className="min-w-0 flex-1 truncate">
+                                          {problem.problemIndex} - {problem.problemName}
+                                        </span>
+                                        {problem.difficulty !== null && (
+                                          <span
+                                            className={`shrink-0 text-[10px] font-bold ${getDifficultyColor(problem.difficulty)}`}
+                                          >
+                                            {problem.difficulty}
+                                          </span>
+                                        )}
+                                      </SidebarMenuSubButton>
+                                    </CollapsibleTrigger>
+
+                                    <CollapsibleContent>
+                                      <SidebarMenuSub className="ml-2 mr-px pr-0">
+                                        {problem.records.map((record, index) => (
+                                          <SidebarMenuSubItem key={record.id}>
+                                            <SidebarMenuSubButton
+                                              size="sm"
+                                              isActive={record.id === selectedSolutionId}
+                                              onClick={() => onSelectSolution(record.id)}
+                                              className="relative cursor-pointer data-[active=true]:bg-emerald-50 data-[active=true]:text-emerald-950"
+                                            >
+                                              {record.id === selectedSolutionId && (
+                                                <span
+                                                  aria-hidden
+                                                  className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-emerald-600"
+                                                />
+                                              )}
+                                              <span className="min-w-0 flex-1 truncate pl-1">
+                                                {formatSolutionRecordLabel(record, index)}
+                                              </span>
+                                            </SidebarMenuSubButton>
+                                          </SidebarMenuSubItem>
+                                        ))}
+                                      </SidebarMenuSub>
+                                    </CollapsibleContent>
+                                  </SidebarMenuSubItem>
+                                </Collapsible>
                               ))}
                             </SidebarMenuSub>
                           </CollapsibleContent>
