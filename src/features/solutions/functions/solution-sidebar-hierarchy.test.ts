@@ -4,6 +4,10 @@ import test from 'node:test';
 import {
   buildSolutionSidebarHierarchy,
   buildSolutionSidebarProblemOptions,
+  getSelectedSidebarGroupKeys,
+  getSidebarContestKey,
+  getSidebarProblemKey,
+  getSidebarTypeKey,
 } from './solution-sidebar-hierarchy';
 import type {
   SolutionListItem,
@@ -181,4 +185,47 @@ test('buildSolutionSidebarHierarchy leaves options empty when contest problems a
   const [abc] = buildSolutionSidebarHierarchy([listItem('abc420')]);
 
   assert.deepEqual(abc.contests[0].problemOptions, []);
+});
+
+test('getSelectedSidebarGroupKeys returns the groups that lead to the selected record', () => {
+  const solutions = [
+    { ...listItem('abc420', 'B'), records: [] },
+    {
+      ...listItem('adt_all_20231220_2', 'C', 'abc301_c'),
+      records: [
+        {
+          id: 'solution_1',
+          contestId: 'adt_all_20231220_2',
+          title: null,
+          createdAt: '2026-10-31T00:00:00.000Z',
+          updatedAt: '2026-10-31T00:00:00.000Z',
+          status: 'AC' as const,
+        },
+      ],
+    },
+  ];
+
+  assert.deepEqual(getSelectedSidebarGroupKeys(solutions, 'solution_1'), [
+    getSidebarTypeKey('ADT_ALL'),
+    getSidebarContestKey('adt_all_20231220_2'),
+    getSidebarProblemKey('adt_all_20231220_2', 'abc301_c'),
+  ]);
+});
+
+test('getSelectedSidebarGroupKeys returns nothing without a matching selection', () => {
+  const solutions = [listItem('abc420', 'B')];
+
+  assert.deepEqual(getSelectedSidebarGroupKeys(solutions, null), []);
+  assert.deepEqual(getSelectedSidebarGroupKeys(solutions, 'missing'), []);
+});
+
+test('sidebar group keys do not collide across levels', () => {
+  assert.equal(
+    new Set([
+      getSidebarTypeKey('ABC'),
+      getSidebarContestKey('abc'),
+      getSidebarProblemKey('abc', 'abc'),
+    ]).size,
+    3
+  );
 });

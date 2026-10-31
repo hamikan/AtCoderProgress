@@ -4,6 +4,7 @@ import { useCallback, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import SolutionsSidebar from '@/features/solutions/components/SolutionsSidebar';
+import { useSolutionsSidebarState } from '@/features/solutions/components/SolutionsSidebarStateProvider';
 import SolutionEditor from '@/features/solutions/components/SolutionEditor';
 import type {
   SolutionDraftState,
@@ -58,6 +59,7 @@ export default function SolutionsWorkspace({
 }: SolutionsWorkspaceProps) {
   const [draftState, setDraftState] = useState<SolutionDraftState>(EMPTY_DRAFT_STATE);
   const router = useRouter();
+  const { sidebarOpen, setSidebarOpen } = useSolutionsSidebarState();
 
   const handleSelectSolution = useCallback((solutionId: string) => {
     if (solutionId === initialSolution?.id) return;
@@ -80,7 +82,11 @@ export default function SolutionsWorkspace({
   }, [router]);
 
   return (
-    <SidebarProvider className="h-full !min-h-0">
+    <SidebarProvider
+      open={sidebarOpen}
+      onOpenChange={setSidebarOpen}
+      className="h-full !min-h-0"
+    >
 
       <SolutionsSidebar
         solutions={solutions}

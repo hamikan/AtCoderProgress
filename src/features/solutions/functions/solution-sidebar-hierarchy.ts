@@ -14,7 +14,6 @@ interface ParsedContestId {
 const TYPE_PRIORITY = ['ABC', 'ARC', 'AGC'];
 
 function parseContestId(contestId: string): ParsedContestId {
-  // AtCoder Daily Training: adt_<kind>_<YYYYMMDD>_<slot>
   const dailyTraining = contestId.match(/^(adt_[a-z]+)_(\d{4})(\d{2})(\d{2})_(\d+)$/);
   if (dailyTraining) {
     const [, kind, year, month, day, slot] = dailyTraining;
@@ -121,4 +120,34 @@ export function buildSolutionSidebarHierarchy(
           ),
         })),
     }));
+}
+
+export function getSidebarTypeKey(type: string): string {
+  return `type:${type}`;
+}
+
+export function getSidebarContestKey(contestId: string): string {
+  return `contest:${contestId}`;
+}
+
+export function getSidebarProblemKey(contestId: string, problemId: string): string {
+  return `problem:${contestId}:${problemId}`;
+}
+
+export function getSelectedSidebarGroupKeys(
+  solutions: SolutionListItem[],
+  selectedSolutionId: string | null
+): string[] {
+  const selected = solutions.find((solution) =>
+    solution.records.some((record) => record.id === selectedSolutionId)
+  );
+  if (!selected) {
+    return [];
+  }
+
+  return [
+    getSidebarTypeKey(parseContestId(selected.contestId).type),
+    getSidebarContestKey(selected.contestId),
+    getSidebarProblemKey(selected.contestId, selected.problemId),
+  ];
 }

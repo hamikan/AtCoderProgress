@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BookOpen, ChevronRight, Plus, Search } from 'lucide-react';
 import {
   Sidebar,
@@ -22,8 +22,13 @@ import { formatSolutionRecordLabel } from '@/features/solutions/functions/soluti
 import {
   buildSolutionSidebarHierarchy,
   buildSolutionSidebarProblemOptions,
+  getSelectedSidebarGroupKeys,
+  getSidebarContestKey,
+  getSidebarProblemKey,
+  getSidebarTypeKey,
 } from '@/features/solutions/functions/solution-sidebar-hierarchy';
 import ContestProblemPicker from '@/features/solutions/components/ContestProblemPicker';
+import { useSolutionsSidebarState } from '@/features/solutions/components/SolutionsSidebarStateProvider';
 import type {
   SolutionListItem,
   SolutionSidebarContestProblem,
@@ -38,13 +43,6 @@ interface SolutionsSidebarProps {
   onNewDraftForProblem: (contestId: string, problemId: string) => void;
 }
 
-function problemContainsSelected(
-  problem: SolutionListItem,
-  selectedSolutionId: string | null
-): boolean {
-  return problem.records.some((record) => record.id === selectedSolutionId);
-}
-
 export default function SolutionsSidebar({
   solutions,
   contestProblems,
@@ -53,7 +51,15 @@ export default function SolutionsSidebar({
   onNewDraft,
   onNewDraftForProblem,
 }: SolutionsSidebarProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    openGroupKeys,
+    setGroupOpen,
+    revealGroups,
+    searchQuery,
+    setSearchQuery,
+    scrollTopRef,
+  } = useSolutionsSidebarState();
+  const contentRef = useRef<HTMLDivElement>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
   const filteredSolutions = useMemo(() => {
@@ -77,6 +83,25 @@ export default function SolutionsSidebar({
     () => buildSolutionSidebarHierarchy(filteredSolutions, problemOptions),
     [filteredSolutions, problemOptions]
   );
+
+  const selectedGroupKeys = useMemo(
+    () => getSelectedSidebarGroupKeys(solutions, selectedSolutionId),
+    [selectedSolutionId, solutions]
+  );
+  const visibleOpenGroupKeys = useMemo(
+    () => openGroupKeys ?? new Set(selectedGroupKeys),
+    [openGroupKeys, selectedGroupKeys]
+  );
+
+  useEffect(() => {
+    revealGroups(selectedGroupKeys);
+  }, [revealGroups, selectedGroupKeys]);
+
+  useLayoutEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = scrollTopRef.current;
+    }
+  }, [scrollTopRef]);
 
   return (
     <Sidebar collapsible="icon" className="!top-0 !pt-0">
@@ -120,7 +145,12 @@ export default function SolutionsSidebar({
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent
+        ref={contentRef}
+        onScroll={(event) => {
+          scrollTopRef.current = event.currentTarget.scrollTop;
+        }}
+      >
         {hierarchy.length === 0 && (
           <div className="px-4 py-8 text-center text-sm text-slate-400 group-data-[collapsible=icon]:hidden">
             {normalizedSearchQuery ? '一致する解法が見つかりません' : '解法がまだありません'}
@@ -132,11 +162,8 @@ export default function SolutionsSidebar({
             <Collapsible
               key={typeGroup.type}
               className="group/type"
-              defaultOpen={typeGroup.contests.some((contest) =>
-                contest.problems.some((problem) =>
-                  problemContainsSelected(problem, selectedSolutionId)
-                )
-              )}
+              open={visibleOpenGroupKeys.has(getSidebarTypeKey(typeGroup.type))}
+              onOpenChange={(open) => setGroupOpen(getSidebarTypeKey(typeGroup.type), open)}
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
@@ -152,9 +179,10 @@ export default function SolutionsSidebar({
                       <Collapsible
                         key={contest.contestId}
                         className="group/contest"
-                        defaultOpen={contest.problems.some((problem) =>
-                          problemContainsSelected(problem, selectedSolutionId)
-                        )}
+                        open={visibleOpenGroupKeys.has(getSidebarContestKey(contest.contestId))}
+                        onOpenChange={(open) =>
+                          setGroupOpen(getSidebarContestKey(contest.contestId), open)
+                        }
                       >
                         <SidebarMenuSubItem>
                           <div className="group/contest-row relative">
@@ -181,10 +209,15 @@ export default function SolutionsSidebar({
                                 <Collapsible
                                   key={`${problem.contestId}:${problem.problemId}`}
                                   className="group/problem"
-                                  defaultOpen={problemContainsSelected(
-                                    problem,
-                                    selectedSolutionId
+                                  open={visibleOpenGroupKeys.has(
+                                    getSidebarProblemKey(problem.contestId, problem.problemId)
                                   )}
+                                  onOpenChange={(open) =>
+                                    setGroupOpen(
+                                      getSidebarProblemKey(problem.contestId, problem.problemId),
+                                      open
+                                    )
+                                  }
                                 >
                                   <SidebarMenuSubItem>
                                     <CollapsibleTrigger asChild>
