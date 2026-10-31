@@ -127,13 +127,6 @@ export default function SolutionsSidebar({
                   <SidebarMenuButton className="font-semibold">
                     <ChevronRight className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/type:rotate-90" />
                     <span>{typeGroup.type}</span>
-                    <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 group-data-[collapsible=icon]:hidden">
-                      {typeGroup.contests.reduce(
-                        (count, contest) => count + contest.problems.length,
-                        0
-                      )}
-                      件
-                    </span>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
 
@@ -152,9 +145,6 @@ export default function SolutionsSidebar({
                             <SidebarMenuSubButton className="font-medium">
                               <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/contest:rotate-90" />
                               <span>{contest.label}</span>
-                              <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
-                                {contest.problems.length}問
-                              </span>
                             </SidebarMenuSubButton>
                           </CollapsibleTrigger>
 
