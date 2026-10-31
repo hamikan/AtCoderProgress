@@ -9,8 +9,11 @@ import {
 import { cva } from 'class-variance-authority';
 import { ArrowLeft, ArrowRight, Download, Minus, Plus, X } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
+import { useState } from 'react';
 
 import { cn } from '@/lib/utils';
+
+import { downloadImage } from './media-preview-download';
 
 const buttonVariants = cva('rounded bg-[rgba(0,0,0,0.5)] px-1', {
   defaultVariants: {
@@ -31,6 +34,23 @@ export function MediaPreviewDialog() {
   const isOpen = useImagePreviewValue('isOpen', editor.id);
   const scale = useImagePreviewValue('scale');
   const isEditingScale = useImagePreviewValue('isEditingScale');
+  const currentPreview = useImagePreviewValue('currentPreview');
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    const url: unknown = currentPreview?.url;
+
+    if (typeof url !== 'string' || !url || isDownloading) return;
+
+    setIsDownloading(true);
+
+    try {
+      await downloadImage(url);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const {
     closeProps,
     currentUrlIndex,
@@ -127,8 +147,21 @@ export function MediaPreviewDialog() {
                 <Plus className="size-4" />
               </button>
             </div>
-            {/* TODO: downLoad the image */}
-            <button className={cn(buttonVariants())} type="button">
+            <button
+              aria-label="画像をダウンロード"
+              className={cn(
+                buttonVariants({
+                  variant:
+                    !currentPreview || isDownloading ? 'disabled' : 'default',
+                })
+              )}
+              disabled={!currentPreview || isDownloading}
+              onClick={() => {
+                void handleDownload();
+              }}
+              title="画像をダウンロード"
+              type="button"
+            >
               <Download className="size-4" />
             </button>
             <button
