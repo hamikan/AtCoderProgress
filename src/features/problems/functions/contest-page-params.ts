@@ -6,6 +6,8 @@ import {
 
 export const DEFAULT_CONTEST_PAGE_SIZE = 100;
 export const MAX_CONTEST_PAGE_SIZE = 100;
+export const INITIAL_CONTEST_PAGE_SIZE = 20;
+export const BACKGROUND_CONTEST_PAGE_SIZE = MAX_CONTEST_PAGE_SIZE;
 
 export function isContestKind(value: unknown): value is ContestKind {
   return contestKindSchema.safeParse(value).success;

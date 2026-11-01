@@ -20,6 +20,7 @@ export type {
   NormalizedContestSearchParams,
 } from './input/contest-search-params';
 export type { ContestPageOptions } from './input/contest-page-options';
+export type { ContestChunkInput } from './input/contest-chunk-input';
 export type {
   NormalizedProblemListFilters,
   ProblemFilterStatus,

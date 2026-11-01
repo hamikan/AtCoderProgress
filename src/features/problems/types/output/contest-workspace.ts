@@ -5,6 +5,7 @@ import type { Contest } from './contest';
 export interface ContestPageData {
   contests: Contest[];
   totalProblems: number;
+  totalContests: number;
   nextCursor: string | null;
   hasMore: boolean;
 }
