@@ -2,12 +2,22 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  BACKGROUND_CONTEST_PAGE_SIZE,
   DEFAULT_CONTEST_PAGE_SIZE,
+  INITIAL_CONTEST_PAGE_SIZE,
+  MAX_CONTEST_PAGE_SIZE,
   isContestKind,
   isContestOrder,
   parseContestPageSize,
   isValidContestCursor,
 } from './contest-page-params';
+
+test('contest autoload page sizes stay within the allowed bounds', () => {
+  assert.equal(INITIAL_CONTEST_PAGE_SIZE, 20);
+  assert.ok(INITIAL_CONTEST_PAGE_SIZE < MAX_CONTEST_PAGE_SIZE);
+  assert.equal(BACKGROUND_CONTEST_PAGE_SIZE, MAX_CONTEST_PAGE_SIZE);
+  assert.equal(parseContestPageSize(String(BACKGROUND_CONTEST_PAGE_SIZE)), BACKGROUND_CONTEST_PAGE_SIZE);
+});
 
 test('contest kind and order validators allow only supported values', () => {
   assert.equal(isContestKind('abc'), true);
