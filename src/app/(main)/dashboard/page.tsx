@@ -2,6 +2,7 @@ import { Calendar, Target, TrendingUp, Trophy } from 'lucide-react';
 
 import { StatCard } from '@/components/ui/stat-card';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import LinkAtCoderPrompt from '@/features/auth/components/LinkAtCoderPrompt';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getTagStatistics } from '@/features/problems/api/get-tag-statistics';
 import TagRadar from '@/features/problems/components/TagRadar';
@@ -45,6 +46,11 @@ export default async function DashboardPage() {
         {!user && (
           <div className="mb-6">
             <LoginPrompt returnTo="/dashboard" />
+          </div>
+        )}
+        {user && !user.atcoderId && (
+          <div className="mb-6">
+            <LinkAtCoderPrompt />
           </div>
         )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
