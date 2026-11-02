@@ -1,3 +1,15 @@
+export interface PersistSubmissionsResult {
+  /** Submissions stored for the first time. */
+  storedCount: number;
+  /** Stored submissions whose result/point/execution time changed. */
+  updatedCount: number;
+  /**
+   * Submissions not stored because their problem is not in the
+   * database yet (issue #110).
+   */
+  droppedCount: number;
+}
+
 export interface SubmissionPersistenceRecord {
   id: number;
   epochSecond: number;
@@ -22,6 +34,21 @@ export interface SubmissionWriterTransaction {
     createMany(args: {
       data: SubmissionPersistenceRecord[];
       skipDuplicates: true;
+    }): Promise<unknown>;
+    findMany(args: {
+      select: { id: true; result: true; point: true; executionTime: true };
+      where: { userId: string; id: { in: number[] } };
+    }): Promise<
+      Array<{
+        id: number;
+        result: string;
+        point: number;
+        executionTime: number | null;
+      }>
+    >;
+    update(args: {
+      data: { result: string; point: number; executionTime: number | null };
+      where: { userId_id: { userId: string; id: number } };
     }): Promise<unknown>;
   };
 }

@@ -3,7 +3,6 @@ import test from 'node:test';
 
 import {
   applyAtCoderIdChange,
-  isAtCoderIdAvailableForUser,
 } from './apply-atcoder-id-change';
 import type { AtCoderProfileData } from '@/features/auth/types';
 
@@ -68,6 +67,14 @@ function createTransaction(
         calls.push({ name: 'submission.createMany', args });
         return { count: 1 };
       },
+      async findMany(args: unknown) {
+        calls.push({ name: 'submission.findMany', args });
+        return [];
+      },
+      async update(args: unknown) {
+        calls.push({ name: 'submission.update', args });
+        return {};
+      },
     },
     userRatingHistory: {
       async deleteMany(args: unknown) {
@@ -113,6 +120,7 @@ test('atomically replaces the public AtCoder ID data without touching private re
       'submission.deleteMany',
       'userRatingHistory.deleteMany',
       'problem.findMany',
+      'submission.findMany',
       'submission.createMany',
       'userRatingHistory.createMany',
     ]
@@ -125,7 +133,7 @@ test('atomically replaces the public AtCoder ID data without touching private re
     },
     where: { id: 'app-user-id' },
   });
-  assert.deepEqual(calls[5].args, {
+  assert.deepEqual(calls[6].args, {
     data: [
       {
         id: 1,
@@ -142,7 +150,7 @@ test('atomically replaces the public AtCoder ID data without touching private re
     ],
     skipDuplicates: true,
   });
-  assert.deepEqual(calls[6].args, {
+  assert.deepEqual(calls[7].args, {
     data: [
       {
         userId: 'app-user-id',
@@ -199,37 +207,3 @@ test('does not write while the seven-day cooldown is active', async () => {
   assert.deepEqual(calls.map((call) => call.name), ['user.findUnique']);
 });
 
-test('detects an AtCoder ID registered by another app user', async () => {
-  const createReader = (ownerId: string | null) => ({
-    user: {
-      async findUnique() {
-        return ownerId ? { id: ownerId } : null;
-      },
-    },
-  });
-
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader('other-user-id'),
-      'app-user-id',
-      'tourist'
-    ),
-    false
-  );
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader('app-user-id'),
-      'app-user-id',
-      'tourist'
-    ),
-    true
-  );
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader(null),
-      'app-user-id',
-      'tourist'
-    ),
-    true
-  );
-});

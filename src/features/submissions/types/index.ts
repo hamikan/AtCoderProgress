@@ -4,6 +4,7 @@ export type { AcceptedProblemHeatmapDay } from './output/accepted-problem-heatma
 export type { RecentSubmission } from './output/recent-submission';
 export type { SolvedProblemStatistics } from './output/solved-problem-statistics';
 export type {
+  PersistSubmissionsResult,
   SubmissionPersistenceRecord,
   SubmissionSyncTransaction,
   SubmissionWriterTransaction,
