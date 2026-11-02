@@ -11,7 +11,9 @@ async function main() {
 
   console.log(`Starting manual sync for AtCoder ID: ${atcoderId}`);
 
-  const user = await prisma.user.findUnique({
+  // Several accounts may link the same AtCoder ID (issue #114); this
+  // manual script syncs the first matching user.
+  const user = await prisma.user.findFirst({
     where: { atcoderId },
     select: { id: true, name: true, atcoderId: true },
   });

@@ -25,15 +25,6 @@ interface UserAtCoderIdReader {
   };
 }
 
-interface AtCoderIdOwnerReader {
-  user: {
-    findUnique(args: {
-      select: { id: true };
-      where: { atcoderId: string };
-    }): Promise<{ id: string } | null>;
-  };
-}
-
 interface UserAtCoderIdTransaction extends UserAtCoderIdReader {
   user: UserAtCoderIdReader['user'] & {
     update(args: {
@@ -96,18 +87,6 @@ export async function getAtCoderIdChangeDecision(
     now
   );
   return decision;
-}
-
-export async function isAtCoderIdAvailableForUser(
-  reader: AtCoderIdOwnerReader,
-  userId: string,
-  atcoderId: string
-): Promise<boolean> {
-  const owner = await reader.user.findUnique({
-    where: { atcoderId },
-    select: { id: true },
-  });
-  return !owner || owner.id === userId;
 }
 
 export async function applyAtCoderIdChange(

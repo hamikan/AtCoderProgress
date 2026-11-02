@@ -3,7 +3,6 @@ import test from 'node:test';
 
 import {
   applyAtCoderIdChange,
-  isAtCoderIdAvailableForUser,
 } from './apply-atcoder-id-change';
 import type { AtCoderProfileData } from '@/features/auth/types';
 
@@ -199,37 +198,3 @@ test('does not write while the seven-day cooldown is active', async () => {
   assert.deepEqual(calls.map((call) => call.name), ['user.findUnique']);
 });
 
-test('detects an AtCoder ID registered by another app user', async () => {
-  const createReader = (ownerId: string | null) => ({
-    user: {
-      async findUnique() {
-        return ownerId ? { id: ownerId } : null;
-      },
-    },
-  });
-
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader('other-user-id'),
-      'app-user-id',
-      'tourist'
-    ),
-    false
-  );
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader('app-user-id'),
-      'app-user-id',
-      'tourist'
-    ),
-    true
-  );
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader(null),
-      'app-user-id',
-      'tourist'
-    ),
-    true
-  );
-});

@@ -8,7 +8,6 @@ import { parseAtCoderId } from '@/features/auth/schemas/atcoder-id';
 import {
   applyAtCoderIdChange,
   getAtCoderIdChangeDecision,
-  isAtCoderIdAvailableForUser,
 } from '@/features/auth/sync/apply-atcoder-id-change';
 import {
   AtCoderProfileFetchError,
@@ -57,15 +56,8 @@ export async function linkAtCoderId(
       return { ok: true, value: { status: 'unchanged' } };
     }
 
-    const isAvailable = await isAtCoderIdAvailableForUser(
-      prisma,
-      user.id,
-      parsedAtCoderId
-    );
-    if (!isAvailable) {
-      return failure('ALREADY_LINKED', 'このAtCoder IDはすでに登録されています。');
-    }
-
+    // AtCoder IDs are not exclusive: several accounts may link the
+    // same ID (issue #114), so there is no availability check here.
     const result = await synchronizeAtCoderIdChange(parsedAtCoderId, {
       fetchSubmissions,
       fetchRatingHistory,
@@ -102,9 +94,6 @@ export async function linkAtCoderId(
         'UPSTREAM_UNAVAILABLE',
         'AtCoderのデータ取得に失敗しました。AtCoder IDは変更されていません。'
       );
-    }
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return failure('ALREADY_LINKED', 'このAtCoder IDはすでに登録されています。');
     }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034') {
       return failure('CONFLICT', '同時に更新が行われました。もう一度お試しください。');
