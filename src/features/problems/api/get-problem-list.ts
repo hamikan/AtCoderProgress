@@ -31,12 +31,17 @@ export async function getProblemList(
   const skip = (page - 1) * pageSize;
 
   const where: Prisma.ProblemWhereInput = {};
+  // Search and status both use OR conditions of their own, so they are
+  // collected and ANDed together instead of overwriting each other.
+  const andConditions: Prisma.ProblemWhereInput[] = [];
 
   if (search) {
-    where.OR = [
-      { id: { contains: search, mode: 'insensitive' } },
-      { name: { contains: search, mode: 'insensitive' } },
-    ];
+    andConditions.push({
+      OR: [
+        { id: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+      ],
+    });
   }
 
   if (difficultyMin !== undefined || difficultyMax !== undefined) {
@@ -55,9 +60,10 @@ export async function getProblemList(
   }
 
   if (tags && tags.length > 0) {
+    // The filter UI passes tag names, not tag IDs.
     where.problemTags = {
       some: {
-        tagId: { in: tags },
+        tag: { name: { in: tags } },
         count: { gte: TAG_THRESHOLD }
       }
     };
@@ -66,13 +72,15 @@ export async function getProblemList(
   if (status && status !== 'ALL' && userId) {
     switch (status) {
       case 'AC':
-        where.OR = [
-          { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } },
-          { submissions: { some: { userId, result: 'AC' } } }
-        ];
+        andConditions.push({
+          OR: [
+            { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } },
+            { submissions: { some: { userId, result: 'AC' } } }
+          ]
+        });
         break;
       case 'TRYING':
-        where.AND = [
+        andConditions.push(
           {
             OR: [
               { solutions: { some: { userId, status: 'TRYING' } } },
@@ -81,24 +89,30 @@ export async function getProblemList(
           },
           { NOT: { submissions: { some: { userId, result: 'AC' } } } },
           { NOT: { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } } }
-        ];
+        );
         break;
       case 'UNSOLVED':
-        where.AND = [
+        andConditions.push(
           { NOT: { submissions: { some: { userId } } } },
           { NOT: { solutions: { some: { userId } } } }
-        ];
+        );
         break;
       default:
         where.solutions = { some: { userId, status } };
     }
   }
 
+  if (andConditions.length > 0) {
+    where.AND = andConditions;
+  }
+
   let prismaOrderBy: Prisma.ProblemFindManyArgs['orderBy'] = undefined;
   if (order && orderBy) {
     switch (orderBy) {
       case 'difficulty':
-        prismaOrderBy = { difficulty: order };
+        // Problems without a difficulty always go last; PostgreSQL
+        // would otherwise put NULLs first on descending order.
+        prismaOrderBy = { difficulty: { sort: order, nulls: 'last' } };
         break;
       case 'contestDate':
         prismaOrderBy = [

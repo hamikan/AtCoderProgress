@@ -45,6 +45,29 @@ test('buildProblemListItems chooses the strongest saved status for a user', () =
   assert.equal(item.status, 'SELF_AC');
 });
 
+test('buildProblemListItems prefers an AC submission over a TRYING solution record', () => {
+  const [upgraded, kept] = buildProblemListItems(
+    [
+      createRow({
+        id: 'upgraded',
+        solutions: [{ status: 'TRYING' }],
+        submissions: [{ id: 1 }],
+      }),
+      createRow({
+        id: 'kept',
+        solutions: [{ status: 'REVIEW_AC' }],
+        submissions: [{ id: 2 }],
+      }),
+    ],
+    'user-1'
+  );
+
+  // A TRYING record must not hide an actual AC, while a richer record
+  // status (REVIEW_AC) is kept as it is.
+  assert.equal(upgraded.status, 'AC');
+  assert.equal(kept.status, 'REVIEW_AC');
+});
+
 test('buildProblemListItems derives AC and trying from submissions', () => {
   const items = buildProblemListItems(
     [

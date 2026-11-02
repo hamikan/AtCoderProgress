@@ -18,15 +18,29 @@ function getProblemStatus(row: ProblemListRow, hasUser: boolean): ProblemStatus 
     return 'UNSOLVED';
   }
 
+  // row.submissions only contains AC submissions (see the query), so an
+  // AC on AtCoder counts at least as the plain 'AC' status even when a
+  // solution record still says TRYING.
+  const hasAcSubmission = row.submissions.length > 0;
+
   if (row.solutions.length > 0) {
-    return row.solutions.reduce((bestStatus, solution) =>
+    const bestSolutionStatus = row.solutions.reduce((bestStatus, solution) =>
       STATUS_PRIORITY[solution.status] > STATUS_PRIORITY[bestStatus]
         ? solution.status
         : bestStatus
     , row.solutions[0].status);
+
+    if (
+      hasAcSubmission &&
+      STATUS_PRIORITY.AC > STATUS_PRIORITY[bestSolutionStatus]
+    ) {
+      return 'AC';
+    }
+
+    return bestSolutionStatus;
   }
 
-  if (row.submissions.length > 0) {
+  if (hasAcSubmission) {
     return 'AC';
   }
 
