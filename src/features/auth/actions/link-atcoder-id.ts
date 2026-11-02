@@ -8,13 +8,13 @@ import { parseAtCoderId } from '@/features/auth/schemas/atcoder-id';
 import {
   applyAtCoderIdChange,
   getAtCoderIdChangeDecision,
-  isAtCoderIdAvailableForUser,
 } from '@/features/auth/sync/apply-atcoder-id-change';
 import {
   AtCoderProfileFetchError,
   synchronizeAtCoderIdChange,
 } from '@/features/auth/sync/synchronize-atcoder-id-change';
 import type { LinkAtCoderIdError } from '@/features/auth/types';
+import { checkAtCoderUserExists } from '@/lib/atcoder/check-user-exists';
 import { fetchRatingHistory } from '@/lib/atcoder/ratings/fetch-rating-history';
 import { fetchSubmissions } from '@/lib/atcoder/submissions/fetch-submissions';
 import { prisma } from '@/lib/prisma';
@@ -57,13 +57,25 @@ export async function linkAtCoderId(
       return { ok: true, value: { status: 'unchanged' } };
     }
 
-    const isAvailable = await isAtCoderIdAvailableForUser(
-      prisma,
-      user.id,
-      parsedAtCoderId
-    );
-    if (!isAvailable) {
-      return failure('ALREADY_LINKED', 'このAtCoder IDはすでに登録されています。');
+    // AtCoder IDs are not exclusive: several accounts may link the
+    // same ID (issue #114), so there is no availability check here.
+
+    // A nonexistent ID links "successfully" today because the data
+    // APIs just return empty results, and the mistake then locks the
+    // user for 7 days (issue #112). Verify the user page first; when
+    // existence cannot be confirmed, link nothing.
+    const existence = await checkAtCoderUserExists(parsedAtCoderId);
+    if (existence === 'not-found') {
+      return failure(
+        'USER_NOT_FOUND',
+        'そのAtCoder IDのユーザーが見つかりませんでした。IDを確認してください。'
+      );
+    }
+    if (existence === 'unknown') {
+      return failure(
+        'UPSTREAM_UNAVAILABLE',
+        'AtCoder IDの存在を確認できませんでした。時間をおいてもう一度お試しください。'
+      );
     }
 
     const result = await synchronizeAtCoderIdChange(parsedAtCoderId, {
@@ -102,9 +114,6 @@ export async function linkAtCoderId(
         'UPSTREAM_UNAVAILABLE',
         'AtCoderのデータ取得に失敗しました。AtCoder IDは変更されていません。'
       );
-    }
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return failure('ALREADY_LINKED', 'このAtCoder IDはすでに登録されています。');
     }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034') {
       return failure('CONFLICT', '同時に更新が行われました。もう一度お試しください。');

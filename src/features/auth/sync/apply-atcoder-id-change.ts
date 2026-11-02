@@ -23,14 +23,16 @@ interface UserAtCoderIdReader {
       atcoderIdChangedAt: Date | null;
     } | null>;
   };
-}
-
-interface AtCoderIdOwnerReader {
-  user: {
-    findUnique(args: {
-      select: { id: true };
-      where: { atcoderId: string };
-    }): Promise<{ id: string } | null>;
+  /**
+   * Optional: when present, a blocked change is still allowed if the
+   * previous link produced no submissions and no rating history at
+   * all (issue #112).
+   */
+  submission?: {
+    count(args: { where: { userId: string } }): Promise<number>;
+  };
+  userRatingHistory?: {
+    count(args: { where: { userId: string } }): Promise<number>;
   };
 }
 
@@ -48,9 +50,11 @@ interface UserAtCoderIdTransaction extends UserAtCoderIdReader {
   problem: SubmissionWriterTransaction['problem'];
   submission: SubmissionWriterTransaction['submission'] & {
     deleteMany(args: { where: { userId: string } }): Promise<unknown>;
+    count(args: { where: { userId: string } }): Promise<number>;
   };
   userRatingHistory: RatingHistoryWriterTransaction['userRatingHistory'] & {
     deleteMany(args: { where: { userId: string } }): Promise<unknown>;
+    count(args: { where: { userId: string } }): Promise<number>;
   };
 }
 
@@ -72,13 +76,32 @@ async function readAtCoderIdChange(
     throw new Error('User not found');
   }
 
+  let decision = decideAtCoderIdChange(
+    user.atcoderId,
+    user.atcoderIdChangedAt,
+    nextAtCoderId,
+    now
+  );
+
+  if (
+    decision.status === 'blocked' &&
+    reader.submission &&
+    reader.userRatingHistory
+  ) {
+    const [submissionCount, ratingHistoryCount] = await Promise.all([
+      reader.submission.count({ where: { userId } }),
+      reader.userRatingHistory.count({ where: { userId } }),
+    ]);
+    if (submissionCount + ratingHistoryCount === 0) {
+      // The previous link produced no data at all — typically a typo
+      // or a nonexistent ID. Locking the user out for 7 days over a
+      // link that brought nothing helps no one (issue #112).
+      decision = { status: 'allowed' };
+    }
+  }
+
   return {
-    decision: decideAtCoderIdChange(
-      user.atcoderId,
-      user.atcoderIdChangedAt,
-      nextAtCoderId,
-      now
-    ),
+    decision,
     user,
   };
 }
@@ -96,18 +119,6 @@ export async function getAtCoderIdChangeDecision(
     now
   );
   return decision;
-}
-
-export async function isAtCoderIdAvailableForUser(
-  reader: AtCoderIdOwnerReader,
-  userId: string,
-  atcoderId: string
-): Promise<boolean> {
-  const owner = await reader.user.findUnique({
-    where: { atcoderId },
-    select: { id: true },
-  });
-  return !owner || owner.id === userId;
 }
 
 export async function applyAtCoderIdChange(

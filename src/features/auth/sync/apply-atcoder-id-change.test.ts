@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import {
   applyAtCoderIdChange,
-  isAtCoderIdAvailableForUser,
+  getAtCoderIdChangeDecision,
 } from './apply-atcoder-id-change';
 import type { AtCoderProfileData } from '@/features/auth/types';
 
@@ -68,6 +68,10 @@ function createTransaction(
         calls.push({ name: 'submission.createMany', args });
         return { count: 1 };
       },
+      async count(args: unknown) {
+        calls.push({ name: 'submission.count', args });
+        return 1;
+      },
     },
     userRatingHistory: {
       async deleteMany(args: unknown) {
@@ -77,6 +81,10 @@ function createTransaction(
       async createMany(args: unknown) {
         calls.push({ name: 'userRatingHistory.createMany', args });
         return { count: 1 };
+      },
+      async count(args: unknown) {
+        calls.push({ name: 'userRatingHistory.count', args });
+        return 1;
       },
     },
     problem: {
@@ -196,40 +204,53 @@ test('does not write while the seven-day cooldown is active', async () => {
   );
 
   assert.equal(result.status, 'blocked');
-  assert.deepEqual(calls.map((call) => call.name), ['user.findUnique']);
+  assert.deepEqual(calls.map((call) => call.name), [
+    'user.findUnique',
+    'submission.count',
+    'userRatingHistory.count',
+  ]);
 });
 
-test('detects an AtCoder ID registered by another app user', async () => {
-  const createReader = (ownerId: string | null) => ({
+test('allows fixing a link that produced no data during the cooldown', async () => {
+  const createReader = (submissionCount: number, ratingHistoryCount: number) => ({
     user: {
       async findUnique() {
-        return ownerId ? { id: ownerId } : null;
+        return {
+          atcoderId: 'typo-id',
+          atcoderIdChangedAt: new Date('2026-07-13T00:00:00.000Z'),
+        };
+      },
+    },
+    submission: {
+      async count() {
+        return submissionCount;
+      },
+    },
+    userRatingHistory: {
+      async count() {
+        return ratingHistoryCount;
       },
     },
   });
 
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader('other-user-id'),
+  // Linked yesterday, but nothing was ever fetched for it (a typo):
+  // the cooldown must not lock the user out (issue #112).
+  assert.deepEqual(
+    await getAtCoderIdChangeDecision(
+      createReader(0, 0),
       'app-user-id',
-      'tourist'
+      'tourist',
+      NOW
     ),
-    false
+    { status: 'allowed' }
   );
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader('app-user-id'),
-      'app-user-id',
-      'tourist'
-    ),
-    true
+
+  // The previous link did bring data: the cooldown applies as before.
+  const blocked = await getAtCoderIdChangeDecision(
+    createReader(3, 0),
+    'app-user-id',
+    'tourist',
+    NOW
   );
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader(null),
-      'app-user-id',
-      'tourist'
-    ),
-    true
-  );
+  assert.equal(blocked.status, 'blocked');
 });
