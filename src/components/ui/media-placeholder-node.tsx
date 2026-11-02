@@ -95,7 +95,7 @@ export const PlaceholderElement = withHOC(
           name: '',
           placeholderId: element.id as string,
           type: KEYS.img,
-          url: uploadedFile.url,
+          url: uploadedFile.ufsUrl,
         };
 
         editor.tf.insertNodes(node, { at: path });
