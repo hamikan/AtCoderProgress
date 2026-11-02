@@ -57,7 +57,7 @@ export default function RecommendedProblems({ className, data }: RecommendedProb
           <a href={url} target="_blank" rel="noreferrer" title="Open problem">
             <ExternalLink className="w-[18px] h-[18px] hover:text-primary cursor-pointer transition-colors" />
           </a>
-          <a href={`/problems/${problem.id}`} title="Write solution">
+          <a href={`/solutions/new?problemId=${problem.id}`} title="Write solution">
             <Edit3 className="w-[18px] h-[18px] hover:text-primary cursor-pointer transition-colors" />
           </a>
         </div>
