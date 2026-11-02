@@ -10,7 +10,9 @@ import { cva } from 'class-variance-authority';
 import { ArrowLeft, ArrowRight, Download, Minus, Plus, X } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
+import { useMounted } from '@/hooks/use-mounted';
 import { cn } from '@/lib/utils';
 
 import { downloadImage } from './media-preview-download';
@@ -36,6 +38,7 @@ export function MediaPreviewDialog() {
   const isEditingScale = useImagePreviewValue('isEditingScale');
   const currentPreview = useImagePreviewValue('currentPreview');
   const [isDownloading, setIsDownloading] = useState(false);
+  const mounted = useMounted();
 
   const handleDownload = async () => {
     const url: unknown = currentPreview?.url;
@@ -66,7 +69,11 @@ export function MediaPreviewDialog() {
     zoomOutDisabled,
   } = useImagePreview({ scrollSpeed: SCROLL_SPEED });
 
-  return (
+  if (!mounted) return null;
+
+  // 解法ページの <main> の contain-layout が fixed の基準になり、プレビューがヘッダーの分ずれて
+  // 画面からはみ出すため、body の直下に描画する
+  return createPortal(
     <div
       className={cn(
         'fixed top-0 left-0 z-50 h-screen w-screen select-none',
@@ -174,7 +181,8 @@ export function MediaPreviewDialog() {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
