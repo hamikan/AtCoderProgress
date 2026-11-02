@@ -3,11 +3,7 @@ import 'server-only';
 import type { InProgressSolutionItem } from '@/features/solutions/types';
 import { prisma } from '@/lib/prisma';
 
-/**
- * Solution records the user has started but not finished:
- * still trying (TRYING) or created without a status yet (UNSOLVED),
- * most recently edited first.
- */
+/** ステータスが挑戦中（TRYING）の解法記録を、更新が新しい順に返す */
 export async function getInProgressSolutions(
   userId?: string,
   limit = 5
@@ -17,7 +13,7 @@ export async function getInProgressSolutions(
   }
 
   const solutions = await prisma.solution.findMany({
-    where: { userId, status: { in: ['TRYING', 'UNSOLVED'] } },
+    where: { userId, status: 'TRYING' },
     orderBy: { updatedAt: 'desc' },
     take: limit,
     include: {
@@ -32,7 +28,6 @@ export async function getInProgressSolutions(
     problemId: solution.problemId,
     problemName: solution.problem.name,
     contestId: solution.contestId,
-    status: solution.status,
     updatedAt: solution.updatedAt.toISOString(),
   }));
 }

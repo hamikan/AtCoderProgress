@@ -6,17 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { InProgressSolutionItem } from '@/features/solutions/types';
 import { formatProblemDisplayName } from '@/lib/atcoder/problem-name';
 
-const STATUS_BADGES: Record<string, { label: string; className: string }> = {
-  TRYING: {
-    label: '挑戦中',
-    className: 'border-amber-200 bg-amber-100 text-amber-700',
-  },
-  UNSOLVED: {
-    label: '書きかけ',
-    className: 'border-indigo-200 bg-indigo-100 text-indigo-700',
-  },
-};
-
 interface InProgressRecordsProps {
   records: InProgressSolutionItem[];
 }
@@ -30,13 +19,12 @@ export default function InProgressRecords({ records }: InProgressRecordsProps) {
     <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-slate-900">
-          書きかけ・挑戦中
+          挑戦中
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div>
           {records.map((record) => {
-            const badge = STATUS_BADGES[record.status] ?? STATUS_BADGES.UNSOLVED;
             return (
               <Link
                 key={record.id}
@@ -49,11 +37,6 @@ export default function InProgressRecords({ records }: InProgressRecordsProps) {
                     record.problemId,
                     record.problemName
                   )}
-                </span>
-                <span
-                  className={`rounded-md border px-2 py-0.5 text-xs font-semibold ${badge.className}`}
-                >
-                  {badge.label}
                 </span>
                 <span className="text-xs text-slate-500">
                   {formatDistanceToNow(new Date(record.updatedAt), {

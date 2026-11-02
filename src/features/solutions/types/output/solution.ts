@@ -11,7 +11,6 @@ export interface InProgressSolutionItem {
   problemId: string;
   problemName: string;
   contestId: string;
-  status: SolutionStatus;
   updatedAt: string;
 }
 
