@@ -30,6 +30,26 @@ test('buildSolvedProblemStatistics calculates unique totals, monthly change, and
   });
 });
 
+test('buildSolvedProblemStatistics uses Tokyo month boundaries', () => {
+  // Nov 2, 01:00 JST. The submission at Oct 31, 16:30 UTC is Nov 1,
+  // 01:30 JST, so it belongs to November in Tokyo (a UTC server would
+  // count it in October).
+  const now = new Date(Date.UTC(2026, 10, 1, 16));
+  const result = buildSolvedProblemStatistics(
+    [
+      {
+        epochSecond: Math.floor(Date.UTC(2026, 9, 31, 16, 30) / 1000),
+        problemId: 'november-in-tokyo',
+      },
+    ],
+    now
+  );
+
+  assert.equal(result.monthlySolved, 1);
+  assert.equal(result.acCountChange, 1);
+  assert.equal(result.currentStreak, 1);
+});
+
 test('buildSolvedProblemStatistics returns an empty anonymous state', () => {
   assert.deepEqual(buildSolvedProblemStatistics([], new Date(2026, 3, 15, 12)), {
     acCount: 0,
