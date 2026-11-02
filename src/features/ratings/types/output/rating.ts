@@ -1,5 +1,6 @@
 export interface RatingData {
-  date: string;
+  /** コンテストの終了時刻（エポックミリ秒） */
+  endedAt: number;
   rating: number;
   contestName: string;
   performance: number;

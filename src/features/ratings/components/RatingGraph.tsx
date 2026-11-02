@@ -12,42 +12,53 @@ import {
   ResponsiveContainer,
   ReferenceArea,
 } from 'recharts';
-import { format, subMonths, subYears, isAfter, parseISO } from 'date-fns';
+import { differenceInYears, format, subYears } from 'date-fns';
 import type { RatingData } from '@/features/ratings/types';
 import { getDifficultyColor } from '@/lib/atcoder/difficulty';
 
-type RatingRange = '3M' | '6M' | '1Y' | 'ALL';
+// 数値は「直近◯年」を表す
+type RatingRange = number | 'ALL';
 
-const RANGE_OPTIONS: Array<{ key: RatingRange; label: string }> = [
-  { key: '3M', label: '3M' },
-  { key: '6M', label: '6M' },
-  { key: '1Y', label: '1Y' },
-  { key: 'ALL', label: 'ALL' },
-];
+const RATING_BAND_SIZE = 400;
+const RATING_BAND_MARGIN = 100;
+const SHORT_SPAN_MS = 180 * 24 * 60 * 60 * 1000;
 
 interface RatingGraphProps {
   data: RatingData[];
 }
 
+// 参加年数を切り捨てた数まで 1Y, 2Y, … を出す（1年未満なら ALL のみ）
+function getYearRanges(data: RatingData[], now: Date): number[] {
+  if (data.length === 0) return [];
+  const years = differenceInYears(now, data[0].endedAt);
+  return Array.from({ length: years }, (_, index) => index + 1);
+}
+
+// 縦軸の端を色の帯の境目にそろえ、線が端に張り付く場合は帯を1つ足す
+function getRatingDomain(ratings: number[]): [number, number] {
+  const min = Math.min(...ratings);
+  const max = Math.max(...ratings);
+  let lower = Math.floor(min / RATING_BAND_SIZE) * RATING_BAND_SIZE;
+  let upper = Math.ceil(max / RATING_BAND_SIZE) * RATING_BAND_SIZE;
+  if (lower > 0 && min - lower < RATING_BAND_MARGIN) lower -= RATING_BAND_SIZE;
+  if (upper - max < RATING_BAND_MARGIN) upper += RATING_BAND_SIZE;
+  return [lower, upper];
+}
 
 export default function RatingGraph({ data }: RatingGraphProps) {
   const [range, setRange] = useState<RatingRange>('ALL');
 
+  const yearRanges = useMemo(() => getYearRanges(data, new Date()), [data]);
+  const rangeOptions: RatingRange[] = [...yearRanges, 'ALL'];
+
   const filteredData = useMemo(() => {
-    if (!data) return [];
     if (range === 'ALL') return data;
 
-    const now = new Date();
-    const cutoff =
-      range === '3M'
-        ? subMonths(now, 3)
-        : range === '6M'
-          ? subMonths(now, 6)
-          : subYears(now, 1);
-    return data.filter((d) => isAfter(parseISO(d.date), cutoff));
+    const cutoff = subYears(new Date(), range).getTime();
+    return data.filter((d) => d.endedAt > cutoff);
   }, [data, range]);
 
-  if (!data || data.length === 0) {
+  if (data.length === 0) {
     return (
       <Card className="h-[400px] flex items-center justify-center text-slate-500 border-0 bg-white shadow-sm ring-1 ring-slate-200">
         <CardContent>データがありません</CardContent>
@@ -55,12 +66,19 @@ export default function RatingGraph({ data }: RatingGraphProps) {
     );
   }
 
-  const maxRating = Math.max(...filteredData.map((d) => d.rating));
-
-  // Dynamic Y-axis domain padding with 400 steps
-  const yMax = Math.ceil(maxRating / 400) * 400;
-  // Ensure at least one band is shown above the max rating for visual breathing room if it's close to the top
-  const domainMax = yMax < maxRating + 100 ? yMax + 400 : yMax;
+  const [domainMin, domainMax] =
+    filteredData.length > 0
+      ? getRatingDomain(filteredData.map((d) => d.rating))
+      : [0, RATING_BAND_SIZE];
+  const yTicks = Array.from(
+    { length: (domainMax - domainMin) / RATING_BAND_SIZE + 1 },
+    (_, index) => domainMin + index * RATING_BAND_SIZE
+  );
+  const span =
+    filteredData.length > 0
+      ? filteredData[filteredData.length - 1].endedAt - filteredData[0].endedAt
+      : 0;
+  const tickFormat = span < SHORT_SPAN_MS ? 'M/d' : 'yyyy/M';
 
   const latest = data[data.length - 1];
   const previous = data.length > 1 ? data[data.length - 2] : null;
@@ -73,16 +91,16 @@ export default function RatingGraph({ data }: RatingGraphProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-bold text-slate-900">レート推移</CardTitle>
           <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
-            {RANGE_OPTIONS.map((option) => (
+            {rangeOptions.map((option) => (
               <button
-                key={option.key}
-                onClick={() => setRange(option.key)}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${range === option.key
+                key={String(option)}
+                onClick={() => setRange(option)}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${range === option
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-900'
                   }`}
               >
-                {option.label}
+                {option === 'ALL' ? 'ALL' : `${option}Y`}
               </button>
             ))}
           </div>
@@ -92,6 +110,11 @@ export default function RatingGraph({ data }: RatingGraphProps) {
       <CardContent>
         {/* Chart Container */}
         <div className="w-full h-[400px] rounded-2xl overflow-hidden bg-white relative">
+          {filteredData.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-slate-500">
+              この期間の参加はありません
+            </div>
+          ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={filteredData}
@@ -106,16 +129,16 @@ export default function RatingGraph({ data }: RatingGraphProps) {
 
               {/* Rating Bands Background */}
               {Array.from({ length: 8 }).map((_, i) => {
-                const min = i * 400;
-                const max = i === 7 ? 10000 : (i + 1) * 400;
+                const min = i * RATING_BAND_SIZE;
+                const max = i === 7 ? 10000 : (i + 1) * RATING_BAND_SIZE;
                 const bandColorClass = getDifficultyColor(min);
 
-                if (min >= domainMax) return null;
+                if (max <= domainMin || min >= domainMax) return null;
 
                 return (
                   <ReferenceArea
                     key={i}
-                    y1={min}
+                    y1={Math.max(min, domainMin)}
                     y2={Math.min(max, domainMax)}
                     className={bandColorClass}
                     fill="currentColor"
@@ -127,20 +150,20 @@ export default function RatingGraph({ data }: RatingGraphProps) {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.5} />
 
               <XAxis
-                dataKey="date"
+                dataKey="endedAt"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
                 tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }}
-                tickFormatter={(val) => {
-                  const d = parseISO(val);
-                  return format(d, 'MMM');
-                }}
+                tickFormatter={(value: number) => format(value, tickFormat)}
                 minTickGap={30}
                 axisLine={false}
                 tickLine={false}
                 dy={10}
               />
               <YAxis
-                domain={[0, domainMax]}
-                ticks={Array.from({ length: domainMax / 400 + 1 }, (_, i) => i * 400)}
+                domain={[domainMin, domainMax]}
+                ticks={yTicks}
                 width={40}
                 tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }}
                 axisLine={false}
@@ -159,17 +182,21 @@ export default function RatingGraph({ data }: RatingGraphProps) {
                   <span key="val" className="font-bold text-slate-900">{String(value)}</span>,
                   <span key="label" className="text-xs text-slate-500">Rating</span>
                 ]}
-                labelFormatter={(label) => (
-                  <span className="mb-2 block">
-                    <span className="text-xs text-slate-400 font-medium">{label}</span>
-                    {/* We could try to find contest name here if needed */}
-                    {typeof label === 'string' && filteredData.find(d => d.date === label) && (
-                      <span className="text-sm font-bold text-slate-700 mt-1 block">
-                        {filteredData.find(d => d.date === label)?.contestName}
+                labelFormatter={(_, payload) => {
+                  const point = payload[0]?.payload as RatingData | undefined;
+                  if (!point) return null;
+
+                  return (
+                    <span className="mb-2 block">
+                      <span className="text-xs text-slate-400 font-medium">
+                        {format(point.endedAt, 'yyyy/MM/dd')}
                       </span>
-                    )}
-                  </span>
-                )}
+                      <span className="text-sm font-bold text-slate-700 mt-1 block">
+                        {point.contestName}
+                      </span>
+                    </span>
+                  );
+                }}
               />
 
               <Area
@@ -183,6 +210,7 @@ export default function RatingGraph({ data }: RatingGraphProps) {
               />
             </AreaChart>
           </ResponsiveContainer>
+          )}
         </div>
 
         {/* Latest contest result */}
