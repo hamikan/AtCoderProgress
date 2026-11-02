@@ -55,7 +55,7 @@ export default function RecommendedProblems({ className, data }: RecommendedProb
           </div>
         </div>
         <div className="flex flex-col gap-3 ml-4 text-slate-400 dark:text-slate-600 shrink-0">
-          <a href={`/problems/${problem.id}`} title="Write solution">
+          <a href={`/solutions/new?problemId=${problem.id}`} title="Write solution">
             <Edit3 className="w-[18px] h-[18px] hover:text-primary cursor-pointer transition-colors" />
           </a>
         </div>
