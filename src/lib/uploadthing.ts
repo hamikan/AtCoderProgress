@@ -29,7 +29,7 @@ export const ourFileRouter = {
       size: file.size,
       type: file.type,
       userId: metadata.userId,
-      url: file.url,
+      url: file.ufsUrl,
     })),
 } satisfies FileRouter;
 

@@ -30,36 +30,45 @@ export async function getContestPage(
     throw new Error(`Invalid contest cursor: ${cursor}`);
   }
 
-  const rows = await prisma.contest.findMany({
-    where: {
-      id: {
-        startsWith: contestType,
-        ...getContestCursorFilter(order, cursor),
+  const [rows, totalContests] = await Promise.all([
+    prisma.contest.findMany({
+      where: {
+        id: {
+          startsWith: contestType,
+          ...getContestCursorFilter(order, cursor),
+        },
       },
-    },
-    orderBy: {
-      id: order,
-    },
-    take: pageSize + 1,
-    select: {
-      id: true,
-      startEpochSecond: true,
-      durationSecond: true,
-      problems: {
-        select: {
-          problemIndex: true,
-          problem: {
-            select: {
-              id: true,
-              name: true,
-              difficulty: true,
-              totalSolutionCount: true,
+      orderBy: {
+        id: order,
+      },
+      take: pageSize + 1,
+      select: {
+        id: true,
+        startEpochSecond: true,
+        durationSecond: true,
+        problems: {
+          select: {
+            problemIndex: true,
+            problem: {
+              select: {
+                id: true,
+                name: true,
+                difficulty: true,
+                totalSolutionCount: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    }),
+    prisma.contest.count({
+      where: {
+        id: {
+          startsWith: contestType,
+        },
+      },
+    }),
+  ]);
 
   const visibleRows = rows.slice(0, pageSize);
   const contests = buildContests(visibleRows);
@@ -69,6 +78,7 @@ export async function getContestPage(
   return {
     contests,
     totalProblems: getContestProblemIds(contests).length,
+    totalContests,
     nextCursor,
     hasMore,
   };
