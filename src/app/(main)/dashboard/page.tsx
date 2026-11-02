@@ -3,6 +3,7 @@ import { Calendar, Target, TrendingUp, Trophy } from 'lucide-react';
 import { StatCard } from '@/components/ui/stat-card';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
+import { refreshAtCoderDataIfStale } from '@/features/auth/sync/refresh-atcoder-data';
 import { getTagStatistics } from '@/features/problems/api/get-tag-statistics';
 import TagRadar from '@/features/problems/components/TagRadar';
 import { getRatingHistory } from '@/features/ratings/api/get-rating-history';
@@ -19,6 +20,11 @@ import RecentActivity from '@/features/submissions/components/RecentActivity';
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   const userId = user?.id;
+  if (userId) {
+    // Submissions and rating history are refreshed periodically here;
+    // they used to be fetched only when the AtCoder ID was linked.
+    await refreshAtCoderDataIfStale(userId);
+  }
   const [
     solvedProblemStats,
     ratingSummary,
