@@ -25,6 +25,7 @@ export default async function ContestPage({ searchParams }: ContestPageProps) {
     <div className="bg-slate-50 h-full overflow-y-auto">
       <div className="w-full max-w-7xl mx-auto px-4 py-8">
         <ContestWorkspace
+          userScope={user ? `${user.id}:${user.atcoderId ?? ''}` : 'anonymous'}
           contestType={contestType}
           order={order}
           problemIndexes={problemIndexes}

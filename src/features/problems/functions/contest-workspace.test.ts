@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildContestListCacheKey,
   buildContests,
   buildContestStats,
   getContestCursorFilter,
   getContestProblemIds,
+  mergeSubmissionStatusMap,
 } from './contest-workspace';
 
 test('contest workspace functions map rows and collect problem ids', () => {
@@ -31,6 +33,35 @@ test('contest workspace functions map rows and collect problem ids', () => {
   assert.equal(contests[0].durationSecond, 7200);
   assert.equal(contests[0].problems.A?.name, 'A');
   assert.deepEqual(getContestProblemIds(contests), ['abc001_a']);
+});
+
+test('buildContestListCacheKey separates users and linked AtCoder IDs', () => {
+  const before = buildContestListCacheKey('user-1:old_id', 'abc', 'desc');
+  const afterLink = buildContestListCacheKey('user-1:new_id', 'abc', 'desc');
+  const otherUser = buildContestListCacheKey('user-2:new_id', 'abc', 'desc');
+
+  assert.notEqual(before, afterLink);
+  assert.notEqual(afterLink, otherUser);
+  assert.equal(
+    buildContestListCacheKey('user-1:new_id', 'abc', 'desc'),
+    afterLink
+  );
+});
+
+test('mergeSubmissionStatusMap lets fresh statuses win and keeps the rest', () => {
+  assert.deepEqual(
+    mergeSubmissionStatusMap(
+      {
+        abc001_a: { result: 'WA', epochSecond: 100 },
+        abc001_b: { result: 'AC', epochSecond: 90 },
+      },
+      { abc001_a: { result: 'AC', epochSecond: 200 } }
+    ),
+    {
+      abc001_a: { result: 'AC', epochSecond: 200 },
+      abc001_b: { result: 'AC', epochSecond: 90 },
+    }
+  );
 });
 
 test('contest workspace functions calculate stats and cursor filters', () => {

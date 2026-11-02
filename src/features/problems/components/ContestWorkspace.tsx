@@ -5,6 +5,10 @@ import { Loader2 } from 'lucide-react';
 import ContestTable from './ContestTable';
 import ProblemStats from './ProblemStats';
 import { loadContestChunk } from '@/features/problems/actions/load-contest-chunk';
+import {
+  buildContestListCacheKey,
+  mergeSubmissionStatusMap,
+} from '@/features/problems/functions/contest-workspace';
 import type {
   Contest,
   ContestKind,
@@ -23,6 +27,8 @@ interface ContestListEntry {
 }
 
 interface ContestWorkspaceProps {
+  /** Identifies whose statuses are shown: user ID + linked AtCoder ID. */
+  readonly userScope: string;
   readonly contestType: ContestKind;
   readonly order: ContestOrder;
   readonly problemIndexes: string[];
@@ -37,11 +43,8 @@ interface ContestWorkspaceProps {
 const contestListCache = new Map<string, ContestListEntry>();
 const loadingCacheKeys = new Set<string>();
 
-function contestListCacheKey(contestType: ContestKind, order: ContestOrder): string {
-  return `${contestType}:${order}`;
-}
-
 export default function ContestWorkspace({
+  userScope,
   contestType,
   order,
   problemIndexes,
@@ -52,11 +55,24 @@ export default function ContestWorkspace({
   nextCursor,
   hasMore,
 }: ContestWorkspaceProps) {
-  const cacheKey = contestListCacheKey(contestType, order);
+  const cacheKey = buildContestListCacheKey(userScope, contestType, order);
 
-  const [lists, setLists] = useState<Map<string, ContestListEntry>>(
-    () => new Map(contestListCache)
-  );
+  const [lists, setLists] = useState<Map<string, ContestListEntry>>(() => {
+    const map = new Map(contestListCache);
+    const cached = map.get(cacheKey);
+    if (cached) {
+      // Fresh server data wins for the statuses it covers, so colors do
+      // not stay stale when the underlying data changed (issue #119).
+      map.set(cacheKey, {
+        ...cached,
+        submissionStatusMap: mergeSubmissionStatusMap(
+          cached.submissionStatusMap,
+          submissionStatusMap
+        ),
+      });
+    }
+    return map;
+  });
 
   const initialEntry: ContestListEntry = {
     contests,
