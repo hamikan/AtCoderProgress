@@ -159,9 +159,6 @@ export default function TagRadar({ initialStats = [] }: TagRadarProps) {
               タグ別習熟度
             </CardTitle>
           </div>
-          <p className="text-sm text-slate-600">
-            分野別の得意・不得意を可視化
-          </p>
         </div>
 
         <Popover>
