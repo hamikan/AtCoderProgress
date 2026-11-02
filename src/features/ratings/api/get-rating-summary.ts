@@ -15,8 +15,10 @@ export async function getRatingSummary(userId?: string): Promise<RatingSummary> 
   }
 
   const startOfCurrentMonth = startOfMonth(new Date());
+  // Unrated participations do not change the rating, so they must not
+  // feed the current/highest rating or the monthly change (issue #116).
   const history = await prisma.userRatingHistory.findMany({
-    where: { userId },
+    where: { userId, isRated: true },
     orderBy: { endTime: 'desc' },
     select: { endTime: true, newRating: true },
   });

@@ -10,7 +10,7 @@ export async function getRatingHistory(userId?: string): Promise<RatingData[]> {
     }
 
     const history = await prisma.userRatingHistory.findMany({
-        where: { userId },
+        where: { userId, isRated: true },
         orderBy: { endTime: 'asc' },
         select: {
             endTime: true,
