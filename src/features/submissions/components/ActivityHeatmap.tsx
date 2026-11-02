@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
+import { buildHeatmapStats } from '@/features/submissions/functions/build-heatmap-stats';
 import type { AcceptedProblemHeatmapDay } from '@/features/submissions/types';
 
 interface ActivityHeatmapProps {
@@ -31,27 +32,7 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
 
   const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
 
-  const stats = (() => {
-    const totalAC = data.reduce((sum, day) => sum + day.count, 0);
-    const dailyAverage = data.length > 0 ? (totalAC / data.length).toFixed(1) : '0.0';
-
-    let maxStreak = 0;
-    let currentStreak = 0;
-
-    // Sort data by date just in case, though usually it's compliant
-    const sortedData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    for (const day of sortedData) {
-      if (day.count > 0) {
-        currentStreak++;
-        if (currentStreak > maxStreak) maxStreak = currentStreak;
-      } else {
-        currentStreak = 0;
-      }
-    }
-
-    return { totalAC, maxStreak, dailyAverage };
-  })();
+  const stats = buildHeatmapStats(data);
 
   return (
     <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
@@ -62,9 +43,6 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
             精進カレンダー
           </CardTitle>
         </div>
-        <p className="text-sm text-slate-600">
-          過去1年間の学習活動を可視化
-        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -121,18 +99,26 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
             </div>
           </div>
 
-          {/* Legend */}
+          {/* Legend: labels are the per-day AC counts behind each color level */}
           <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>少ない</span>
-            <div className="flex items-center space-x-1">
-              {[0, 1, 2, 3, 4].map((level) => (
-                <div
-                  key={level}
-                  className={`h-3 w-3 rounded-sm ${getIntensityClass(level)}`}
-                />
+            <span>1日のAC数</span>
+            <div className="flex items-end space-x-2">
+              {[
+                { level: 0, label: '0' },
+                { level: 1, label: '1' },
+                { level: 2, label: '2–3' },
+                { level: 3, label: '4–5' },
+                { level: 4, label: '6+' },
+              ].map(({ level, label }) => (
+                <div key={level} className="flex flex-col items-center gap-1">
+                  <div
+                    className={`h-3 w-3 rounded-sm ${getIntensityClass(level)}`}
+                  />
+                  <span className="text-[10px] leading-none">{label}</span>
+                </div>
               ))}
             </div>
-            <span>多い</span>
+            <span>問</span>
           </div>
 
           {/* Stats */}

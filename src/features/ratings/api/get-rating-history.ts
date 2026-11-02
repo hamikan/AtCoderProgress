@@ -16,6 +16,7 @@ export async function getRatingHistory(userId?: string): Promise<RatingData[]> {
             endTime: true,
             newRating: true,
             contestName: true,
+            performance: true,
         },
     });
 
@@ -23,5 +24,6 @@ export async function getRatingHistory(userId?: string): Promise<RatingData[]> {
         date: format(h.endTime, 'yyyy-MM-dd'),
         rating: h.newRating,
         contestName: h.contestName,
+        performance: h.performance,
     }));
 }

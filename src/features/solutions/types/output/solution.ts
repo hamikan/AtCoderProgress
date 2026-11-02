@@ -6,6 +6,15 @@ export type SolutionStatus =
   | 'TRYING'
   | 'UNSOLVED';
 
+export interface InProgressSolutionItem {
+  id: string;
+  problemId: string;
+  problemName: string;
+  contestId: string;
+  status: SolutionStatus;
+  updatedAt: string;
+}
+
 export interface SolutionListItem {
   latestSolutionId: string;
   problemId: string;
