@@ -1,40 +1,16 @@
-import { Code2, Github, Twitter, Mail } from 'lucide-react';
+import { Code2, Github } from 'lucide-react';
 
 export default function Footer() {
   const navigation = {
     main: [
-      { name: 'ホーム', href: '#' },
+      { name: 'ホーム', href: '/' },
       { name: '機能', href: '#features' },
-      { name: '料金', href: '#pricing' },
-      { name: 'ヘルプ', href: '#help' },
-    ],
-    support: [
-      { name: 'お問い合わせ', href: '#contact' },
-      { name: 'ヘルプセンター', href: '#help' },
-      { name: 'ガイド', href: '#guide' },
-      { name: 'ステータス', href: '#status' },
-    ],
-    legal: [
-      { name: '利用規約', href: '#terms' },
-      { name: 'プライバシーポリシー', href: '#privacy' },
-      { name: '特定商取引法', href: '#commerce' },
-      { name: 'クッキーポリシー', href: '#cookies' },
     ],
     social: [
       {
-        name: 'Twitter',
-        href: '#',
-        icon: Twitter,
-      },
-      {
         name: 'GitHub',
-        href: '#',
+        href: 'https://github.com/hamikan/AtCoderProgress',
         icon: Github,
-      },
-      {
-        name: 'Email',
-        href: 'mailto:support@competitivegrow.com',
-        icon: Mail,
       },
     ],
   };
@@ -69,55 +45,21 @@ export default function Footer() {
           </div>
 
           {/* Navigation Links */}
-          <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-sm font-semibold leading-6 text-white">サービス</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {navigation.main.map((item) => (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        className="text-sm leading-6 text-slate-300 hover:text-white transition-colors"
-                      >
-                        {item.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold leading-6 text-white">サポート</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {navigation.support.map((item) => (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        className="text-sm leading-6 text-slate-300 hover:text-white transition-colors"
-                      >
-                        {item.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="md:grid md:grid-cols-1 md:gap-8">
-              <div>
-                <h3 className="text-sm font-semibold leading-6 text-white">法的情報</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {navigation.legal.map((item) => (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        className="text-sm leading-6 text-slate-300 hover:text-white transition-colors"
-                      >
-                        {item.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="mt-12 xl:col-span-2 xl:mt-0">
+            <div>
+              <h3 className="text-sm font-semibold leading-6 text-white">サービス</h3>
+              <ul role="list" className="mt-6 space-y-4">
+                {navigation.main.map((item) => (
+                  <li key={item.name}>
+                    <a
+                      href={item.href}
+                      className="text-sm leading-6 text-slate-300 hover:text-white transition-colors"
+                    >
+                      {item.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>

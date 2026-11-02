@@ -2,8 +2,19 @@
 
 import { Button } from '@/components/ui/button';
 import { ArrowRight, TrendingUp } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
-export default function Hero() {
+export default function Hero({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const router = useRouter();
+
+  const handleStart = () => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    } else {
+      signIn('github', { callbackUrl: '/dashboard' });
+    }
+  };
   return (
     <section className="relative overflow-hidden py-20 sm:py-32">
       <div className="absolute inset-0 bg-gradient-to-r from-slate-800/5 to-blue-800/5" />
@@ -36,12 +47,10 @@ export default function Hero() {
             <Button
               size="lg"
               className="bg-gradient-to-r from-slate-600 to-slate-800 px-8 hover:from-slate-700 hover:to-slate-900"
+              onClick={handleStart}
             >
               無料で始める
               <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="lg" className="px-8">
-              デモを見る
             </Button>
           </div>
 

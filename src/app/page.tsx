@@ -11,8 +11,8 @@ export default async function TopPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header isAuthenticated={Boolean(user)} />
-      <Hero />
-      <Features />
+      <Hero isAuthenticated={Boolean(user)} />
+      <Features isAuthenticated={Boolean(user)} />
       <Footer />
     </main>
   );

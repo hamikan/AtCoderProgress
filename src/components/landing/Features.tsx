@@ -2,18 +2,28 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  BarChart3, 
-  Brain, 
-  Calendar, 
-  Code, 
-  Heart, 
-  Radar, 
+import {
+  BarChart3,
+  Brain,
+  Calendar,
+  Code,
+  Radar,
   Trophy,
   Users
 } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
-export default function Features() {
+export default function Features({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const router = useRouter();
+
+  const handleStart = () => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    } else {
+      signIn('github', { callbackUrl: '/dashboard' });
+    }
+  };
   const features = [
     {
       icon: Brain,
@@ -136,16 +146,15 @@ export default function Features() {
               今すぐ始めて、競技プログラミングのスキルを次のレベルへ
             </h3>
             <p className="text-slate-600 mb-8">
-              無料プランでも十分な機能をご利用いただけます。プレミアム機能で更なる成長を目指しましょう。
+              アカウントを作れば、すぐに精進の記録と分析を使えます。
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <button className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-slate-600 to-slate-800 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:from-slate-700 hover:to-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">
+              <button
+                onClick={handleStart}
+                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-slate-600 to-slate-800 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:from-slate-700 hover:to-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600"
+              >
                 <Trophy className="mr-2 h-4 w-4" />
                 無料アカウント作成
-              </button>
-              <button className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-8 py-3 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">
-                <Heart className="mr-2 h-4 w-4" />
-                プレミアムプランを見る
               </button>
             </div>
           </div>

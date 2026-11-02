@@ -6,9 +6,6 @@ export default function Header({ isAuthenticated }: { isAuthenticated: boolean }
 
   const navigation = [
     { name: '機能', href: '#features' },
-    { name: '料金', href: '#pricing' },
-    { name: 'ヘルプ', href: '#help' },
-    { name: 'お問い合わせ', href: '#contact' },
   ];
 
   return (
