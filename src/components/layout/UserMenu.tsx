@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Settings, LogOut, User } from 'lucide-react';
+import { Settings, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 
@@ -43,7 +43,6 @@ export default function UserMenu({ user }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem><User className="mr-2 h-4 w-4" /><span>プロフィール</span></DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/link-atcoder"><Settings className="mr-2 h-4 w-4" /><span>AtCoder ID設定</span></Link>
         </DropdownMenuItem>
