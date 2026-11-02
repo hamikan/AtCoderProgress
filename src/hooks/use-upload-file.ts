@@ -23,7 +23,6 @@ interface UseUploadFileProps {
   onUploadComplete?: (file: UploadedFile) => void;
   onUploadError?: (error: unknown) => void;
   onUploadProgress?: (opts: { file: string; progress: number }) => void;
-  skipPolling?: boolean;
 }
 
 export function useUploadFile({
@@ -105,7 +104,7 @@ export function useUploadFile({
         serverData: null,
         size: preparedFile.size,
         type: preparedFile.type,
-        url: URL.createObjectURL(preparedFile),
+        ufsUrl: URL.createObjectURL(preparedFile),
       } as UploadedFile;
 
       // Simulate upload progress
