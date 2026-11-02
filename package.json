@@ -43,6 +43,7 @@
     "db:seed:tags": "ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed-tags.ts",
     "db:sync:latest": "NODE_OPTIONS=--conditions=react-server ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/sync-latest.ts",
     "difficulty:estimate": "ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/estimate-difficulties.ts",
+    "images:cleanup": "NODE_OPTIONS=--conditions=react-server ts-node -r tsconfig-paths/register --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/cleanup-unused-images.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
