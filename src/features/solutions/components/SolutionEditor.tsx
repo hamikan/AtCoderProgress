@@ -289,7 +289,11 @@ function SolutionEditorContent({
   function handleCreateNewRecord() {
     if (!problem) return;
     isNavigatingRef.current = true;
-    router.push(`/solutions/new?problemId=${problem.id}`);
+    const searchParams = new URLSearchParams({ problemId: problem.id });
+    if (contestId) {
+      searchParams.set('contestId', contestId);
+    }
+    router.push(`/solutions/new?${searchParams}`);
   }
 
   function handleSelectSolutionRecord(solutionId: string) {
