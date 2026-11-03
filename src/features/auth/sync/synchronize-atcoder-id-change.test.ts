@@ -79,6 +79,31 @@ test('commits only after both profile data fetches succeed', async () => {
   assert.ok(events.indexOf('committed') > events.indexOf('rating fetched'));
 });
 
+test('aborts the other fetch when one of them fails', async () => {
+  let submissionsAborted = false;
+
+  await assert.rejects(
+    synchronizeAtCoderIdChange('tourist', {
+      fetchSubmissions: async (_atcoderId, _fromSecond, signal) => {
+        await new Promise<never>((_resolve, reject) => {
+          signal?.addEventListener('abort', () => {
+            submissionsAborted = true;
+            reject(new Error('aborted'));
+          });
+        });
+        throw new Error('unreachable');
+      },
+      fetchRatingHistory: async () => {
+        throw new Error('rating fetch failed');
+      },
+      commit: async () => ({ status: 'changed' }) as const,
+    }),
+    (error) => error instanceof AtCoderProfileFetchError
+  );
+
+  assert.equal(submissionsAborted, true);
+});
+
 test('does not classify commit failures as profile fetch failures', async () => {
   const commitError = new Error('commit failed');
 

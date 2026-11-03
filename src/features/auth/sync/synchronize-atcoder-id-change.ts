@@ -6,10 +6,14 @@ import type { AtCoderProfileData } from '@/features/auth/types';
 
 interface SynchronizeAtCoderIdChangeDependencies<Result> {
   commit(profileData: AtCoderProfileData): Promise<Result>;
-  fetchRatingHistory(atcoderId: string): Promise<RatingHistoryResource[]>;
+  fetchRatingHistory(
+    atcoderId: string,
+    signal?: AbortSignal
+  ): Promise<RatingHistoryResource[]>;
   fetchSubmissions(
     atcoderId: string,
-    fromSecond: number
+    fromSecond: number,
+    signal?: AbortSignal
   ): Promise<SubmissionResources>;
 }
 
@@ -26,9 +30,24 @@ export async function synchronizeAtCoderIdChange<Result>(
 ): Promise<Result> {
   let profileData: AtCoderProfileData;
   try {
+    // When one fetch fails, abort the other: the submissions fetch in
+    // particular can otherwise keep paging for minutes after the
+    // whole attempt has already failed (issue #118).
+    const controller = new AbortController();
+    const guarded = async <Value>(
+      run: (signal: AbortSignal) => Promise<Value>
+    ): Promise<Value> => {
+      try {
+        return await run(controller.signal);
+      } catch (error) {
+        controller.abort();
+        throw error;
+      }
+    };
+
     const [submissionData, ratingHistory] = await Promise.all([
-      dependencies.fetchSubmissions(atcoderId, 0),
-      dependencies.fetchRatingHistory(atcoderId),
+      guarded((signal) => dependencies.fetchSubmissions(atcoderId, 0, signal)),
+      guarded((signal) => dependencies.fetchRatingHistory(atcoderId, signal)),
     ]);
     profileData = { ratingHistory, submissionData };
   } catch (error) {

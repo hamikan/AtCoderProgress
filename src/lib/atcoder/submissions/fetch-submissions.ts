@@ -12,7 +12,8 @@ const MAX_PAGES = 200;
 
 export async function fetchSubmissions(
   atcoderId: string,
-  fromSecond: number
+  fromSecond: number,
+  signal?: AbortSignal
 ): Promise<SubmissionResources> {
   const parsedAtCoderId = parseAtCoderId(atcoderId);
   if (!Number.isInteger(fromSecond) || fromSecond < 0) {
@@ -24,6 +25,7 @@ export async function fetchSubmissions(
     cursor: fromSecond,
     page: 1,
     submissions: [],
+    signal,
   });
   return { submissions };
 }
@@ -33,15 +35,19 @@ async function fetchSubmissionPages({
   cursor,
   page,
   submissions,
+  signal,
 }: {
   atcoderId: string;
   cursor: number;
   page: number;
   submissions: RawSubmission[];
+  signal?: AbortSignal;
 }): Promise<RawSubmission[]> {
   if (page > MAX_PAGES) {
     throw new Error('Submission pagination limit exceeded');
   }
+
+  signal?.throwIfAborted();
 
   const params = new URLSearchParams({
     from_second: String(cursor),
@@ -49,7 +55,8 @@ async function fetchSubmissionPages({
   });
   const pageItems = await fetchJson(
     `${SUBMISSIONS_ENDPOINT}?${params.toString()}`,
-    rawSubmissionsSchema
+    rawSubmissionsSchema,
+    { signal }
   );
   const nextSubmissions = [...submissions, ...pageItems];
 
@@ -68,6 +75,7 @@ async function fetchSubmissionPages({
     cursor: lastSubmission.epoch_second + 1,
     page: page + 1,
     submissions: nextSubmissions,
+    signal,
   });
 }
 

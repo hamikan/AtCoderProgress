@@ -7,11 +7,11 @@ import { ratingHistorySchema } from './schemas';
 import type { RatingHistoryResource } from './types';
 
 export async function fetchRatingHistory(
-  atcoderId: string
+  atcoderId: string,
+  signal?: AbortSignal
 ): Promise<RatingHistoryResource[]> {
   const parsedAtCoderId = parseAtCoderId(atcoderId);
-  return fetchJson(
-    getRatingHistoryEndpoint(parsedAtCoderId),
-    ratingHistorySchema
-  );
+  return fetchJson(getRatingHistoryEndpoint(parsedAtCoderId), ratingHistorySchema, {
+    signal,
+  });
 }

@@ -4,14 +4,27 @@ import type { z } from 'zod';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 
+export interface FetchJsonOptions {
+  timeoutMs?: number;
+  /**
+   * Aborts the request when the caller no longer needs the result
+   * (for example, a sibling request already failed).
+   */
+  signal?: AbortSignal;
+}
+
 export async function fetchJson<Schema extends z.ZodType>(
   url: string,
   schema: Schema,
-  timeoutMs = DEFAULT_TIMEOUT_MS
+  options: FetchJsonOptions = {}
 ): Promise<z.output<Schema>> {
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, signal } = options;
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
   const response = await fetch(url, {
     cache: 'no-store',
-    signal: AbortSignal.timeout(timeoutMs),
+    signal: signal
+      ? AbortSignal.any([timeoutSignal, signal])
+      : timeoutSignal,
   });
 
   if (!response.ok) {
