@@ -1,5 +1,4 @@
-import { Button } from '@/components/ui/button';
-import { Bell, Code2, Home } from 'lucide-react';
+import { Code2, Home } from 'lucide-react';
 import Link from 'next/link';
 import LoginLink from './LoginLink';
 import UserMenu from './UserMenu';
@@ -35,10 +34,6 @@ export default function Header({ user }: HeaderProps) {
           </nav>
         </div>
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="h-4 w-4" />
-            <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-          </Button>
           {user ? <UserMenu user={user} /> : <LoginLink />}
         </div>
       </div>
