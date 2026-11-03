@@ -250,8 +250,12 @@ function SolutionEditorContent({
           (!savedSolutionId || savedId !== savedSolutionId) &&
           !isNavigatingRef.current
         ) {
-          router.replace(`/solutions/${savedId}`);
-          router.refresh();
+          // The first save created the record. Reflect its ID in the
+          // URL without navigating: /solutions/new and
+          // /solutions/<id> are different pages, so navigating would
+          // rebuild the editor and drop whatever was typed or pasted
+          // while this save was in flight (issue #126).
+          window.history.replaceState(null, '', `/solutions/${savedId}`);
         } else if (didMoveScope && !isNavigatingRef.current) {
           router.refresh();
         }
