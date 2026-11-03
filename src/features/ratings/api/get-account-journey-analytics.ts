@@ -18,7 +18,7 @@ export async function getAccountJourneyAnalytics(
 ): Promise<AccountJourneyAnalytics> {
   const [ratingHistory, submissions, curriculumRows] = await Promise.all([
     userId ? prisma.userRatingHistory.findMany({
-      where: { userId },
+      where: { userId, isRated: true },
       orderBy: { endTime: 'asc' },
       select: {
         oldRating: true,
