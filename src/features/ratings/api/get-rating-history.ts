@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { prisma } from '@/lib/prisma';
-import { format } from 'date-fns';
 import type { RatingData } from '@/features/ratings/types';
 
 export async function getRatingHistory(userId?: string): Promise<RatingData[]> {
@@ -16,12 +15,14 @@ export async function getRatingHistory(userId?: string): Promise<RatingData[]> {
             endTime: true,
             newRating: true,
             contestName: true,
+            performance: true,
         },
     });
 
     return history.map((h) => ({
-        date: format(h.endTime, 'yyyy-MM-dd'),
+        endedAt: h.endTime.getTime(),
         rating: h.newRating,
         contestName: h.contestName,
+        performance: h.performance,
     }));
 }
