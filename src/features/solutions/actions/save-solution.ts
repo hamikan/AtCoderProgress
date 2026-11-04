@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import type { Prisma } from '@/generated/prisma/client';
 
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import { dedupeTagNamesByCase } from '@/features/solutions/functions/tag-names';
 import { parseSolutionInput } from '@/features/solutions/schemas/solution';
 import type { SaveSolutionError, SaveSolutionInput } from '@/features/solutions/types';
 import { prisma } from '@/lib/prisma';
@@ -60,15 +61,25 @@ export async function saveSolution(
         where: { solutionId: savedSolutionId },
       });
 
-      if (parsedInput.tagNames.length > 0) {
+      const tagNames = dedupeTagNamesByCase(parsedInput.tagNames);
+      if (tagNames.length > 0) {
+        // Letter case does not make a new tag: reuse the existing
+        // tag even when the typed case differs (issue #133).
         const userTags = await Promise.all(
-          parsedInput.tagNames.map((name) =>
-            transaction.userTag.upsert({
-              where: { createdById_name: { createdById: user.id, name } },
-              create: { createdById: user.id, name },
-              update: {},
-            })
-          )
+          tagNames.map(async (name) => {
+            const existing = await transaction.userTag.findFirst({
+              where: {
+                createdById: user.id,
+                name: { equals: name, mode: 'insensitive' },
+              },
+            });
+            return (
+              existing ??
+              (await transaction.userTag.create({
+                data: { createdById: user.id, name },
+              }))
+            );
+          })
         );
 
         await transaction.solutionUserTag.createMany({
