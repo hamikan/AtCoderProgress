@@ -63,8 +63,6 @@ export async function saveSolution(
 
       const tagNames = dedupeTagNamesByCase(parsedInput.tagNames);
       if (tagNames.length > 0) {
-        // Letter case does not make a new tag: reuse the existing
-        // tag even when the typed case differs (issue #133).
         const userTags = await Promise.all(
           tagNames.map(async (name) => {
             const existing = await transaction.userTag.findFirst({
@@ -72,12 +70,15 @@ export async function saveSolution(
                 createdById: user.id,
                 name: { equals: name, mode: 'insensitive' },
               },
+              orderBy: { createdAt: 'asc' },
             });
             return (
               existing ??
-              (await transaction.userTag.create({
-                data: { createdById: user.id, name },
-              }))
+              transaction.userTag.upsert({
+                where: { createdById_name: { createdById: user.id, name } },
+                create: { createdById: user.id, name },
+                update: {},
+              })
             );
           })
         );
