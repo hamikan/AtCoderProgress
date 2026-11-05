@@ -42,7 +42,7 @@ export default function LinkAtCoderForm({ canSubmit }: LinkAtCoderFormProps) {
       }
 
       await update();
-      router.push('/');
+      router.push('/dashboard');
     } catch {
       setError('連携に失敗しました。もう一度お試しください。');
     } finally {

@@ -1,4 +1,5 @@
 import LoginPanel from '@/features/auth/components/LoginPanel';
+import { getLoginErrorMessage } from '@/features/auth/functions/get-login-error-message';
 import { normalizeLoginCallbackUrl } from '@/features/auth/functions/normalize-login-callback-url';
 import type { LoginSearchParamsInput } from '@/features/auth/types';
 
@@ -7,9 +8,12 @@ interface LoginPageProps {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
   const callbackUrl = normalizeLoginCallbackUrl(
-    (await searchParams).callbackUrl
+    params.callbackUrl,
+    process.env.NEXTAUTH_URL
   );
+  const errorMessage = getLoginErrorMessage(params.error);
 
-  return <LoginPanel callbackUrl={callbackUrl} />;
+  return <LoginPanel callbackUrl={callbackUrl} errorMessage={errorMessage} />;
 }
