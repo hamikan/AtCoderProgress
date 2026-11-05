@@ -8,12 +8,6 @@ import type {
 } from '@/features/problems/types';
 import type { SubmissionStatus } from '@/features/submissions/types';
 
-/**
- * Cache key for the contest list kept in the browser across page
- * transitions. The submission statuses in the list belong to one user
- * and one linked AtCoder ID, so the key must include both: otherwise
- * the colors stay stale after linking or changing the ID (issue #119).
- */
 export function buildContestListCacheKey(
   userScope: string,
   contestType: ContestKind,
@@ -22,11 +16,6 @@ export function buildContestListCacheKey(
   return `${userScope}:${contestType}:${order}`;
 }
 
-/**
- * Overlays freshly delivered submission statuses onto a cached map.
- * Fresh values win; entries for contests outside the fresh chunk are
- * kept as they are.
- */
 export function mergeSubmissionStatusMap(
   cached: Record<string, SubmissionStatus>,
   fresh: Record<string, SubmissionStatus>

@@ -27,7 +27,6 @@ interface ContestListEntry {
 }
 
 interface ContestWorkspaceProps {
-  /** Identifies whose statuses are shown: user ID + linked AtCoder ID. */
   readonly userScope: string;
   readonly contestType: ContestKind;
   readonly order: ContestOrder;
@@ -61,8 +60,7 @@ export default function ContestWorkspace({
     const map = new Map(contestListCache);
     const cached = map.get(cacheKey);
     if (cached) {
-      // Fresh server data wins for the statuses it covers, so colors do
-      // not stay stale when the underlying data changed (issue #119).
+      // 同じキャッシュでも提出状況が更新されていることがあるので、サーバーから届いた分で上書きする
       map.set(cacheKey, {
         ...cached,
         submissionStatusMap: mergeSubmissionStatusMap(
