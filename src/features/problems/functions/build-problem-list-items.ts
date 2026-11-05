@@ -18,27 +18,15 @@ function getProblemStatus(row: ProblemListRow, hasUser: boolean): ProblemStatus 
     return 'UNSOLVED';
   }
 
-  // submissions はクエリ（get-problem-list.ts）で AC の提出だけに絞ってある
-  const hasAcSubmission = row.submissions.length > 0;
-
   if (row.solutions.length > 0) {
-    const bestSolutionStatus = row.solutions.reduce((bestStatus, solution) =>
+    return row.solutions.reduce((bestStatus, solution) =>
       STATUS_PRIORITY[solution.status] > STATUS_PRIORITY[bestStatus]
         ? solution.status
         : bestStatus
     , row.solutions[0].status);
-
-    if (
-      hasAcSubmission &&
-      STATUS_PRIORITY.AC > STATUS_PRIORITY[bestSolutionStatus]
-    ) {
-      return 'AC';
-    }
-
-    return bestSolutionStatus;
   }
 
-  if (hasAcSubmission) {
+  if (row.submissions.length > 0) {
     return 'AC';
   }
 
