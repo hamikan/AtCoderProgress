@@ -1,10 +1,28 @@
 import type {
   Contest,
+  ContestKind,
   ContestOrder,
   ContestRow,
   ContestStats,
   Problem,
 } from '@/features/problems/types';
+
+// 提出を取り直すと日時が変わるので、ブラウザ側のキャッシュも作り直される
+export function buildContestCacheScope(
+  user: { id: string; atcoderId: string | null } | null,
+  submissionsLastFetchedAt: Date | null
+): string {
+  if (!user) return 'anonymous';
+  return [user.id, user.atcoderId ?? '', submissionsLastFetchedAt?.getTime() ?? ''].join(':');
+}
+
+export function buildContestListCacheKey(
+  cacheScope: string,
+  contestType: ContestKind,
+  order: ContestOrder
+): string {
+  return `${cacheScope}:${contestType}:${order}`;
+}
 
 export function buildContestStats({
   total,

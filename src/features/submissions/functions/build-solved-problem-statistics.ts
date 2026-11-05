@@ -1,5 +1,10 @@
-import { format, startOfMonth, subDays } from 'date-fns';
-
+import {
+  formatTokyoDate,
+  formatTokyoDateParts,
+  getTokyoDateParts,
+  getTokyoMonthStartEpochSecond,
+  shiftTokyoDateParts,
+} from '@/lib/date/tokyo-date';
 import type {
   AcceptedSubmissionRow,
   SolvedProblemStatistics,
@@ -9,14 +14,8 @@ export function buildSolvedProblemStatistics(
   submissions: readonly AcceptedSubmissionRow[],
   now: Date
 ): SolvedProblemStatistics {
-  const startOfCurrentMonth = startOfMonth(now);
-  const startOfLastMonth = startOfMonth(subDays(startOfCurrentMonth, 1));
-  const startOfCurrentMonthEpoch = Math.floor(
-    startOfCurrentMonth.getTime() / 1000
-  );
-  const startOfLastMonthEpoch = Math.floor(
-    startOfLastMonth.getTime() / 1000
-  );
+  const startOfCurrentMonthEpoch = getTokyoMonthStartEpochSecond(now, 0);
+  const startOfLastMonthEpoch = getTokyoMonthStartEpochSecond(now, -1);
 
   const firstAcceptedAt = new Map<string, number>();
   const currentMonthProblems = new Set<string>();
@@ -38,9 +37,7 @@ export function buildSolvedProblemStatistics(
       lastMonthProblems.add(submission.problemId);
     }
 
-    acceptedDates.add(
-      format(new Date(submission.epochSecond * 1000), 'yyyy-MM-dd')
-    );
+    acceptedDates.add(formatTokyoDate(new Date(submission.epochSecond * 1000)));
   }
 
   const acCountChange = [...firstAcceptedAt.values()].filter(
@@ -60,12 +57,17 @@ function calculateCurrentStreak(
   acceptedDates: ReadonlySet<string>,
   now: Date
 ): number {
-  const start = acceptedDates.has(format(now, 'yyyy-MM-dd'))
-    ? now
-    : subDays(now, 1);
+  let startParts = getTokyoDateParts(now);
+  if (!acceptedDates.has(formatTokyoDateParts(startParts))) {
+    startParts = shiftTokyoDateParts(startParts, -1);
+  }
 
   for (let days = 0; ; days += 1) {
-    if (!acceptedDates.has(format(subDays(start, days), 'yyyy-MM-dd'))) {
+    if (
+      !acceptedDates.has(
+        formatTokyoDateParts(shiftTokyoDateParts(startParts, -days))
+      )
+    ) {
       return days;
     }
   }
