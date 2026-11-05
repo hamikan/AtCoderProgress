@@ -18,9 +18,7 @@ function getProblemStatus(row: ProblemListRow, hasUser: boolean): ProblemStatus 
     return 'UNSOLVED';
   }
 
-  // row.submissions only contains AC submissions (see the query), so an
-  // AC on AtCoder counts at least as the plain 'AC' status even when a
-  // solution record still says TRYING.
+  // submissions はクエリ（get-problem-list.ts）で AC の提出だけに絞ってある
   const hasAcSubmission = row.submissions.length > 0;
 
   if (row.solutions.length > 0) {

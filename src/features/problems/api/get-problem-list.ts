@@ -31,8 +31,6 @@ export async function getProblemList(
   const skip = (page - 1) * pageSize;
 
   const where: Prisma.ProblemWhereInput = {};
-  // Search and status both use OR conditions of their own, so they are
-  // collected and ANDed together instead of overwriting each other.
   const andConditions: Prisma.ProblemWhereInput[] = [];
 
   if (search) {
@@ -60,7 +58,6 @@ export async function getProblemList(
   }
 
   if (tags && tags.length > 0) {
-    // The filter UI passes tag names, not tag IDs.
     where.problemTags = {
       some: {
         tag: { name: { in: tags } },
@@ -110,8 +107,6 @@ export async function getProblemList(
   if (order && orderBy) {
     switch (orderBy) {
       case 'difficulty':
-        // Problems without a difficulty always go last; PostgreSQL
-        // would otherwise put NULLs first on descending order.
         prismaOrderBy = { difficulty: { sort: order, nulls: 'last' } };
         break;
       case 'contestDate':
