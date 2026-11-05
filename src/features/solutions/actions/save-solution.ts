@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache';
 import type { Prisma } from '@/generated/prisma/client';
 
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
-import { dedupeTagNamesByCase } from '@/features/solutions/functions/tag-names';
 import { parseSolutionInput } from '@/features/solutions/schemas/solution';
 import type { SaveSolutionError, SaveSolutionInput } from '@/features/solutions/types';
 import { prisma } from '@/lib/prisma';
@@ -61,10 +60,9 @@ export async function saveSolution(
         where: { solutionId: savedSolutionId },
       });
 
-      const tagNames = dedupeTagNamesByCase(parsedInput.tagNames);
-      if (tagNames.length > 0) {
+      if (parsedInput.tagNames.length > 0) {
         const userTags = await Promise.all(
-          tagNames.map(async (name) => {
+          parsedInput.tagNames.map(async (name) => {
             const existing = await transaction.userTag.findFirst({
               where: {
                 createdById: user.id,
