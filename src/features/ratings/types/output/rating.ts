@@ -10,6 +10,8 @@ export interface RatingSummary {
   currentRating: number;
   currentRatingChange: number;
   highestRating: number;
+  /** 先月末時点のレート（先月までに rated の参加がなければ null） */
+  lastMonthRating: number | null;
 }
 
 export interface NextRatingBand {
