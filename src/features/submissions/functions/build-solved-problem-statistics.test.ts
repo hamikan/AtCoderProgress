@@ -31,9 +31,7 @@ test('buildSolvedProblemStatistics calculates unique totals, monthly change, and
 });
 
 test('buildSolvedProblemStatistics uses Tokyo month boundaries', () => {
-  // Nov 2, 01:00 JST. The submission at Oct 31, 16:30 UTC is Nov 1,
-  // 01:30 JST, so it belongs to November in Tokyo (a UTC server would
-  // count it in October).
+  // 日本時間 11/2 01:00。UTC 10/31 16:30 の提出は日本時間 11/1 01:30 なので11月に数える（UTC のサーバーなら10月になる）
   const now = new Date(Date.UTC(2026, 10, 1, 16));
   const result = buildSolvedProblemStatistics(
     [

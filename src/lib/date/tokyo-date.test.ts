@@ -8,21 +8,20 @@ import {
   shiftTokyoDateParts,
 } from './tokyo-date';
 
-// All instants below are written in UTC so the expectations hold no
-// matter which timezone the machine running the tests is in.
+// テストを動かすマシンのタイムゾーンに左右されないよう、時刻はすべて UTC で書く
 
 test('formatTokyoDate uses the Asia/Tokyo calendar day', () => {
-  // 2026-11-01 23:30 UTC is already 2026-11-02 08:30 in Tokyo.
+  // UTC 2026-11-01 23:30 は、日本時間ではもう 2026-11-02 08:30
   assert.equal(
     formatTokyoDate(new Date(Date.UTC(2026, 10, 1, 23, 30))),
     '2026-11-02'
   );
-  // 2026-11-02 14:59 UTC is still 2026-11-02 23:59 in Tokyo.
+  // UTC 2026-11-02 14:59 は、日本時間ではまだ 2026-11-02 23:59
   assert.equal(
     formatTokyoDate(new Date(Date.UTC(2026, 10, 2, 14, 59))),
     '2026-11-02'
   );
-  // 2026-11-02 15:00 UTC is 2026-11-03 00:00 in Tokyo.
+  // UTC 2026-11-02 15:00 は、日本時間で 2026-11-03 00:00
   assert.equal(
     formatTokyoDate(new Date(Date.UTC(2026, 10, 2, 15, 0))),
     '2026-11-03'
@@ -37,17 +36,17 @@ test('getTokyoDateStartEpochSecond returns Tokyo midnight', () => {
 });
 
 test('getTokyoMonthStartEpochSecond returns the Tokyo month boundary', () => {
-  const now = new Date(Date.UTC(2026, 10, 15, 12, 0)); // Nov 15 in Tokyo too
+  const now = new Date(Date.UTC(2026, 10, 15, 12, 0)); // 日本時間でも 11/15
   assert.equal(
     getTokyoMonthStartEpochSecond(now),
-    Math.floor(Date.UTC(2026, 9, 31, 15, 0) / 1000) // Nov 1 00:00 JST
+    Math.floor(Date.UTC(2026, 9, 31, 15, 0) / 1000) // 日本時間 11/1 00:00
   );
   assert.equal(
     getTokyoMonthStartEpochSecond(now, -1),
-    Math.floor(Date.UTC(2026, 8, 30, 15, 0) / 1000) // Oct 1 00:00 JST
+    Math.floor(Date.UTC(2026, 8, 30, 15, 0) / 1000) // 日本時間 10/1 00:00
   );
-  // An instant that is still October in UTC but already November in Tokyo.
-  const boundary = new Date(Date.UTC(2026, 9, 31, 16, 0)); // Nov 1 01:00 JST
+  // UTC ではまだ10月だが、日本時間ではもう11月の時刻
+  const boundary = new Date(Date.UTC(2026, 9, 31, 16, 0)); // 日本時間 11/1 01:00
   assert.equal(
     getTokyoMonthStartEpochSecond(boundary),
     Math.floor(Date.UTC(2026, 9, 31, 15, 0) / 1000)

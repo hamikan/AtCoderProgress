@@ -1,14 +1,4 @@
-/**
- * Date helpers pinned to Asia/Tokyo.
- *
- * The app aggregates submissions and ratings by calendar day and month
- * for users in Japan. Using the server's timezone instead shifts every
- * boundary by the offset (9 hours on a UTC server), so all day/month
- * boundaries must go through these helpers (issue #115). JST is UTC+9
- * all year (no daylight saving), which makes the offset arithmetic
- * exact.
- */
-
+// 日本時間は夏時間がなく常に UTC+9 なので、固定の差で計算できる
 const TOKYO_OFFSET_SECONDS = 9 * 60 * 60;
 
 export interface TokyoDateParts {
@@ -26,7 +16,6 @@ const tokyoPartsFormatter = new Intl.DateTimeFormat('en-US', {
   day: '2-digit',
 });
 
-/** The calendar date that `date` falls on in Asia/Tokyo. */
 export function getTokyoDateParts(date: Date): TokyoDateParts {
   const values = new Map(
     tokyoPartsFormatter
@@ -41,19 +30,16 @@ export function getTokyoDateParts(date: Date): TokyoDateParts {
   };
 }
 
-/** Formats date parts as `yyyy-MM-dd`. */
 export function formatTokyoDateParts(parts: TokyoDateParts): string {
   const month = String(parts.month).padStart(2, '0');
   const day = String(parts.day).padStart(2, '0');
   return `${parts.year}-${month}-${day}`;
 }
 
-/** The `yyyy-MM-dd` calendar date of `date` in Asia/Tokyo. */
 export function formatTokyoDate(date: Date): string {
   return formatTokyoDateParts(getTokyoDateParts(date));
 }
 
-/** Shifts date parts by a number of calendar days. */
 export function shiftTokyoDateParts(
   parts: TokyoDateParts,
   days: number
@@ -69,7 +55,6 @@ export function shiftTokyoDateParts(
   };
 }
 
-/** Epoch seconds of 00:00 Asia/Tokyo on the given date. */
 export function getTokyoDateStartEpochSecond(parts: TokyoDateParts): number {
   return (
     Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / 1000) -
@@ -77,10 +62,6 @@ export function getTokyoDateStartEpochSecond(parts: TokyoDateParts): number {
   );
 }
 
-/**
- * Epoch seconds of the start (00:00 Asia/Tokyo) of the month that
- * contains `date`, shifted by `monthOffset` months.
- */
 export function getTokyoMonthStartEpochSecond(
   date: Date,
   monthOffset = 0

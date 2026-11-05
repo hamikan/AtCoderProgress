@@ -13,7 +13,6 @@ export async function getRatingSummary(userId?: string): Promise<RatingSummary> 
     };
   }
 
-  // Month boundaries follow Asia/Tokyo, not the server timezone (#115).
   const startOfCurrentMonth = new Date(
     getTokyoMonthStartEpochSecond(new Date()) * 1000
   );
