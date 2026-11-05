@@ -78,6 +78,11 @@ export default async function DashboardPage() {
             title="現在レート"
             value={ratingSummary.currentRating}
             change={ratingSummary.currentRatingChange}
+            changeLabel={
+              ratingSummary.lastMonthRating === null
+                ? undefined
+                : `先月最終 ${ratingSummary.lastMonthRating.toLocaleString()}`
+            }
             detail={ratingDetail}
           />
           <StatCard

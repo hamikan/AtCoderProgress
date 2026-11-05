@@ -10,6 +10,7 @@ export async function getRatingSummary(userId?: string): Promise<RatingSummary> 
       currentRating: 0,
       currentRatingChange: 0,
       highestRating: 0,
+      lastMonthRating: null,
     };
   }
 
@@ -24,14 +25,15 @@ export async function getRatingSummary(userId?: string): Promise<RatingSummary> 
 
   const currentRating = history[0]?.newRating ?? 0;
   const lastMonthRating =
-    history.find((entry) => entry.endTime < startOfCurrentMonth)?.newRating ?? 0;
+    history.find((entry) => entry.endTime < startOfCurrentMonth)?.newRating ?? null;
 
   return {
     currentRating,
-    currentRatingChange: currentRating - lastMonthRating,
+    currentRatingChange: currentRating - (lastMonthRating ?? 0),
     highestRating: history.reduce(
       (highest, entry) => Math.max(highest, entry.newRating),
       0
     ),
+    lastMonthRating,
   };
 }
