@@ -47,7 +47,7 @@ export default function UserMenu({ user }: UserMenuProps) {
           <Link href="/link-atcoder"><Settings className="mr-2 h-4 w-4" /><span>AtCoder ID設定</span></Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
+        <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/dashboard' })}>
           <LogOut className="mr-2 h-4 w-4" /><span>ログアウト</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
