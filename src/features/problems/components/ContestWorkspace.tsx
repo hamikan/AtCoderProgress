@@ -5,10 +5,7 @@ import { Loader2 } from 'lucide-react';
 import ContestTable from './ContestTable';
 import ProblemStats from './ProblemStats';
 import { loadContestChunk } from '@/features/problems/actions/load-contest-chunk';
-import {
-  buildContestListCacheKey,
-  mergeSubmissionStatusMap,
-} from '@/features/problems/functions/contest-workspace';
+import { buildContestListCacheKey } from '@/features/problems/functions/contest-workspace';
 import type {
   Contest,
   ContestKind,
@@ -27,7 +24,7 @@ interface ContestListEntry {
 }
 
 interface ContestWorkspaceProps {
-  readonly userScope: string;
+  readonly cacheScope: string;
   readonly contestType: ContestKind;
   readonly order: ContestOrder;
   readonly problemIndexes: string[];
@@ -43,7 +40,7 @@ const contestListCache = new Map<string, ContestListEntry>();
 const loadingCacheKeys = new Set<string>();
 
 export default function ContestWorkspace({
-  userScope,
+  cacheScope,
   contestType,
   order,
   problemIndexes,
@@ -54,23 +51,11 @@ export default function ContestWorkspace({
   nextCursor,
   hasMore,
 }: ContestWorkspaceProps) {
-  const cacheKey = buildContestListCacheKey(userScope, contestType, order);
+  const cacheKey = buildContestListCacheKey(cacheScope, contestType, order);
 
-  const [lists, setLists] = useState<Map<string, ContestListEntry>>(() => {
-    const map = new Map(contestListCache);
-    const cached = map.get(cacheKey);
-    if (cached) {
-      // 同じキャッシュでも提出状況が更新されていることがあるので、サーバーから届いた分で上書きする
-      map.set(cacheKey, {
-        ...cached,
-        submissionStatusMap: mergeSubmissionStatusMap(
-          cached.submissionStatusMap,
-          submissionStatusMap
-        ),
-      });
-    }
-    return map;
-  });
+  const [lists, setLists] = useState<Map<string, ContestListEntry>>(
+    () => new Map(contestListCache)
+  );
 
   const initialEntry: ContestListEntry = {
     contests,

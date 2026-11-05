@@ -2,6 +2,7 @@ import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import ContestWorkspace from '@/features/problems/components/ContestWorkspace';
 import { getContestWorkspace } from '@/features/problems/api/get-contest-workspace';
 import { INITIAL_CONTEST_PAGE_SIZE } from '@/features/problems/functions/contest-page-params';
+import { buildContestCacheScope } from '@/features/problems/functions/contest-workspace';
 import { getContestProblemIndexes } from '@/features/problems/functions/get-contest-problem-indexes';
 import { normalizeContestSearchParams } from '@/features/problems/functions/normalize-contest-search-params';
 import type { ContestSearchParamsInput } from '@/features/problems/types';
@@ -25,7 +26,7 @@ export default async function ContestPage({ searchParams }: ContestPageProps) {
     <div className="bg-slate-50 h-full overflow-y-auto">
       <div className="w-full max-w-7xl mx-auto px-4 py-8">
         <ContestWorkspace
-          userScope={user ? `${user.id}:${user.atcoderId ?? ''}` : 'anonymous'}
+          cacheScope={buildContestCacheScope(user, contestPage.submissionsLastFetchedAt)}
           contestType={contestType}
           order={order}
           problemIndexes={problemIndexes}

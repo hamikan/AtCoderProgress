@@ -6,21 +6,22 @@ import type {
   ContestStats,
   Problem,
 } from '@/features/problems/types';
-import type { SubmissionStatus } from '@/features/submissions/types';
+
+// 提出を取り直すと日時が変わるので、ブラウザ側のキャッシュも作り直される
+export function buildContestCacheScope(
+  user: { id: string; atcoderId: string | null } | null,
+  submissionsLastFetchedAt: Date | null
+): string {
+  if (!user) return 'anonymous';
+  return [user.id, user.atcoderId ?? '', submissionsLastFetchedAt?.getTime() ?? ''].join(':');
+}
 
 export function buildContestListCacheKey(
-  userScope: string,
+  cacheScope: string,
   contestType: ContestKind,
   order: ContestOrder
 ): string {
-  return `${userScope}:${contestType}:${order}`;
-}
-
-export function mergeSubmissionStatusMap(
-  cached: Record<string, SubmissionStatus>,
-  fresh: Record<string, SubmissionStatus>
-): Record<string, SubmissionStatus> {
-  return { ...cached, ...fresh };
+  return `${cacheScope}:${contestType}:${order}`;
 }
 
 export function buildContestStats({

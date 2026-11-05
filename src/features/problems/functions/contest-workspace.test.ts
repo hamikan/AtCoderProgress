@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildContestCacheScope,
   buildContestListCacheKey,
   buildContests,
   buildContestStats,
   getContestCursorFilter,
   getContestProblemIds,
-  mergeSubmissionStatusMap,
 } from './contest-workspace';
 
 test('contest workspace functions map rows and collect problem ids', () => {
@@ -35,33 +35,38 @@ test('contest workspace functions map rows and collect problem ids', () => {
   assert.deepEqual(getContestProblemIds(contests), ['abc001_a']);
 });
 
-test('buildContestListCacheKey separates users and linked AtCoder IDs', () => {
-  const before = buildContestListCacheKey('user-1:old_id', 'abc', 'desc');
-  const afterLink = buildContestListCacheKey('user-1:new_id', 'abc', 'desc');
-  const otherUser = buildContestListCacheKey('user-2:new_id', 'abc', 'desc');
+test('buildContestCacheScope changes when the user, linked ID or fetch time changes', () => {
+  const fetchedAt = new Date('2026-11-05T00:00:00Z');
+  const scope = buildContestCacheScope({ id: 'user-1', atcoderId: 'old_id' }, fetchedAt);
 
-  assert.notEqual(before, afterLink);
-  assert.notEqual(afterLink, otherUser);
   assert.equal(
-    buildContestListCacheKey('user-1:new_id', 'abc', 'desc'),
-    afterLink
+    buildContestCacheScope({ id: 'user-1', atcoderId: 'old_id' }, new Date(fetchedAt)),
+    scope
   );
+  assert.notEqual(
+    buildContestCacheScope({ id: 'user-1', atcoderId: 'new_id' }, fetchedAt),
+    scope
+  );
+  assert.notEqual(
+    buildContestCacheScope({ id: 'user-2', atcoderId: 'old_id' }, fetchedAt),
+    scope
+  );
+  assert.notEqual(
+    buildContestCacheScope(
+      { id: 'user-1', atcoderId: 'old_id' },
+      new Date('2026-11-06T00:00:00Z')
+    ),
+    scope
+  );
+  assert.equal(buildContestCacheScope(null, null), 'anonymous');
 });
 
-test('mergeSubmissionStatusMap lets fresh statuses win and keeps the rest', () => {
-  assert.deepEqual(
-    mergeSubmissionStatusMap(
-      {
-        abc001_a: { result: 'WA', epochSecond: 100 },
-        abc001_b: { result: 'AC', epochSecond: 90 },
-      },
-      { abc001_a: { result: 'AC', epochSecond: 200 } }
-    ),
-    {
-      abc001_a: { result: 'AC', epochSecond: 200 },
-      abc001_b: { result: 'AC', epochSecond: 90 },
-    }
-  );
+test('buildContestListCacheKey separates scopes, contest types and orders', () => {
+  const key = buildContestListCacheKey('scope-1', 'abc', 'desc');
+
+  assert.notEqual(buildContestListCacheKey('scope-2', 'abc', 'desc'), key);
+  assert.notEqual(buildContestListCacheKey('scope-1', 'arc', 'desc'), key);
+  assert.notEqual(buildContestListCacheKey('scope-1', 'abc', 'asc'), key);
 });
 
 test('contest workspace functions calculate stats and cursor filters', () => {
