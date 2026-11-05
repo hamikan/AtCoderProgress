@@ -11,6 +11,7 @@ export type {
 export type { SaveSolutionError } from './error/save-solution-error';
 export type { SolutionSidebarLookupError } from './error/solution-sidebar-lookup-error';
 export type {
+  InProgressSolutionItem,
   SolutionListItem,
   SolutionRecordListItem,
   SolutionStatus,
