@@ -18,7 +18,7 @@ export async function getRatingSummary(userId?: string): Promise<RatingSummary> 
     getTokyoMonthStartEpochSecond(new Date()) * 1000
   );
   const history = await prisma.userRatingHistory.findMany({
-    where: { userId },
+    where: { userId, isRated: true },
     orderBy: { endTime: 'desc' },
     select: { endTime: true, newRating: true },
   });
