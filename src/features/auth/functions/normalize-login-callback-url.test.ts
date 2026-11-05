@@ -27,7 +27,7 @@ test('normalizeLoginCallbackUrl keeps the path of a same-origin absolute URL', (
     ),
     '/solutions/new?problemId=abc001_a'
   );
-  // NEXTAUTH_URL may carry a trailing slash; only its origin is compared.
+  // NEXTAUTH_URL の末尾に / が付いていても、比べるのはオリジンだけ
   assert.equal(
     normalizeLoginCallbackUrl(
       'https://app.example.com/problems/list',
@@ -42,6 +42,13 @@ test('normalizeLoginCallbackUrl rejects absolute URLs from another origin', () =
     normalizeLoginCallbackUrl('https://example.com/solutions', 'https://app.example.com'),
     '/dashboard'
   );
-  // Without an app origin to compare against, absolute URLs stay rejected.
+  // 比べるオリジンがなければ、絶対 URL は使わない
   assert.equal(normalizeLoginCallbackUrl('https://app.example.com/solutions'), '/dashboard');
+});
+
+test('normalizeLoginCallbackUrl rejects a same-origin URL whose path starts with //', () => {
+  assert.equal(
+    normalizeLoginCallbackUrl('http://localhost:1207//evil.com/path', 'http://localhost:1207'),
+    '/dashboard'
+  );
 });

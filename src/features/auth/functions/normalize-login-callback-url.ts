@@ -1,16 +1,6 @@
 const DEFAULT_LOGIN_CALLBACK_URL = '/dashboard';
 const PLACEHOLDER_ORIGIN = 'https://atcoder-progress.local';
 
-/**
- * Normalizes the post-login redirect target.
- *
- * Plain internal paths are kept as they are. NextAuth sometimes hands
- * back an absolute URL for the page the user originally wanted; when it
- * points at this app itself (its origin matches `appOrigin`, e.g.
- * NEXTAUTH_URL), only the path part is used so the user returns to the
- * original page. Anything else falls back to the dashboard, so an
- * external URL can never become the redirect target.
- */
 export function normalizeLoginCallbackUrl(
   value: unknown,
   appOrigin?: string
@@ -37,15 +27,19 @@ export function normalizeLoginCallbackUrl(
     return callbackUrl;
   }
 
+  // ログインに失敗すると next-auth は戻り先を絶対 URL で渡してくるため、このアプリの URL ならパスだけを使う
   const allowedOrigin = parseOrigin(appOrigin);
   if (allowedOrigin) {
     try {
       const parsed = new URL(callbackUrl);
       if (parsed.origin === allowedOrigin) {
-        return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        // `//evil.com` のようなパスが外部の URL として扱われないよう、同じチェックに通す
+        return normalizeLoginCallbackUrl(
+          `${parsed.pathname}${parsed.search}${parsed.hash}`
+        );
       }
     } catch {
-      // Not an absolute URL; fall through to the default.
+      return DEFAULT_LOGIN_CALLBACK_URL;
     }
   }
 
