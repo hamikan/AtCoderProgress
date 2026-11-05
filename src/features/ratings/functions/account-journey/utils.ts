@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { formatTokyoDate } from '@/lib/date/tokyo-date';
 import {
   DIFFICULTY_UNKNOWN_BUCKET,
   RATING_BANDS,
@@ -12,7 +12,7 @@ import type {
 } from '@/features/ratings/types/input/account-journey-rows';
 
 export function formatEpochDate(epochSecond: number) {
-  return format(new Date(epochSecond * 1000), 'yyyy-MM-dd');
+  return formatTokyoDate(new Date(epochSecond * 1000));
 }
 
 export function toPercentage(solved: number, total: number) {

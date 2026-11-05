@@ -1,8 +1,7 @@
 import 'server-only';
 
-import { startOfMonth } from 'date-fns';
-
 import { prisma } from '@/lib/prisma';
+import { getTokyoMonthStartEpochSecond } from '@/lib/date/tokyo-date';
 import type { RatingSummary } from '@/features/ratings/types';
 
 export async function getRatingSummary(userId?: string): Promise<RatingSummary> {
@@ -14,7 +13,9 @@ export async function getRatingSummary(userId?: string): Promise<RatingSummary> 
     };
   }
 
-  const startOfCurrentMonth = startOfMonth(new Date());
+  const startOfCurrentMonth = new Date(
+    getTokyoMonthStartEpochSecond(new Date()) * 1000
+  );
   const history = await prisma.userRatingHistory.findMany({
     where: { userId, isRated: true },
     orderBy: { endTime: 'desc' },
