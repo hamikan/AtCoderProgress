@@ -19,6 +19,7 @@ import { isEmptySolutionContent } from '@/features/solutions/functions/solution-
 import {
   getDefaultContestId,
   getSolutionEditorKey,
+  hasUnsavedScopeMove,
 } from '@/features/solutions/functions/solution-editor';
 import { useHydrated } from '@/features/solutions/hooks/use-hydrated';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -163,6 +164,18 @@ function SolutionEditorContent({
   const debouncedStatus = useDebounce(status, 300);
   const debouncedContestId = useDebounce(contestId, 300);
   const debouncedTagsKey = useDebounce(JSON.stringify(selectedTags), 300);
+  // 同じコンテストの別の問題へ切り替えても入力は何も変わらず保存が走らないため、記録と範囲がずれていれば開いた直後に保存する
+  const hasScopeMove = hasUnsavedScopeMove(
+    initialSolution
+      ? {
+          problemId: initialSolution.problemId,
+          contestId: initialSolution.contestId,
+        }
+      : null,
+    problem && contestId
+      ? { problemId: problem.id, contestId }
+      : null
+  );
   const shouldSaveInitialDraft = Boolean(
     problem?.id &&
       contestId &&
@@ -218,7 +231,7 @@ function SolutionEditorContent({
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      if (!shouldSaveInitialDraft) return;
+      if (!shouldSaveInitialDraft && !hasScopeMove) return;
     }
     if (
       !isAuthenticated ||
@@ -315,6 +328,7 @@ function SolutionEditorContent({
     debouncedStatus,
     debouncedTagsKey,
     debouncedTitle,
+    hasScopeMove,
     isAuthenticated,
     isDebouncedContestValid,
     problem?.id,
