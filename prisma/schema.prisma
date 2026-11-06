@@ -56,8 +56,22 @@ model User {
   solutions                 Solution[]
   userTags                  UserTag[]
   problemReviews            ProblemReview[]
+  atcoderIdFetches          AtCoderIdFetch[]
 
   @@map("users")
+}
+
+// 連携で新しい AtCoder ID のデータを全部取った記録。1人が24時間に取れる回数を数える
+model AtCoderIdFetch {
+  id                String      @id @default(cuid())
+  userId            String      @map("user_id")
+  atcoderAccountId  String      @map("atcoder_account_id")
+  createdAt         DateTime    @default(now()) @map("created_at")
+
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("atcoder_id_fetches")
 }
 
 // 提出とレート履歴は、同じ AtCoder ID を何人が連携しても1回分だけ持つ

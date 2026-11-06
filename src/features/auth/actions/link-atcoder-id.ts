@@ -5,6 +5,7 @@ import { Prisma } from '@/generated/prisma/client';
 
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { parseAtCoderId } from '@/features/auth/schemas/atcoder-id';
+import { ATCODER_ID_FETCH_LIMIT } from '@/features/auth/functions/atcoder-id-change-policy';
 import {
   applyAtCoderIdChange,
   getAtCoderIdChangeDecision,
@@ -52,10 +53,17 @@ export async function linkAtCoderId(
   }
 
   try {
+    const existingAccount = await prisma.atCoderAccount.findUnique({
+      where: { id: toAtCoderAccountId(parsedAtCoderId) },
+      select: { submissionsLastFetchedAt: true },
+    });
+    // すでに誰かが取ってある ID なら全件は取り直さない。新しい分はダッシュボードを開いたときの更新で入る
+    const needsFetch = !existingAccount?.submissionsLastFetchedAt;
     const decision = await getAtCoderIdChangeDecision(
       prisma,
       user.id,
       parsedAtCoderId,
+      needsFetch,
       new Date()
     );
 
@@ -74,7 +82,7 @@ export async function linkAtCoderId(
     }
     let changed: Result<ApplyAtCoderIdChangeResult, LinkAtCoderIdError>;
     try {
-      changed = await changeAtCoderId(user.id, parsedAtCoderId);
+      changed = await changeAtCoderId(user.id, parsedAtCoderId, needsFetch);
     } finally {
       endLinkAttempt(user.id);
     }
@@ -110,7 +118,8 @@ export async function linkAtCoderId(
 
 async function changeAtCoderId(
   userId: string,
-  atcoderId: string
+  atcoderId: string,
+  needsFetch: boolean
 ): Promise<Result<ApplyAtCoderIdChangeResult, LinkAtCoderIdError>> {
   const commit = (profileData: AtCoderProfileData | null) => {
     const now = new Date();
@@ -121,12 +130,7 @@ async function changeAtCoderId(
     );
   };
 
-  const existingAccount = await prisma.atCoderAccount.findUnique({
-    where: { id: toAtCoderAccountId(atcoderId) },
-    select: { submissionsLastFetchedAt: true },
-  });
-  // すでに誰かが取ってある ID なら全件は取り直さない。新しい分はダッシュボードを開いたときの更新で入る
-  if (existingAccount?.submissionsLastFetchedAt) {
+  if (!needsFetch) {
     return { ok: true, value: await commit(null) };
   }
 
@@ -168,5 +172,5 @@ function formatChangeBlockedMessage(availableAt: Date): string {
     timeStyle: 'short',
     timeZone: 'Asia/Tokyo',
   }).format(availableAt);
-  return `AtCoder IDは${formatted}以降に変更できます。`;
+  return `まだ誰も連携していないAtCoder IDのデータを取れるのは、24時間に${ATCODER_ID_FETCH_LIMIT}回までです。${formatted}以降にもう一度お試しください。`;
 }

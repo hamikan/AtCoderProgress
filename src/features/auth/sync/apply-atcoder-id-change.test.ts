@@ -2,6 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { applyAtCoderIdChange } from './apply-atcoder-id-change';
+import {
+  ATCODER_ID_FETCH_LIMIT,
+  ATCODER_ID_FETCH_WINDOW_MS,
+} from '@/features/auth/functions/atcoder-id-change-policy';
 import type { AtCoderProfileData } from '@/features/auth/types';
 
 const NOW = new Date('2026-07-14T00:00:00.000Z');
@@ -38,24 +42,40 @@ const PROFILE_DATA: AtCoderProfileData = {
   ],
 };
 
-function createTransaction(
-  user: {
-    atcoderId: string | null;
-    atcoderIdChangedAt: Date | null;
-  },
-  storedAccountName: string | null = null,
-  currentAccountDataCount = 1
-) {
+const LIMIT_REACHED = Array.from(
+  { length: ATCODER_ID_FETCH_LIMIT },
+  (_, index) => new Date(NOW.getTime() - (index + 1) * 60 * 60 * 1000)
+);
+
+function createTransaction({
+  atcoderId = 'chokudai',
+  recentFetchTimes = [],
+  storedAccountName = null,
+}: {
+  atcoderId?: string | null;
+  recentFetchTimes?: Date[];
+  storedAccountName?: string | null;
+} = {}) {
   const calls: Array<{ name: string; args: unknown }> = [];
   const transaction = {
     user: {
       async findUnique(args: unknown) {
         calls.push({ name: 'user.findUnique', args });
-        return user;
+        return { atcoderId };
       },
       async update(args: unknown) {
         calls.push({ name: 'user.update', args });
-        return user;
+        return {};
+      },
+    },
+    atCoderIdFetch: {
+      async findMany(args: unknown) {
+        calls.push({ name: 'atCoderIdFetch.findMany', args });
+        return recentFetchTimes.map((createdAt) => ({ createdAt }));
+      },
+      async create(args: unknown) {
+        calls.push({ name: 'atCoderIdFetch.create', args });
+        return {};
       },
     },
     atCoderAccount: {
@@ -65,10 +85,6 @@ function createTransaction(
       },
     },
     submission: {
-      async count(args: unknown) {
-        calls.push({ name: 'submission.count', args });
-        return currentAccountDataCount;
-      },
       async findMany(args: unknown) {
         calls.push({ name: 'submission.findMany', args });
         return [];
@@ -83,10 +99,6 @@ function createTransaction(
       },
     },
     userRatingHistory: {
-      async count(args: unknown) {
-        calls.push({ name: 'userRatingHistory.count', args });
-        return 0;
-      },
       async createMany(args: unknown) {
         calls.push({ name: 'userRatingHistory.createMany', args });
         return { count: 1 };
@@ -103,11 +115,8 @@ function createTransaction(
   return { calls, transaction };
 }
 
-test('stores fetched data under the new AtCoder ID and links it without deleting anything', async () => {
-  const { calls, transaction } = createTransaction({
-    atcoderId: 'chokudai',
-    atcoderIdChangedAt: new Date('2026-07-01T00:00:00.000Z'),
-  });
+test('stores fetched data under the new AtCoder ID and records the fetch', async () => {
+  const { calls, transaction } = createTransaction();
 
   const result = await applyAtCoderIdChange(
     transaction,
@@ -122,7 +131,9 @@ test('stores fetched data under the new AtCoder ID and links it without deleting
     calls.map((call) => call.name),
     [
       'user.findUnique',
+      'atCoderIdFetch.findMany',
       'atCoderAccount.upsert',
+      'atCoderIdFetch.create',
       'problem.findMany',
       'submission.findMany',
       'submission.createMany',
@@ -131,6 +142,13 @@ test('stores fetched data under the new AtCoder ID and links it without deleting
     ]
   );
   assert.deepEqual(calls[1].args, {
+    where: {
+      userId: 'app-user-id',
+      createdAt: { gt: new Date(NOW.getTime() - ATCODER_ID_FETCH_WINDOW_MS) },
+    },
+    select: { createdAt: true },
+  });
+  assert.deepEqual(calls[2].args, {
     where: { id: 'tourist' },
     create: {
       id: 'tourist',
@@ -140,27 +158,25 @@ test('stores fetched data under the new AtCoder ID and links it without deleting
     update: { name: 'tourist', submissionsLastFetchedAt: NOW },
     select: { name: true },
   });
+  assert.deepEqual(calls[3].args, {
+    data: { userId: 'app-user-id', atcoderAccountId: 'tourist' },
+  });
   assert.equal(
-    (calls[4].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
+    (calls[6].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
       .atcoderAccountId,
     'tourist'
   );
-  assert.equal(
-    (calls[5].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
-      .atcoderAccountId,
-    'tourist'
-  );
-  assert.deepEqual(calls[6].args, {
+  assert.deepEqual(calls[8].args, {
     data: { atcoderId: 'tourist', atcoderIdChangedAt: NOW },
     where: { id: 'app-user-id' },
   });
 });
 
-test('switches to an AtCoder ID that is already stored without fetching', async () => {
-  const { calls, transaction } = createTransaction(
-    { atcoderId: 'chokudai', atcoderIdChangedAt: null },
-    'Tourist'
-  );
+test('switches to a stored AtCoder ID without fetching, even at the daily limit', async () => {
+  const { calls, transaction } = createTransaction({
+    recentFetchTimes: LIMIT_REACHED,
+    storedAccountName: 'Tourist',
+  });
 
   const result = await applyAtCoderIdChange(
     transaction,
@@ -173,25 +189,27 @@ test('switches to an AtCoder ID that is already stored without fetching', async 
   assert.deepEqual(result, { status: 'changed' });
   assert.deepEqual(
     calls.map((call) => call.name),
-    ['user.findUnique', 'atCoderAccount.upsert', 'user.update']
+    [
+      'user.findUnique',
+      'atCoderIdFetch.findMany',
+      'atCoderAccount.upsert',
+      'user.update',
+    ]
   );
-  assert.deepEqual(calls[1].args, {
+  assert.deepEqual(calls[2].args, {
     where: { id: 'tourist' },
     create: { id: 'tourist', name: 'TOURIST', submissionsLastFetchedAt: null },
     update: {},
     select: { name: true },
   });
-  assert.deepEqual(calls[2].args, {
+  assert.deepEqual(calls[3].args, {
     data: { atcoderId: 'Tourist', atcoderIdChangedAt: NOW },
     where: { id: 'app-user-id' },
   });
 });
 
 test('does not write when the AtCoder ID is unchanged', async () => {
-  const { calls, transaction } = createTransaction({
-    atcoderId: 'chokudai',
-    atcoderIdChangedAt: NOW,
-  });
+  const { calls, transaction } = createTransaction();
 
   assert.deepEqual(
     await applyAtCoderIdChange(
@@ -203,13 +221,15 @@ test('does not write when the AtCoder ID is unchanged', async () => {
     ),
     { status: 'unchanged' }
   );
-  assert.deepEqual(calls.map((call) => call.name), ['user.findUnique']);
+  assert.deepEqual(
+    calls.map((call) => call.name),
+    ['user.findUnique', 'atCoderIdFetch.findMany']
+  );
 });
 
-test('does not write while the seven-day cooldown is active', async () => {
+test('does not fetch a new AtCoder ID once the daily limit is reached', async () => {
   const { calls, transaction } = createTransaction({
-    atcoderId: 'chokudai',
-    atcoderIdChangedAt: new Date('2026-07-13T00:00:00.000Z'),
+    recentFetchTimes: LIMIT_REACHED,
   });
 
   const result = await applyAtCoderIdChange(
@@ -221,31 +241,8 @@ test('does not write while the seven-day cooldown is active', async () => {
   );
 
   assert.equal(result.status, 'blocked');
-  assert.deepEqual(calls.map((call) => call.name), [
-    'user.findUnique',
-    'submission.count',
-    'userRatingHistory.count',
-  ]);
-});
-
-test('allows leaving an AtCoder ID that brought no data even during the cooldown', async () => {
-  const { calls, transaction } = createTransaction(
-    {
-      atcoderId: 'Typo_Id',
-      atcoderIdChangedAt: new Date('2026-07-13T00:00:00.000Z'),
-    },
-    null,
-    0
+  assert.deepEqual(
+    calls.map((call) => call.name),
+    ['user.findUnique', 'atCoderIdFetch.findMany']
   );
-
-  const result = await applyAtCoderIdChange(
-    transaction,
-    'app-user-id',
-    'tourist',
-    NOW,
-    PROFILE_DATA
-  );
-
-  assert.deepEqual(result, { status: 'changed' });
-  assert.deepEqual(calls[1].args, { where: { atcoderAccountId: 'typo_id' } });
 });
