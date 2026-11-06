@@ -26,8 +26,7 @@ function range(from: number, to: number, epochSecond: number): RawSubmission[] {
 }
 
 test('collectSubmissions keeps submissions that share the page-boundary second', async () => {
-  // Page 1 ends in the middle of second 200 (ids 4 and 5 of that second
-  // are on page 1, id 6 follows on page 2). The old cursor (+1) lost id 6.
+  // 1ページ目が 200 秒の途中（id 4, 5）で終わり、同じ秒の id 6 は次のページにある。+1 だと id 6 を取りこぼしていた
   const pages = new Map<number, RawSubmission[]>([
     [0, [...range(1, 3, 100), ...range(4, 5, 200)]],
     [200, [...range(4, 5, 200), submission(6, 200)]],

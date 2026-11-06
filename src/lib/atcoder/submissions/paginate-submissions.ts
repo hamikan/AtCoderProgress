@@ -7,27 +7,12 @@ export type FetchSubmissionPage = (
 export interface CollectSubmissionsOptions {
   pageSize?: number;
   maxPages?: number;
-  /** Called before fetching each page after the first (rate limiting). */
   waitBetweenPages?: () => Promise<void>;
 }
 
 const DEFAULT_PAGE_SIZE = 500;
 const DEFAULT_MAX_PAGES = 200;
 
-/**
- * Walks the submissions API page by page and returns every submission
- * exactly once.
- *
- * The next page starts at the last submission's `epoch_second` WITHOUT
- * adding 1. Adding 1 would skip submissions that share the boundary
- * second whenever a page ends in the middle of that second, and they
- * could never be recovered (issue #117). The overlap this creates is
- * removed by submission ID.
- *
- * If a full page consists only of already-seen submissions at the
- * cursor's second, the cursor cannot advance any further; the walk
- * stops with what it has instead of looping forever.
- */
 export async function collectSubmissions(
   fetchPage: FetchSubmissionPage,
   initialCursor: number,
@@ -67,10 +52,12 @@ export async function collectSubmissions(
       throw new Error('Invalid submission pagination response');
     }
 
+    // 同じ秒の提出だけで1ページが埋まると先へ進めないので、そこで止める
     if (newCount === 0 && lastSubmission.epoch_second === cursor) {
       return collected;
     }
 
+    // +1 すると境目と同じ秒の残りを取りこぼすため、同じ秒から取り直す（重なりは ID で除く）
     cursor = lastSubmission.epoch_second;
   }
 }
