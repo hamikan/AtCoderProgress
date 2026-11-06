@@ -10,9 +10,12 @@ interface StatCardProps {
   value: string | number;
   change?: string | number;
   changeType?: ChangeType;
-  icon: LucideIcon;
-  iconClassName: string;
-  iconBackgroundClassName: string;
+  changeLabel?: string;
+  /** Small supplemental line shown under the change row. */
+  detail?: string;
+  icon?: LucideIcon;
+  iconClassName?: string;
+  iconBackgroundClassName?: string;
 }
 
 export function StatCard({
@@ -20,6 +23,8 @@ export function StatCard({
   value,
   change,
   changeType,
+  changeLabel,
+  detail,
   icon: Icon,
   iconClassName,
   iconBackgroundClassName,
@@ -31,9 +36,11 @@ export function StatCard({
     <Card className="relative overflow-hidden border-0 bg-white shadow-sm ring-1 ring-slate-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
-        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBackgroundClassName}`}>
-          <Icon className={`h-4 w-4 ${iconClassName}`} />
-        </div>
+        {Icon && (
+          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBackgroundClassName ?? ''}`}>
+            <Icon className={`h-4 w-4 ${iconClassName ?? ''}`} />
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-slate-900">{formatValue(value)}</div>
@@ -52,10 +59,9 @@ export function StatCard({
               {formattedChange}
             </Badge>
           )}
-          {(resolvedChangeType === 'increase' || resolvedChangeType === 'decrease') && (
-            <span className="text-slate-500">前月比</span>
-          )}
+          {changeLabel && <span className="text-slate-500">{changeLabel}</span>}
         </div>
+        {detail && <div className="mt-1 text-xs text-slate-500">{detail}</div>}
       </CardContent>
     </Card>
   );
