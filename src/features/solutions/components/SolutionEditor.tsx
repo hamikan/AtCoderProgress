@@ -113,6 +113,8 @@ function SolutionEditorContent({
   const savedSolutionIdRef = useRef<string | null>(
     initialSolution?.id ?? null
   );
+  // 保存が終わる前に別の画面へ移ったとき、移った先の URL を書き換えたり読み直したりしないため
+  const isMountedRef = useRef(true);
   const saveInFlightRef = useRef(false);
   const pendingSaveRef = useRef<SaveSolutionInput | null>(null);
   const savedScopeRef = useRef<{
@@ -136,6 +138,13 @@ function SolutionEditorContent({
         ? JSON.parse(draftState.content)
         : [{ type: 'p', children: [{ text: '' }] }],
   });
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     isNavigatingRef.current = false;
@@ -263,10 +272,18 @@ function SolutionEditorContent({
             );
             savedScopeRef.current = nextScope;
 
-            if (isFirstSave && !isNavigatingRef.current) {
+            if (
+              isFirstSave &&
+              !isNavigatingRef.current &&
+              isMountedRef.current
+            ) {
               // ページを移るとエディタが作り直されて保存中に打った文字が消えるため、URL だけを書き換える
               window.history.replaceState(null, '', `/solutions/${savedId}`);
-            } else if (didMoveScope && !isNavigatingRef.current) {
+            } else if (
+              didMoveScope &&
+              !isNavigatingRef.current &&
+              isMountedRef.current
+            ) {
               router.refresh();
             }
           } catch {
