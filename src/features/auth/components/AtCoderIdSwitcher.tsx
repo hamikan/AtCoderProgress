@@ -103,7 +103,7 @@ export default function AtCoderIdSwitcher({
         {fetchStatus === 'fetching' && (
           <p
             role="status"
-            className="absolute right-0 top-full z-10 mt-1 w-64 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600"
+            className="absolute inset-x-0 top-full z-10 mt-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600"
           >
             データを取得しています。
             <br />
@@ -113,7 +113,7 @@ export default function AtCoderIdSwitcher({
         {fetchStatus === 'failed' && (
           <div
             role="alert"
-            className="absolute right-0 top-full z-10 mt-1 w-64 space-y-2 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
+            className="absolute inset-x-0 top-full z-10 mt-1 space-y-2 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
           >
             <p>{retryError ?? 'データを取得できませんでした。'}</p>
             <Button
@@ -156,7 +156,7 @@ export default function AtCoderIdSwitcher({
       {error && (
         <p
           role="alert"
-          className="absolute right-0 top-full z-10 mt-1 w-64 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
+          className="absolute inset-x-0 top-full z-10 mt-1 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
         >
           {error}
         </p>
