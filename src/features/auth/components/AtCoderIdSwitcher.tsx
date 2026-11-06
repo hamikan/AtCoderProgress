@@ -54,17 +54,10 @@ export default function AtCoderIdSwitcher({ currentAtCoderId }: AtCoderIdSwitche
       <button
         type="button"
         onClick={startEditing}
-        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 px-2.5 text-sm text-slate-900 hover:bg-slate-50"
+        className="inline-flex h-9 min-w-48 items-center justify-between gap-2 rounded-md border border-slate-300 px-3 text-sm text-slate-900 hover:bg-slate-50"
       >
-        {currentAtCoderId ? (
-          <>
-            <span className="hidden text-slate-500 sm:inline">AtCoder</span>
-            <span>{currentAtCoderId}</span>
-          </>
-        ) : (
-          <span>AtCoder IDを連携</span>
-        )}
-        <Pencil className="h-3.5 w-3.5 text-slate-500" />
+        <span>{currentAtCoderId ?? 'AtCoder IDを連携'}</span>
+        <Pencil className="h-4 w-4 text-slate-500" />
       </button>
     );
   }
@@ -90,10 +83,10 @@ export default function AtCoderIdSwitcher({ currentAtCoderId }: AtCoderIdSwitche
         readOnly={isLoading}
         maxLength={16}
         placeholder="chokudai"
-        className="h-8 w-40 rounded-md border border-blue-600 px-2.5 pr-7 text-sm text-slate-900 outline-none"
+        className="h-9 w-48 rounded-md border border-blue-600 px-3 pr-8 text-sm text-slate-900 outline-none"
       />
       {isLoading && (
-        <Loader2 className="absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-slate-400" />
+        <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
       )}
       {message && (
         <p
