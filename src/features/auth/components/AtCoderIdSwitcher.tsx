@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Loader2, Pencil } from 'lucide-react';
+import { AlertTriangle, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -113,17 +113,19 @@ export default function AtCoderIdSwitcher({
         {fetchStatus === 'failed' && (
           <div
             role="alert"
-            className="absolute inset-x-0 top-full z-10 mt-1 space-y-2 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
+            className="absolute inset-x-0 top-full z-10 mt-1 flex items-center justify-between gap-2 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
           >
             <p>{retryError ?? 'データを取得できませんでした。'}</p>
             <Button
-              size="sm"
+              size="icon"
               variant="outline"
-              className="h-7 w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="size-7 shrink-0 text-slate-600"
               onClick={retryFetch}
               disabled={isRetrying}
+              aria-label="もう一度取得"
+              title="もう一度取得"
             >
-              {isRetrying ? 'やり直しています...' : 'もう一度取得'}
+              <RefreshCw className={isRetrying ? 'animate-spin' : undefined} />
             </Button>
           </div>
         )}
