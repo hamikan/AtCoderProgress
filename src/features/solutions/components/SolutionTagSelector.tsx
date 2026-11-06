@@ -60,12 +60,14 @@ export default function SolutionTagSelector({
   const addTag = (tagName: string) => {
     const normalizedTagName = normalizeTagName(tagName);
     if (!normalizedTagName) return;
-    if (selectedTagKeys.has(toTagKey(normalizedTagName))) {
+    const tagKey = toTagKey(normalizedTagName);
+    if (selectedTagKeys.has(tagKey)) {
       setTagSearch('');
       return;
     }
 
-    onSelectedTagsChange([...selectedTags, normalizedTagName]);
+    const existingTagName = allTagNames.find((name) => toTagKey(name) === tagKey);
+    onSelectedTagsChange([...selectedTags, existingTagName ?? normalizedTagName]);
     setTagSearch('');
   };
 

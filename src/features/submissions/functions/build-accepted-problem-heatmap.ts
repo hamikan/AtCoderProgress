@@ -1,5 +1,10 @@
-import { format, subDays } from 'date-fns';
-
+import {
+  formatTokyoDate,
+  formatTokyoDateParts,
+  getTokyoDateParts,
+  getTokyoDateStartEpochSecond,
+  shiftTokyoDateParts,
+} from '@/lib/date/tokyo-date';
 import type {
   AcceptedProblemHeatmapDay,
   AcceptedSubmissionRow,
@@ -8,7 +13,11 @@ import type {
 const HEATMAP_DAYS = 365;
 
 export function getAcceptedProblemHeatmapStartEpoch(now: Date): number {
-  return Math.floor(subDays(now, HEATMAP_DAYS).getTime() / 1000);
+  const startParts = shiftTokyoDateParts(
+    getTokyoDateParts(now),
+    -HEATMAP_DAYS
+  );
+  return getTokyoDateStartEpochSecond(startParts);
 }
 
 export function buildAcceptedProblemHeatmap(
@@ -18,19 +27,17 @@ export function buildAcceptedProblemHeatmap(
   const problemIdsByDate = new Map<string, Set<string>>();
 
   for (const submission of submissions) {
-    const date = format(
-      new Date(submission.epochSecond * 1000),
-      'yyyy-MM-dd'
-    );
+    const date = formatTokyoDate(new Date(submission.epochSecond * 1000));
     const problemIds = problemIdsByDate.get(date) ?? new Set<string>();
     problemIds.add(submission.problemId);
     problemIdsByDate.set(date, problemIds);
   }
 
+  const endParts = getTokyoDateParts(now);
+
   return Array.from({ length: HEATMAP_DAYS + 1 }, (_, index) => {
-    const date = format(
-      subDays(now, HEATMAP_DAYS - index),
-      'yyyy-MM-dd'
+    const date = formatTokyoDateParts(
+      shiftTokyoDateParts(endParts, -(HEATMAP_DAYS - index))
     );
     const count = problemIdsByDate.get(date)?.size ?? 0;
 
