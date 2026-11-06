@@ -62,13 +62,23 @@ export async function saveSolution(
 
       if (parsedInput.tagNames.length > 0) {
         const userTags = await Promise.all(
-          parsedInput.tagNames.map((name) =>
-            transaction.userTag.upsert({
-              where: { createdById_name: { createdById: user.id, name } },
-              create: { createdById: user.id, name },
-              update: {},
-            })
-          )
+          parsedInput.tagNames.map(async (name) => {
+            const existing = await transaction.userTag.findFirst({
+              where: {
+                createdById: user.id,
+                name: { equals: name, mode: 'insensitive' },
+              },
+              orderBy: { createdAt: 'asc' },
+            });
+            return (
+              existing ??
+              transaction.userTag.upsert({
+                where: { createdById_name: { createdById: user.id, name } },
+                create: { createdById: user.id, name },
+                update: {},
+              })
+            );
+          })
         );
 
         await transaction.solutionUserTag.createMany({

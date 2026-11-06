@@ -10,7 +10,6 @@ interface StatCardProps {
   value: string | number;
   change?: string | number;
   changeType?: ChangeType;
-  /** Label shown next to the change badge. Defaults to 前月比. */
   changeLabel?: string;
   /** Small supplemental line shown under the change row. */
   detail?: string;
@@ -24,7 +23,7 @@ export function StatCard({
   value,
   change,
   changeType,
-  changeLabel = '前月比',
+  changeLabel,
   detail,
   icon: Icon,
   iconClassName,
@@ -60,9 +59,7 @@ export function StatCard({
               {formattedChange}
             </Badge>
           )}
-          {(resolvedChangeType === 'increase' || resolvedChangeType === 'decrease') && (
-            <span className="text-slate-500">{changeLabel}</span>
-          )}
+          {changeLabel && <span className="text-slate-500">{changeLabel}</span>}
         </div>
         {detail && <div className="mt-1 text-xs text-slate-500">{detail}</div>}
       </CardContent>

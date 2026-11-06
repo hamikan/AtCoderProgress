@@ -23,4 +23,5 @@ export interface ContestPageResult extends ContestPageData {
 
 export interface ContestWorkspaceResult extends ContestPageResult {
   stats: ContestStats;
+  submissionsLastFetchedAt: Date | null;
 }
