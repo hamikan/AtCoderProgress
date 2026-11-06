@@ -3,12 +3,11 @@ import 'server-only';
 import { fetchJson } from '@/lib/atcoder/fetch-json';
 import { parseAtCoderId } from '@/lib/atcoder/user-id';
 import { SUBMISSIONS_ENDPOINT } from './endpoints';
+import { collectSubmissions } from './paginate-submissions';
 import { rawSubmissionsSchema } from './schemas';
-import type { RawSubmission, SubmissionResources } from './types';
+import type { SubmissionResources } from './types';
 
-const PAGE_SIZE = 500;
 const FETCH_DELAY_MS = 2_000;
-const MAX_PAGES = 200;
 
 export async function fetchSubmissions(
   atcoderId: string,
@@ -19,56 +18,21 @@ export async function fetchSubmissions(
     throw new Error('Invalid submission cursor');
   }
 
-  const submissions = await fetchSubmissionPages({
-    atcoderId: parsedAtCoderId,
-    cursor: fromSecond,
-    page: 1,
-    submissions: [],
-  });
-  return { submissions };
-}
-
-async function fetchSubmissionPages({
-  atcoderId,
-  cursor,
-  page,
-  submissions,
-}: {
-  atcoderId: string;
-  cursor: number;
-  page: number;
-  submissions: RawSubmission[];
-}): Promise<RawSubmission[]> {
-  if (page > MAX_PAGES) {
-    throw new Error('Submission pagination limit exceeded');
-  }
-
-  const params = new URLSearchParams({
-    from_second: String(cursor),
-    user: atcoderId,
-  });
-  const pageItems = await fetchJson(
-    `${SUBMISSIONS_ENDPOINT}?${params.toString()}`,
-    rawSubmissionsSchema
+  const submissions = await collectSubmissions(
+    (cursor) => {
+      const params = new URLSearchParams({
+        from_second: String(cursor),
+        user: parsedAtCoderId,
+      });
+      return fetchJson(
+        `${SUBMISSIONS_ENDPOINT}?${params.toString()}`,
+        rawSubmissionsSchema
+      );
+    },
+    fromSecond,
+    { waitBetweenPages: () => sleep(FETCH_DELAY_MS) }
   );
-  const nextSubmissions = [...submissions, ...pageItems];
-
-  if (pageItems.length < PAGE_SIZE) {
-    return nextSubmissions;
-  }
-
-  const lastSubmission = pageItems.at(-1);
-  if (!lastSubmission || lastSubmission.epoch_second < cursor) {
-    throw new Error('Invalid submission pagination response');
-  }
-
-  await sleep(FETCH_DELAY_MS);
-  return fetchSubmissionPages({
-    atcoderId,
-    cursor: lastSubmission.epoch_second + 1,
-    page: page + 1,
-    submissions: nextSubmissions,
-  });
+  return { submissions };
 }
 
 function sleep(ms: number): Promise<void> {
