@@ -64,9 +64,17 @@ function createTransaction(
       },
     },
     submission: {
+      async findMany(args: unknown) {
+        calls.push({ name: 'submission.findMany', args });
+        return [];
+      },
       async createMany(args: unknown) {
         calls.push({ name: 'submission.createMany', args });
         return { count: 1 };
+      },
+      async update(args: unknown) {
+        calls.push({ name: 'submission.update', args });
+        return {};
       },
     },
     userRatingHistory: {
@@ -107,6 +115,7 @@ test('stores fetched data under the new AtCoder ID and links it without deleting
       'user.findUnique',
       'atCoderAccount.upsert',
       'problem.findMany',
+      'submission.findMany',
       'submission.createMany',
       'userRatingHistory.createMany',
       'user.update',
@@ -123,16 +132,16 @@ test('stores fetched data under the new AtCoder ID and links it without deleting
     select: { name: true },
   });
   assert.equal(
-    (calls[3].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
-      .atcoderAccountId,
-    'tourist'
-  );
-  assert.equal(
     (calls[4].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
       .atcoderAccountId,
     'tourist'
   );
-  assert.deepEqual(calls[5].args, {
+  assert.equal(
+    (calls[5].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
+      .atcoderAccountId,
+    'tourist'
+  );
+  assert.deepEqual(calls[6].args, {
     data: { atcoderId: 'tourist', atcoderIdChangedAt: NOW },
     where: { id: 'app-user-id' },
   });

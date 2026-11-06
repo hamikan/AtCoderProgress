@@ -5,6 +5,7 @@ export type { HeatmapStats } from './output/heatmap-stats';
 export type { RecentSubmission } from './output/recent-submission';
 export type { SolvedProblemStatistics } from './output/solved-problem-statistics';
 export type {
+  PersistSubmissionsResult,
   SubmissionPersistenceRecord,
   AtCoderAccountUpsertTransaction,
   SubmissionSyncTransaction,
