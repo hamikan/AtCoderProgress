@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { formatTokyoDate } from '@/lib/date/tokyo-date';
 import {
   DIFFICULTY_UNKNOWN_BUCKET,
   RATING_BANDS,
@@ -221,7 +221,7 @@ function groupActivityDatesByBand(
 ) {
   const ratingActivities = ratingHistory.map((row) => ({
     bandKey: getRatingBand(row.oldRating).key,
-    date: format(row.endTime, 'yyyy-MM-dd'),
+    date: formatTokyoDate(row.endTime),
   }));
   const submissionActivities = submissions.map((submission) => ({
     bandKey: getRatingBand(resolveRatingAtEpoch(submission.epochSecond, ratingHistory)).key,

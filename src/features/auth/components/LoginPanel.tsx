@@ -5,9 +5,10 @@ import { FaGithub } from 'react-icons/fa';
 
 interface LoginPanelProps {
   callbackUrl: string;
+  errorMessage?: string | null;
 }
 
-export default function LoginPanel({ callbackUrl }: LoginPanelProps) {
+export default function LoginPanel({ callbackUrl, errorMessage }: LoginPanelProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm space-y-6 rounded-lg bg-white p-8 shadow-md">
@@ -15,6 +16,14 @@ export default function LoginPanel({ callbackUrl }: LoginPanelProps) {
           <h1 className="text-3xl font-bold text-gray-900">ログイン</h1>
           <p className="mt-2 text-gray-600">さあ、始めましょう</p>
         </div>
+        {errorMessage && (
+          <p
+            role="alert"
+            className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            {errorMessage}
+          </p>
+        )}
         <button
           type="button"
           onClick={() => signIn('github', { callbackUrl })}
