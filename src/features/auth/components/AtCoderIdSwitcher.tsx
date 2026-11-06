@@ -87,7 +87,7 @@ export default function AtCoderIdSwitcher({
         <button
           type="button"
           onClick={startEditing}
-          className="inline-flex h-9 w-48 items-center justify-between gap-2 rounded-md border border-slate-300 px-3 text-sm text-slate-900 hover:bg-slate-50 lg:w-80"
+          className="inline-flex h-9 w-48 items-center justify-between gap-2 rounded-md border border-slate-300 px-3 text-sm text-slate-900 hover:bg-slate-50 lg:w-70"
         >
           <span className="inline-flex items-center gap-2">
             {fetchStatus === 'fetching' && (
@@ -148,7 +148,7 @@ export default function AtCoderIdSwitcher({
         readOnly={isLoading}
         maxLength={16}
         placeholder="chokudai"
-        className="h-9 w-48 rounded-md border border-blue-600 px-3 pr-8 text-sm text-slate-900 outline-none lg:w-80"
+        className="h-9 w-48 rounded-md border border-blue-600 px-3 pr-8 text-sm text-slate-900 outline-none lg:w-70"
       />
       {isLoading && (
         <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
