@@ -1,27 +1,30 @@
 import 'server-only';
 
 import { prisma } from '@/lib/prisma';
-import { format } from 'date-fns';
 import type { RatingData } from '@/features/ratings/types';
 
-export async function getRatingHistory(userId?: string): Promise<RatingData[]> {
-    if (!userId) {
+export async function getRatingHistory(
+    atcoderAccountId?: string | null
+): Promise<RatingData[]> {
+    if (!atcoderAccountId) {
         return [];
     }
 
     const history = await prisma.userRatingHistory.findMany({
-        where: { userId },
+        where: { atcoderAccountId, isRated: true },
         orderBy: { endTime: 'asc' },
         select: {
             endTime: true,
             newRating: true,
             contestName: true,
+            performance: true,
         },
     });
 
     return history.map((h) => ({
-        date: format(h.endTime, 'yyyy-MM-dd'),
+        endedAt: h.endTime.getTime(),
         rating: h.newRating,
         contestName: h.contestName,
+        performance: h.performance,
     }));
 }

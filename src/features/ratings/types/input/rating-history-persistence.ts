@@ -1,5 +1,7 @@
+import type { AtCoderAccountUpsertTransaction } from '@/features/submissions/types';
+
 export interface RatingHistoryPersistenceRecord {
-  userId: string;
+  atcoderAccountId: string;
   isRated: boolean;
   place: number;
   oldRating: number;
@@ -22,11 +24,5 @@ export interface RatingHistoryWriterTransaction {
 }
 
 export interface RatingHistorySyncTransaction
-  extends RatingHistoryWriterTransaction {
-  user: {
-    findUnique(args: {
-      select: { atcoderId: true };
-      where: { id: string };
-    }): Promise<{ atcoderId: string | null } | null>;
-  };
-}
+  extends RatingHistoryWriterTransaction,
+    AtCoderAccountUpsertTransaction {}

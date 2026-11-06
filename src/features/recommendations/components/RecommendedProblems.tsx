@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { getDifficultyColor } from '@/lib/atcoder/difficulty';
-import { ExternalLink, Edit3, Target } from 'lucide-react';
+import { formatProblemDisplayName } from '@/lib/atcoder/problem-name';
+import { Edit3 } from 'lucide-react';
 import type { RecommendedProblem } from '@/features/recommendations/types';
 
 interface RecommendedProblemsProps {
@@ -43,7 +44,7 @@ export default function RecommendedProblems({ className, data }: RecommendedProb
             </span>
             <a href={url} target="_blank" rel="noreferrer">
               <h3 className="text-[15px] font-semibold text-[#111818] dark:text-white group-hover:text-primary transition-colors cursor-pointer line-clamp-1 break-all">
-                {problem.name}
+                {formatProblemDisplayName(problem.contestId, problem.id, problem.name)}
               </h3>
             </a>
           </div>
@@ -54,10 +55,7 @@ export default function RecommendedProblems({ className, data }: RecommendedProb
           </div>
         </div>
         <div className="flex flex-col gap-3 ml-4 text-slate-400 dark:text-slate-600 shrink-0">
-          <a href={url} target="_blank" rel="noreferrer" title="Open problem">
-            <ExternalLink className="w-[18px] h-[18px] hover:text-primary cursor-pointer transition-colors" />
-          </a>
-          <a href={`/problems/${problem.id}`} title="Write solution">
+          <a href={`/solutions/new?problemId=${problem.id}`} title="Write solution">
             <Edit3 className="w-[18px] h-[18px] hover:text-primary cursor-pointer transition-colors" />
           </a>
         </div>
@@ -72,10 +70,7 @@ export default function RecommendedProblems({ className, data }: RecommendedProb
     )}>
       {/* Header Section */}
       <div className="px-6 pt-6 pb-4 flex items-center justify-between border-b border-background-light dark:border-white/5 shrink-0">
-        <div className="flex items-center gap-2">
-          <Target className="text-emerald-500 w-6 h-6" />
-          <h2 className="text-lg font-bold text-[#111818] dark:text-white">次解くべき問題</h2>
-        </div>
+        <h2 className="text-lg font-bold text-[#111818] dark:text-white">次解くべき問題</h2>
       </div>
 
       {/* Content Area */}

@@ -1,9 +1,15 @@
+export interface PersistSubmissionsResult {
+  storedCount: number;
+  updatedCount: number;
+  droppedCount: number;
+}
+
 export interface SubmissionPersistenceRecord {
   id: number;
   epochSecond: number;
   problemId: string;
   contestId: string;
-  userId: string;
+  atcoderAccountId: string;
   language: string;
   point: number;
   length: number;
@@ -23,19 +29,38 @@ export interface SubmissionWriterTransaction {
       data: SubmissionPersistenceRecord[];
       skipDuplicates: true;
     }): Promise<unknown>;
+    findMany(args: {
+      select: { id: true; result: true; point: true; executionTime: true };
+      where: { id: { in: number[] } };
+    }): Promise<
+      Array<{
+        id: number;
+        result: string;
+        point: number;
+        executionTime: number | null;
+      }>
+    >;
+    update(args: {
+      data: { result: string; point: number; executionTime: number | null };
+      where: { id: number };
+    }): Promise<unknown>;
+  };
+}
+
+export interface AtCoderAccountUpsertTransaction {
+  atCoderAccount: {
+    upsert(args: {
+      create: {
+        id: string;
+        name: string;
+        submissionsLastFetchedAt?: Date | null;
+      };
+      update: { name?: string; submissionsLastFetchedAt?: Date };
+      where: { id: string };
+    }): Promise<unknown>;
   };
 }
 
 export interface SubmissionSyncTransaction
-  extends SubmissionWriterTransaction {
-  user: {
-    findUnique(args: {
-      select: { atcoderId: true };
-      where: { id: string };
-    }): Promise<{ atcoderId: string | null } | null>;
-    updateMany(args: {
-      data: { submissionsLastFetchedAt: Date };
-      where: { id: string; atcoderId: string };
-    }): Promise<{ count: number }>;
-  };
-}
+  extends SubmissionWriterTransaction,
+    AtCoderAccountUpsertTransaction {}

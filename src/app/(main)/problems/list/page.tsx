@@ -19,12 +19,12 @@ export default async function ProblemListPage({ searchParams }: ProblemListPageP
   const filters = normalizeProblemListSearchParams(params, userId);
 
   const [{ problems, totalProblems }, availableTags] = await Promise.all([
-    getProblemList(filters),
+    getProblemList(filters, user?.atcoderAccountId),
     getSelectableTags(userId),
   ]);
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50 h-full">
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50 h-full overflow-y-auto">
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="space-y-6">
           {!user && (

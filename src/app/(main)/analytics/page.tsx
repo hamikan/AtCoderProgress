@@ -2,10 +2,15 @@ import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getAccountJourneyAnalytics } from '@/features/ratings/api/get-account-journey-analytics';
 import AccountJourney from '@/features/ratings/components/AccountJourney';
+import { getAcceptedProblemHeatmap } from '@/features/submissions/api/get-accepted-problem-heatmap';
+import ActivityHeatmap from '@/features/submissions/components/ActivityHeatmap';
 
 export default async function AnalyticsPage() {
   const user = await getCurrentUser();
-  const analytics = await getAccountJourneyAnalytics(user?.id);
+  const [analytics, acceptedProblemHeatmap] = await Promise.all([
+    getAccountJourneyAnalytics(user?.atcoderAccountId),
+    getAcceptedProblemHeatmap(user?.atcoderAccountId),
+  ]);
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50">
@@ -21,6 +26,7 @@ export default async function AnalyticsPage() {
           </p>
         </div>
         <AccountJourney data={analytics} />
+        <ActivityHeatmap data={acceptedProblemHeatmap} />
       </div>
     </div>
   );

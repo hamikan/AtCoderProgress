@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function getContestStatistics(
   contestType: ContestKind = 'abc',
-  userId?: string
+  atcoderAccountId?: string | null
 ): Promise<ContestStats> {
   const problemRows = await prisma.contestProblem.findMany({
     where: { contestId: { startsWith: contestType } },
@@ -15,7 +15,7 @@ export async function getContestStatistics(
   });
   const problemIds = problemRows.map((row) => row.problemId);
 
-  if (!userId || problemIds.length === 0) {
+  if (!atcoderAccountId || problemIds.length === 0) {
     return buildContestStats({
       total: problemIds.length,
       acCount: 0,
@@ -25,12 +25,12 @@ export async function getContestStatistics(
 
   const [acRows, submittedRows] = await prisma.$transaction([
     prisma.submission.findMany({
-      where: { userId, problemId: { in: problemIds }, result: 'AC' },
+      where: { atcoderAccountId, problemId: { in: problemIds }, result: 'AC' },
       select: { problemId: true },
       distinct: ['problemId'],
     }),
     prisma.submission.findMany({
-      where: { userId, problemId: { in: problemIds } },
+      where: { atcoderAccountId, problemId: { in: problemIds } },
       select: { problemId: true },
       distinct: ['problemId'],
     }),

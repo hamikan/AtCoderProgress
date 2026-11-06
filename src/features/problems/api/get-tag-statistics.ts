@@ -15,6 +15,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function getTagStatistics(
   userId?: string,
+  atcoderAccountId?: string | null,
   difficultyRange?: ProblemDifficultyRange
 ): Promise<TagStat[]> {
   const problemWhere: Prisma.ProblemWhereInput | undefined = difficultyRange
@@ -45,19 +46,7 @@ export async function getTagStatistics(
           where: {
             problem: {
               ...problemWhere,
-              OR: [
-                { submissions: { some: { userId, result: 'AC' } } },
-                {
-                  solutions: {
-                    some: {
-                      userId,
-                      status: {
-                        in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'],
-                      },
-                    },
-                  },
-                },
-              ],
+              OR: buildSolvedConditions(userId, atcoderAccountId),
             },
           },
         })
@@ -94,19 +83,7 @@ export async function getTagStatistics(
             where: {
               id: { in: [...allProblemIds] },
               ...problemWhere,
-              OR: [
-                { submissions: { some: { userId, result: 'AC' } } },
-                {
-                  solutions: {
-                    some: {
-                      userId,
-                      status: {
-                        in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'],
-                      },
-                    },
-                  },
-                },
-              ],
+              OR: buildSolvedConditions(userId, atcoderAccountId),
             },
             select: { id: true },
           })
@@ -122,4 +99,25 @@ export async function getTagStatistics(
   return [...base.stats, ...unlinkedStats].toSorted(
     (left, right) => right.score - left.score
   );
+}
+
+function buildSolvedConditions(
+  userId: string | undefined,
+  atcoderAccountId: string | null | undefined
+): Prisma.ProblemWhereInput[] {
+  return [
+    ...(atcoderAccountId
+      ? [{ submissions: { some: { atcoderAccountId, result: 'AC' } } }]
+      : []),
+    {
+      solutions: {
+        some: {
+          userId,
+          status: {
+            in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'],
+          },
+        },
+      },
+    },
+  ];
 }

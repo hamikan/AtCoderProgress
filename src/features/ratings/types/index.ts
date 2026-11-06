@@ -1,4 +1,8 @@
-export type { RatingData, RatingSummary } from './output/rating';
+export type {
+  NextRatingBand,
+  RatingData,
+  RatingSummary,
+} from './output/rating';
 export type {
   CurriculumRow,
   FirstAcceptedProblem,

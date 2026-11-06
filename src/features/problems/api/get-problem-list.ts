@@ -13,7 +13,8 @@ import { prisma } from '@/lib/prisma';
 const TAG_THRESHOLD = 1;
 
 export async function getProblemList(
-  input: ProblemListFiltersInput
+  input: ProblemListFiltersInput,
+  atcoderAccountId?: string | null
 ): Promise<{ problems: ProblemListItem[]; totalProblems: number }> {
   const {
     search,
@@ -31,12 +32,15 @@ export async function getProblemList(
   const skip = (page - 1) * pageSize;
 
   const where: Prisma.ProblemWhereInput = {};
+  const andConditions: Prisma.ProblemWhereInput[] = [];
 
   if (search) {
-    where.OR = [
-      { id: { contains: search, mode: 'insensitive' } },
-      { name: { contains: search, mode: 'insensitive' } },
-    ];
+    andConditions.push({
+      OR: [
+        { id: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+      ],
+    });
   }
 
   if (difficultyMin !== undefined || difficultyMax !== undefined) {
@@ -57,48 +61,60 @@ export async function getProblemList(
   if (tags && tags.length > 0) {
     where.problemTags = {
       some: {
-        tagId: { in: tags },
+        tag: { name: { in: tags } },
         count: { gte: TAG_THRESHOLD }
       }
     };
   }
 
   if (status && status !== 'ALL' && userId) {
+    const acceptedSubmission: Prisma.ProblemWhereInput[] = atcoderAccountId
+      ? [{ submissions: { some: { atcoderAccountId, result: 'AC' } } }]
+      : [];
+    const anySubmission: Prisma.ProblemWhereInput[] = atcoderAccountId
+      ? [{ submissions: { some: { atcoderAccountId } } }]
+      : [];
     switch (status) {
       case 'AC':
-        where.OR = [
-          { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } },
-          { submissions: { some: { userId, result: 'AC' } } }
-        ];
+        andConditions.push({
+          OR: [
+            { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } },
+            ...acceptedSubmission
+          ]
+        });
         break;
       case 'TRYING':
-        where.AND = [
+        andConditions.push(
           {
             OR: [
               { solutions: { some: { userId, status: 'TRYING' } } },
-              { submissions: { some: { userId } } }
+              ...anySubmission
             ]
           },
-          { NOT: { submissions: { some: { userId, result: 'AC' } } } },
+          ...acceptedSubmission.map((condition) => ({ NOT: condition })),
           { NOT: { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } } }
-        ];
+        );
         break;
       case 'UNSOLVED':
-        where.AND = [
-          { NOT: { submissions: { some: { userId } } } },
+        andConditions.push(
+          ...anySubmission.map((condition) => ({ NOT: condition })),
           { NOT: { solutions: { some: { userId } } } }
-        ];
+        );
         break;
       default:
         where.solutions = { some: { userId, status } };
     }
   }
 
+  if (andConditions.length > 0) {
+    where.AND = andConditions;
+  }
+
   let prismaOrderBy: Prisma.ProblemFindManyArgs['orderBy'] = undefined;
   if (order && orderBy) {
     switch (orderBy) {
       case 'difficulty':
-        prismaOrderBy = { difficulty: order };
+        prismaOrderBy = { difficulty: { sort: order, nulls: 'last' } };
         break;
       case 'contestDate':
         prismaOrderBy = [
@@ -123,14 +139,14 @@ export async function getProblemList(
           select: { status: true }
         },
         submissions: {
-          where: { userId: userId ?? '', result: 'AC' },
+          where: { atcoderAccountId: atcoderAccountId ?? '', result: 'AC' },
           take: 1,
           select: { id: true }
         },
         _count: {
           select: {
             submissions: {
-              where: { userId: userId ?? '' }
+              where: { atcoderAccountId: atcoderAccountId ?? '' }
             }
           }
         }

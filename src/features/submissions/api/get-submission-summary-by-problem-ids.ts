@@ -5,14 +5,14 @@ import { prisma } from '@/lib/prisma';
 import type { SubmissionSummaryRow } from '@/features/submissions/types';
 
 async function getSubmissionsByProblemIds(
-  userId: string,
+  atcoderAccountId: string,
   problemIds: string[]
 ): Promise<SubmissionSummaryRow[]> {
   if (problemIds.length === 0) return [];
 
   return prisma.submission.findMany({
     where: {
-      userId,
+      atcoderAccountId,
       problemId: { in: problemIds },
     },
     select: {
@@ -23,7 +23,10 @@ async function getSubmissionsByProblemIds(
   });
 }
 
-export async function getSubmissionSummaryByProblemIds(userId: string, problemIds: string[]) {
-  const submissions = await getSubmissionsByProblemIds(userId, problemIds);
+export async function getSubmissionSummaryByProblemIds(
+  atcoderAccountId: string,
+  problemIds: string[]
+) {
+  const submissions = await getSubmissionsByProblemIds(atcoderAccountId, problemIds);
   return buildSubmissionSummary(submissions);
 }

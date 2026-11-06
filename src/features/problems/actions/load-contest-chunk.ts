@@ -28,6 +28,6 @@ export async function loadContestChunk(
 
   return getContestChunk(contestType, order, {
     cursor,
-    userId: user?.id,
+    atcoderAccountId: user?.atcoderAccountId,
   });
 }

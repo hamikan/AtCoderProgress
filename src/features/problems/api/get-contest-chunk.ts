@@ -21,8 +21,8 @@ export async function getContestChunk(
     pageSize: BACKGROUND_CONTEST_PAGE_SIZE,
   });
   const problemIds = getContestProblemIds(contestPage.contests);
-  const submissionSummary = options.userId
-    ? await getSubmissionSummaryByProblemIds(options.userId, problemIds)
+  const submissionSummary = options.atcoderAccountId
+    ? await getSubmissionSummaryByProblemIds(options.atcoderAccountId, problemIds)
     : { statusMap: {} };
 
   return {

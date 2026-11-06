@@ -48,24 +48,35 @@ model User {
   email                     String?     @unique
   emailVerified             DateTime?   @map("email_verified")
   image                     String?
-  atcoderId                 String?     @unique @map("atcoder_id")
+  atcoderId                 String?     @map("atcoder_id")
   atcoderIdChangedAt        DateTime?   @map("atcoder_id_changed_at")
-  submissionsLastFetchedAt  DateTime?   @map("submissions_last_fetched_at")
 
   accounts                  Account[]
   sessions                  Session[]
-  submissions               Submission[]
   solutions                 Solution[]
   userTags                  UserTag[]
-  ratingHistory             UserRatingHistory[]
   problemReviews            ProblemReview[]
 
   @@map("users")
 }
 
+// 提出とレート履歴は、同じ AtCoder ID を何人が連携しても1回分だけ持つ
+model AtCoderAccount {
+  // AtCoder ID は大文字小文字を区別しないので、小文字にそろえて持つ
+  id                        String      @id
+  name                      String
+  submissionsLastFetchedAt  DateTime?   @map("submissions_last_fetched_at")
+  createdAt                 DateTime    @default(now()) @map("created_at")
+
+  submissions               Submission[]
+  ratingHistory             UserRatingHistory[]
+
+  @@map("atcoder_accounts")
+}
+
 model UserRatingHistory {
   id                String   @id @default(cuid())
-  userId            String   @map("user_id")
+  atcoderAccountId  String   @map("atcoder_account_id")
   isRated           Boolean  @map("is_rated")
   place             Int
   oldRating         Int      @map("old_rating")
@@ -77,10 +88,9 @@ model UserRatingHistory {
   contestNameEn     String   @map("contest_name_en")
   endTime           DateTime @map("end_time")
 
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  atcoderAccount    AtCoderAccount @relation(fields: [atcoderAccountId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@unique([userId, contestScreenName])
+  @@unique([atcoderAccountId, contestScreenName])
   @@map("user_rating_history")
 }
 
@@ -98,16 +108,17 @@ model Submission {
   epochSecond    Int      @map("epoch_second")
   problemId      String   @map("problem_id")
   contestId      String   @map("contest_id")
-  userId         String   @map("user_id")
+  atcoderAccountId String @map("atcoder_account_id")
   language       String
   point          Float
   length         Int
   result         String
   executionTime  Int?     @map("execution_time")
 
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  atcoderAccount AtCoderAccount @relation(fields: [atcoderAccountId], references: [id], onDelete: Cascade)
   problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Restrict)
 
+  @@index([atcoderAccountId, epochSecond])
   @@map("submissions")
 }
 
