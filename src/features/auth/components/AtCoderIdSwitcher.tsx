@@ -105,7 +105,9 @@ export default function AtCoderIdSwitcher({
             role="status"
             className="absolute right-0 top-full z-10 mt-1 w-64 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600"
           >
-            AtCoderからデータを取得しています。提出の多いIDだと数十秒〜数分かかります。
+            データを取得しています。
+            <br />
+            提出の多いIDだと数十秒〜数分かかります。
           </p>
         )}
         {fetchStatus === 'failed' && (
@@ -113,7 +115,7 @@ export default function AtCoderIdSwitcher({
             role="alert"
             className="absolute right-0 top-full z-10 mt-1 w-64 space-y-2 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
           >
-            <p>{retryError ?? 'AtCoderからデータを取得できませんでした。'}</p>
+            <p>{retryError ?? 'データを取得できませんでした。'}</p>
             <Button
               size="sm"
               variant="brand"
