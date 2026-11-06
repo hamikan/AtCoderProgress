@@ -285,10 +285,11 @@ function SolutionEditorContent({
     saveInFlightRef.current = true;
     try {
       while (pendingSaveRef.current) {
-        const input = pendingSaveRef.current;
+        const input = {
+          ...pendingSaveRef.current,
+          solutionId: savedSolutionIdRef.current,
+        };
         pendingSaveRef.current = null;
-        // 後ろに並んだ保存が初回保存で作られた記録を更新できるよう、ID は送信時に読む
-        input.solutionId = savedSolutionIdRef.current;
         setSaveState('saving');
         try {
           const result = await saveSolution(input);
