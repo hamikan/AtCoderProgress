@@ -27,6 +27,7 @@ import type {
   SelectableTag,
 } from '@/features/problems/types';
 import type {
+  SaveSolutionInput,
   SolutionDraftState,
   SolutionRecordListItem,
   SolutionSaveState,
@@ -108,6 +109,12 @@ function SolutionEditorContent({
   );
   const isFirstRender = useRef(true);
   const isNavigatingRef = useRef(false);
+  // 最初の保存で作られた記録の ID を次の保存に使い、記録が二重にできないよう、保存は1つずつ送る
+  const savedSolutionIdRef = useRef<string | null>(
+    initialSolution?.id ?? null
+  );
+  const saveInFlightRef = useRef(false);
+  const pendingSaveRef = useRef<SaveSolutionInput | null>(null);
   const savedScopeRef = useRef<{
     problemId: string;
     contestId: string;
@@ -132,6 +139,7 @@ function SolutionEditorContent({
 
   useEffect(() => {
     isNavigatingRef.current = false;
+    savedSolutionIdRef.current = initialSolution?.id ?? null;
     savedScopeRef.current = initialSolution
       ? {
           problemId: initialSolution.problemId,
@@ -210,57 +218,68 @@ function SolutionEditorContent({
     ) {
       return;
     }
-    const problemId = problem.id;
-    const targetContestId = debouncedContestId;
+    pendingSaveRef.current = {
+      problemId: problem.id,
+      contestId: debouncedContestId,
+      title: debouncedTitle || null,
+      content: debouncedContent,
+      status: debouncedStatus,
+      tagNames: JSON.parse(debouncedTagsKey) as string[],
+    };
 
-    async function performSave() {
-      setSaveState('saving');
+    async function drainSaveQueue() {
+      if (saveInFlightRef.current) return;
+      saveInFlightRef.current = true;
       try {
-        const result = await saveSolution({
-          solutionId: savedSolutionId,
-          problemId,
-          contestId: targetContestId,
-          title: debouncedTitle || null,
-          content: debouncedContent,
-          status: debouncedStatus,
-          tagNames: JSON.parse(debouncedTagsKey) as string[],
-        });
-        if (!result.ok) {
-          setSaveState('error');
-          return;
+        while (pendingSaveRef.current) {
+          const input = {
+            ...pendingSaveRef.current,
+            solutionId: savedSolutionIdRef.current,
+          };
+          pendingSaveRef.current = null;
+          setSaveState('saving');
+          try {
+            const result = await saveSolution(input);
+            if (!result.ok) {
+              setSaveState('error');
+              return;
+            }
+
+            const savedId = result.value.solutionId;
+            const isFirstSave = savedSolutionIdRef.current === null;
+            savedSolutionIdRef.current = savedId;
+            setSavedSolutionId(savedId);
+            setSaveState('saved');
+
+            const previousScope = savedScopeRef.current;
+            const nextScope = {
+              problemId: input.problemId,
+              contestId: input.contestId,
+            };
+            const didMoveScope = Boolean(
+              previousScope &&
+                (previousScope.problemId !== nextScope.problemId ||
+                  previousScope.contestId !== nextScope.contestId)
+            );
+            savedScopeRef.current = nextScope;
+
+            if (isFirstSave && !isNavigatingRef.current) {
+              // ページを移るとエディタが作り直されて保存中に打った文字が消えるため、URL だけを書き換える
+              window.history.replaceState(null, '', `/solutions/${savedId}`);
+            } else if (didMoveScope && !isNavigatingRef.current) {
+              router.refresh();
+            }
+          } catch {
+            setSaveState('error');
+            return;
+          }
         }
-
-        const savedId = result.value.solutionId;
-        const previousScope = savedScopeRef.current;
-        const nextScope = {
-          problemId,
-          contestId: targetContestId,
-        };
-        const didMoveScope = Boolean(
-          previousScope &&
-            (previousScope.problemId !== nextScope.problemId ||
-              previousScope.contestId !== nextScope.contestId)
-        );
-
-        setSavedSolutionId(savedId);
-        setSaveState('saved');
-        savedScopeRef.current = nextScope;
-
-        if (
-          (!savedSolutionId || savedId !== savedSolutionId) &&
-          !isNavigatingRef.current
-        ) {
-          // ページを移るとエディタが作り直されて保存中に打った文字が消えるため、URL だけを書き換える
-          window.history.replaceState(null, '', `/solutions/${savedId}`);
-        } else if (didMoveScope && !isNavigatingRef.current) {
-          router.refresh();
-        }
-      } catch {
-        setSaveState('error');
+      } finally {
+        saveInFlightRef.current = false;
       }
     }
 
-    void performSave();
+    void drainSaveQueue();
   }, [
     debouncedContent,
     debouncedContestId,
@@ -271,7 +290,6 @@ function SolutionEditorContent({
     isDebouncedContestValid,
     problem?.id,
     router,
-    savedSolutionId,
     shouldSaveInitialDraft,
   ]);
 
