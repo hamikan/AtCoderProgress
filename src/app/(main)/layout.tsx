@@ -1,5 +1,7 @@
 import Header from "@/components/layout/Header";
+import LoginLink from '@/components/layout/LoginLink';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import UserMenu from '@/features/auth/components/UserMenu';
 
 export default async function MainLayout({
   children,
@@ -10,7 +12,7 @@ export default async function MainLayout({
 
   return (
     <div className="flex flex-col h-svh overflow-hidden">
-      <Header user={user} />
+      <Header account={user ? <UserMenu user={user} /> : <LoginLink />} />
       <main className="min-h-0 flex-1 overflow-clip contain-layout">
         {children}
       </main>
