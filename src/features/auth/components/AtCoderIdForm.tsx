@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { linkAtCoderId } from '@/features/auth/actions/link-atcoder-id';
 import { validateAtCoderId } from '@/features/auth/schemas/atcoder-id';
 
@@ -61,36 +64,27 @@ export default function AtCoderIdForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      <div>
-        <label htmlFor="atcoderId" className="block text-sm font-medium text-gray-700">
-          AtCoder ID
-        </label>
-        <div className="mt-1">
-          <input
-            id="atcoderId"
-            name="atcoderId"
-            type="text"
-            value={atcoderId}
-            onChange={(event) => setAtCoderId(event.target.value)}
-            maxLength={16}
-            minLength={3}
-            pattern="[A-Za-z0-9_]{3,16}"
-            required
-            className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
-            placeholder="chokudai"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="atcoderId">AtCoder ID</Label>
+        <Input
+          id="atcoderId"
+          name="atcoderId"
+          type="text"
+          value={atcoderId}
+          onChange={(event) => setAtCoderId(event.target.value)}
+          maxLength={16}
+          minLength={3}
+          pattern="[A-Za-z0-9_]{3,16}"
+          required
+          placeholder="chokudai"
+        />
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={isLoading || !canSubmit}
-        className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
-      >
+      <Button type="submit" disabled={isLoading || !canSubmit} className="w-full">
         {isLoading ? '設定中...' : canSubmit ? submitLabel : 'ログイン後に設定できます'}
-      </button>
+      </Button>
 
       {showSlowNote && (
         <p role="status" className="text-sm text-gray-600">
