@@ -1,43 +1,28 @@
 import 'server-only';
 
-import { decideAtCoderIdChange } from '@/features/auth/functions/atcoder-id-change-policy';
-import type {
-  ApplyAtCoderIdChangeResult,
-  AtCoderProfileData,
-} from '@/features/auth/types';
-import { persistRatingHistoryInTransaction } from '@/features/ratings/sync/persist-rating-history';
-import type { RatingHistoryWriterTransaction } from '@/features/ratings/types';
 import {
-  getCanonicalAtCoderName,
-  persistSubmissionsInTransaction,
-} from '@/features/submissions/sync/persist-submissions';
-import type { SubmissionWriterTransaction } from '@/features/submissions/types';
+  decideAtCoderIdChange,
+  getAtCoderIdFetchIntervalStart,
+} from '@/features/auth/functions/atcoder-id-change-policy';
+import type { ApplyAtCoderIdChangeResult } from '@/features/auth/types';
 import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
 
 interface UserAtCoderIdReader {
   user: {
     findUnique(args: {
-      select: {
-        atcoderId: true;
-        atcoderIdChangedAt: true;
-      };
+      select: { atcoderId: true };
       where: { id: string };
-    }): Promise<{
-      atcoderId: string | null;
-      atcoderIdChangedAt: Date | null;
-    } | null>;
+    }): Promise<{ atcoderId: string | null } | null>;
   };
-  submission: {
-    count(args: { where: { atcoderAccountId: string } }): Promise<number>;
-  };
-  userRatingHistory: {
-    count(args: { where: { atcoderAccountId: string } }): Promise<number>;
+  atCoderIdFetch: {
+    findMany(args: {
+      select: { createdAt: true };
+      where: { userId: string; createdAt: { gt: Date } };
+    }): Promise<Array<{ createdAt: Date }>>;
   };
 }
 
-type UserAtCoderIdTransaction = UserAtCoderIdReader &
-  SubmissionWriterTransaction &
-  RatingHistoryWriterTransaction & {
+type UserAtCoderIdTransaction = UserAtCoderIdReader & {
   user: {
     update(args: {
       data: {
@@ -49,15 +34,16 @@ type UserAtCoderIdTransaction = UserAtCoderIdReader &
   };
   atCoderAccount: {
     upsert(args: {
-      create: {
-        id: string;
-        name: string;
-        submissionsLastFetchedAt: Date | null;
-      };
+      create: { id: string; name: string; fetchStartedAt: Date | null };
       select: { name: true };
-      update: { name?: string; submissionsLastFetchedAt?: Date };
+      update: { fetchStartedAt?: Date; fetchFailedAt?: null };
       where: { id: string };
     }): Promise<{ name: string }>;
+  };
+  atCoderIdFetch: {
+    create(args: {
+      data: { userId: string; atcoderAccountId: string };
+    }): Promise<unknown>;
   };
 };
 
@@ -65,62 +51,56 @@ async function readAtCoderIdChange(
   reader: UserAtCoderIdReader,
   userId: string,
   nextAtCoderId: string,
+  needsFetch: boolean,
   now: Date
 ) {
-  const user = await reader.user.findUnique({
-    where: { id: userId },
-    select: {
-      atcoderId: true,
-      atcoderIdChangedAt: true,
-    },
-  });
+  const [user, recentFetches] = await Promise.all([
+    reader.user.findUnique({
+      where: { id: userId },
+      select: { atcoderId: true },
+    }),
+    reader.atCoderIdFetch.findMany({
+      where: { userId, createdAt: { gt: getAtCoderIdFetchIntervalStart(now) } },
+      select: { createdAt: true },
+    }),
+  ]);
 
   if (!user) {
     throw new Error('User not found');
   }
 
-  const decision = decideAtCoderIdChange(
-    user.atcoderId,
-    user.atcoderIdChangedAt,
+  return decideAtCoderIdChange({
+    currentAtCoderId: user.atcoderId,
     nextAtCoderId,
-    now
-  );
-  if (decision.status !== 'blocked' || !user.atcoderId) {
-    return decision;
-  }
-
-  // 提出もレート履歴も1件もない ID（打ち間違いなど）で、7日間変えられなくなるのを防ぐ
-  const atcoderAccountId = toAtCoderAccountId(user.atcoderId);
-  const [submissionCount, ratingHistoryCount] = await Promise.all([
-    reader.submission.count({ where: { atcoderAccountId } }),
-    reader.userRatingHistory.count({ where: { atcoderAccountId } }),
-  ]);
-  return submissionCount + ratingHistoryCount === 0
-    ? { status: 'allowed' as const }
-    : decision;
+    needsFetch,
+    recentFetchTimes: recentFetches.map((fetch) => fetch.createdAt),
+    now,
+  });
 }
 
 export async function getAtCoderIdChangeDecision(
   reader: UserAtCoderIdReader,
   userId: string,
   nextAtCoderId: string,
+  needsFetch: boolean,
   now: Date
 ) {
-  return readAtCoderIdChange(reader, userId, nextAtCoderId, now);
+  return readAtCoderIdChange(reader, userId, nextAtCoderId, needsFetch, now);
 }
 
-// profileData が null のときは、その ID のデータがすでにあるので取り直さずに連携だけを切り替える
+// 全件の取得はここではしない。startFetch のときは取得中の印を付けて記録し、取得は呼び出し側が裏で始める
 export async function applyAtCoderIdChange(
   transaction: UserAtCoderIdTransaction,
   userId: string,
   nextAtCoderId: string,
   now: Date,
-  profileData: AtCoderProfileData | null
+  startFetch: boolean
 ): Promise<ApplyAtCoderIdChangeResult> {
   const decision = await readAtCoderIdChange(
     transaction,
     userId,
     nextAtCoderId,
+    startFetch,
     now
   );
   if (decision.status !== 'allowed') {
@@ -128,34 +108,21 @@ export async function applyAtCoderIdChange(
   }
 
   const atcoderAccountId = toAtCoderAccountId(nextAtCoderId);
-  const canonicalName = profileData
-    ? getCanonicalAtCoderName(profileData.submissionData)
-    : null;
   const account = await transaction.atCoderAccount.upsert({
     where: { id: atcoderAccountId },
     create: {
       id: atcoderAccountId,
-      name: canonicalName ?? nextAtCoderId,
-      submissionsLastFetchedAt: profileData ? now : null,
+      name: nextAtCoderId,
+      fetchStartedAt: startFetch ? now : null,
     },
-    update: {
-      ...(canonicalName ? { name: canonicalName } : {}),
-      ...(profileData ? { submissionsLastFetchedAt: now } : {}),
-    },
+    update: startFetch ? { fetchStartedAt: now, fetchFailedAt: null } : {},
     select: { name: true },
   });
 
-  if (profileData) {
-    await persistSubmissionsInTransaction(
-      transaction,
-      atcoderAccountId,
-      profileData.submissionData
-    );
-    await persistRatingHistoryInTransaction(
-      transaction,
-      atcoderAccountId,
-      profileData.ratingHistory
-    );
+  if (startFetch) {
+    await transaction.atCoderIdFetch.create({
+      data: { userId, atcoderAccountId },
+    });
   }
 
   await transaction.user.update({

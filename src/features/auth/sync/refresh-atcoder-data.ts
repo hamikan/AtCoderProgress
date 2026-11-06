@@ -5,6 +5,7 @@ import {
   getSubmissionRefreshCursor,
   shouldRefreshAtCoderData,
 } from '@/features/auth/functions/atcoder-data-refresh-policy';
+import { getAtCoderFetchStatus } from '@/features/auth/functions/atcoder-fetch-status';
 import { syncRatingHistory } from '@/features/ratings/sync/sync-rating-history';
 import { syncSubmissions } from '@/features/submissions/sync/sync-submissions';
 import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
@@ -22,10 +23,17 @@ export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void
   try {
     const account = await prisma.atCoderAccount.findUnique({
       where: { id: atcoderAccountId },
-      select: { submissionsLastFetchedAt: true },
+      select: {
+        submissionsLastFetchedAt: true,
+        fetchStartedAt: true,
+        fetchFailedAt: true,
+      },
     });
+    const now = new Date();
+    // 全件の取得がまだ終わっていない ID は、裏の取得（とやり直し）に任せて、ここでは取らない
     if (
-      !shouldRefreshAtCoderData(account?.submissionsLastFetchedAt ?? null, new Date())
+      getAtCoderFetchStatus(account, now) !== 'ready' ||
+      !shouldRefreshAtCoderData(account?.submissionsLastFetchedAt ?? null, now)
     ) {
       return;
     }
