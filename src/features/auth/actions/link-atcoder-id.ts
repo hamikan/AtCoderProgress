@@ -157,5 +157,5 @@ function formatChangeBlockedMessage(availableAt: Date): string {
     timeStyle: 'short',
     timeZone: 'Asia/Tokyo',
   }).format(availableAt);
-  return `${formatted}以降にもう一度お試しください。`;
+  return `${formatted}以降に\nもう一度お試しください。`;
 }

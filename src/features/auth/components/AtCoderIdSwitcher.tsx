@@ -156,7 +156,7 @@ export default function AtCoderIdSwitcher({
       {error && (
         <p
           role="alert"
-          className="absolute inset-x-0 top-full z-10 mt-1 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
+          className="absolute inset-x-0 top-full z-10 mt-1 whitespace-pre-line rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
         >
           {error}
         </p>
