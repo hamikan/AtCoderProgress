@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import type { AtCoderFetchStatus } from '@/features/auth/types';
+import { getMyAtCoderFetchStatus } from '@/features/auth/actions/get-my-atcoder-fetch-status';
 import { retryAtCoderFetch } from '@/features/auth/actions/retry-atcoder-fetch';
 import { useLinkAtCoderId } from '@/features/auth/hooks/use-link-atcoder-id';
 
@@ -29,13 +30,23 @@ export default function AtCoderIdSwitcher({
   const router = useRouter();
   const { update } = useSession();
 
-  // 裏で全件を取っている間は、終わったら表示されるように画面を読み直し続ける
+  // 取得中は状態だけを確かめ、終わったときに一度だけ画面を読み直す。毎回読み直すと、おすすめの問題などが入れ替わってしまう
   useEffect(() => {
     if (fetchStatus !== 'fetching') {
       return;
     }
-    const timer = setInterval(() => router.refresh(), FETCH_STATUS_POLL_MS);
-    return () => clearInterval(timer);
+    let cancelled = false;
+    const timer = setInterval(async () => {
+      const latestStatus = await getMyAtCoderFetchStatus();
+      if (!cancelled && latestStatus !== 'fetching') {
+        clearInterval(timer);
+        router.refresh();
+      }
+    }, FETCH_STATUS_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, [fetchStatus, router]);
 
   function startEditing() {
