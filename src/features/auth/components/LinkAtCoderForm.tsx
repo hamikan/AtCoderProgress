@@ -56,7 +56,6 @@ export default function LinkAtCoderForm({ canSubmit }: LinkAtCoderFormProps) {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">メインAtCoder IDを設定</h1>
           <p className="mt-2 text-gray-600">あなたの分析に使うAtCoder IDを入力してください。</p>
-          <p className="mt-2 text-sm text-gray-500">設定後7日間は別のIDへ変更できません。</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div>
