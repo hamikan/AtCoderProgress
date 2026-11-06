@@ -5,11 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { linkAtCoderId } from '@/features/auth/actions/link-atcoder-id';
-import { validateAtCoderId } from '@/features/auth/schemas/atcoder-id';
-
-// すでにデータがある ID はすぐ終わるので、しばらく待っても終わらないときだけ案内を出す
-const SLOW_LINK_NOTE_DELAY_MS = 1500;
+import { useLinkAtCoderId } from '@/features/auth/hooks/use-link-atcoder-id';
 
 interface AtCoderIdFormProps {
   canSubmit: boolean;
@@ -23,9 +19,7 @@ export default function AtCoderIdForm({
   onLinked,
 }: AtCoderIdFormProps) {
   const [atcoderId, setAtCoderId] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSlowNote, setShowSlowNote] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { error, isLoading, link, setError, showSlowNote } = useLinkAtCoderId();
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -33,32 +27,8 @@ export default function AtCoderIdForm({
       setError('保存するにはログインが必要です。');
       return;
     }
-
-    const validation = validateAtCoderId(atcoderId);
-    if (!validation.ok) {
-      setError(validation.error);
-      return;
-    }
-
-    setError(null);
-    setIsLoading(true);
-    const slowNoteTimer = setTimeout(
-      () => setShowSlowNote(true),
-      SLOW_LINK_NOTE_DELAY_MS
-    );
-    try {
-      const result = await linkAtCoderId(validation.value);
-      if (!result.ok) {
-        setError(result.error.message);
-        return;
-      }
+    if (await link(atcoderId)) {
       await onLinked();
-    } catch {
-      setError('連携に失敗しました。もう一度お試しください。');
-    } finally {
-      clearTimeout(slowNoteTimer);
-      setShowSlowNote(false);
-      setIsLoading(false);
     }
   }
 

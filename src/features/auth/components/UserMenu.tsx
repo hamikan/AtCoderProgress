@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -12,8 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import LinkAtCoderDialog from '@/features/auth/components/LinkAtCoderDialog';
-import { Settings, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
 interface UserMenuProps {
@@ -25,12 +22,8 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ user }: UserMenuProps) {
-  const [atcoderIdDialogOpen, setAtCoderIdDialogOpen] = useState(false);
-
   return (
-    <>
-    {/* メニューから小窓を開くので、閉じたあとに画面の操作が止まらないよう modal にしない */}
-    <DropdownMenu modal={false}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
@@ -49,20 +42,10 @@ export default function UserMenu({ user }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => setAtCoderIdDialogOpen(true)}>
-          <Settings className="mr-2 h-4 w-4" /><span>AtCoder ID設定</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
           <LogOut className="mr-2 h-4 w-4" /><span>ログアウト</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-    <LinkAtCoderDialog
-      open={atcoderIdDialogOpen}
-      onOpenChange={setAtCoderIdDialogOpen}
-      currentAtCoderId={user.atcoderId}
-    />
-    </>
   );
 }
