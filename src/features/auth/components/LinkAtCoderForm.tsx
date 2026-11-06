@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import { linkAtCoderId } from '@/features/auth/actions/link-atcoder-id';
-import { ATCODER_ID_FETCH_LIMIT } from '@/features/auth/functions/atcoder-id-change-policy';
 import { validateAtCoderId } from '@/features/auth/schemas/atcoder-id';
 
 interface LinkAtCoderFormProps {
@@ -57,9 +56,6 @@ export default function LinkAtCoderForm({ canSubmit }: LinkAtCoderFormProps) {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">メインAtCoder IDを設定</h1>
           <p className="mt-2 text-gray-600">あなたの分析に使うAtCoder IDを入力してください。</p>
-          <p className="mt-2 text-sm text-gray-500">
-            一度でも連携されたことのあるIDには、いつでも切り替えられます。まだ誰も連携していないIDのデータを取れるのは、24時間に{ATCODER_ID_FETCH_LIMIT}回までです。
-          </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div>
