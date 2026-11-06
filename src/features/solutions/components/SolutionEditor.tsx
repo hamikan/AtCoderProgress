@@ -113,9 +113,7 @@ function SolutionEditorContent({
   const savedSolutionIdRef = useRef<string | null>(
     initialSolution?.id ?? null
   );
-  // Set false on unmount: a save that finishes after the user moved
-  // to another screen must not touch that screen's URL or refresh it
-  // (issue #128).
+  // 保存が終わる前に別の画面へ移ったとき、移った先の URL を書き換えたり読み直したりしないため
   const isMountedRef = useRef(true);
   const saveInFlightRef = useRef(false);
   const pendingSaveRef = useRef<SaveSolutionInput | null>(null);
