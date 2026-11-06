@@ -1,25 +1,3 @@
-/**
- * 使われていない UploadThing 画像を掃除するスクリプト（issue #108）。
- *
- * 使い方:
- *   npm run images:cleanup                    # 候補を表示するだけ（dry-run）
- *   npm run images:cleanup -- --execute       # 候補を実際に消す
- *   npm run images:cleanup -- --days=30       # 「古さ」のしきい値を変える（既定: 7日）
- *
- * 安全策:
- * - 既定は dry-run で、--execute を明示したときだけ削除する。
- * - どの解法の本文にも出てこない画像だけを候補にする。
- * - アップロードから --days 日以上たった画像だけを候補にする
- *   （貼った直後でまだ保存されていない画像を守るため）。
- * - 実行前に接続先（DB と UploadThing のアプリID）を表示する。
- *
- * 実装メモ:
- * - 一覧取得は UTApi.listFiles ではなく、同じ REST API
- *   （POST https://uploadthing.com/api/listFiles）を直接呼ぶ。
- *   SDK 版は size と uploadedAt を返さないため、候補の表示と
- *   日数の判定ができない。応答に size / uploadedAt が無い場合は
- *   安全のためその場で中止する。削除は UTApi.deleteFiles で行う。
- */
 import 'dotenv/config';
 
 import { UTApi } from 'uploadthing/server';
@@ -81,11 +59,7 @@ interface UploadThingTokenInfo {
   appId?: string;
 }
 
-/**
- * UPLOADTHING_TOKEN は base64 の JSON（apiKey / appId を含む）。
- * v6 形式のシークレット（sk_...）がそのまま入っている場合はそれを使う。
- * 認証情報そのものは表示しない。
- */
+// UPLOADTHING_TOKEN は apiKey と appId を含む base64 の JSON。v6 の sk_ 形式ならそのまま API キーとして使う
 function parseUploadThingToken(
   token: string | undefined
 ): UploadThingTokenInfo {
@@ -113,6 +87,7 @@ interface RawFileEntry {
   status?: unknown;
 }
 
+// SDK の UTApi.listFiles は size と uploadedAt を返さないので、同じ REST API を直接呼ぶ
 async function listAllFiles(apiKey: string): Promise<UploadThingFileInfo[]> {
   const files: UploadThingFileInfo[] = [];
   let offset = 0;
