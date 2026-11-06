@@ -188,9 +188,7 @@ function SolutionEditorContent({
   const debouncedStatus = useDebounce(status, 300);
   const debouncedContestId = useDebounce(contestId, 300);
   const debouncedTagsKey = useDebounce(JSON.stringify(selectedTags), 300);
-  // Switching to another problem that shares the record's contest
-  // changes no editor state, so without this the move is never saved
-  // (issue #130).
+  // 同じコンテストの別の問題へ切り替えても入力は何も変わらず保存が走らないため、記録と範囲がずれていれば開いた直後に保存する
   const hasScopeMove = hasUnsavedScopeMove(
     initialSolution
       ? {

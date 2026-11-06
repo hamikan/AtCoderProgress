@@ -2,59 +2,55 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  ATCODER_ID_CHANGE_COOLDOWN_MS,
+  ATCODER_ID_FETCH_INTERVAL_MS,
   decideAtCoderIdChange,
 } from './atcoder-id-change-policy';
 
-const NOW = new Date('2026-07-14T00:00:00.000Z');
+const NOW = new Date('2026-11-07T00:00:00.000Z');
+
+function minutesAgo(minutes: number): Date {
+  return new Date(NOW.getTime() - minutes * 60 * 1000);
+}
+
+function decide(overrides: Partial<Parameters<typeof decideAtCoderIdChange>[0]>) {
+  return decideAtCoderIdChange({
+    currentAtCoderId: 'chokudai',
+    nextAtCoderId: 'tourist',
+    needsFetch: true,
+    recentFetchTimes: [],
+    now: NOW,
+    ...overrides,
+  });
+}
 
 test('first registration is allowed', () => {
-  assert.deepEqual(decideAtCoderIdChange(null, null, 'chokudai', NOW), {
-    status: 'allowed',
-  });
+  assert.deepEqual(decide({ currentAtCoderId: null }), { status: 'allowed' });
 });
 
-test('submitting the current AtCoder ID is a no-op', () => {
+test('submitting the current AtCoder ID is a no-op, ignoring case', () => {
+  assert.deepEqual(decide({ nextAtCoderId: 'chokudai' }), { status: 'unchanged' });
+  assert.deepEqual(decide({ nextAtCoderId: 'Chokudai' }), { status: 'unchanged' });
+});
+
+test('switching to an AtCoder ID whose data is stored is never limited', () => {
   assert.deepEqual(
-    decideAtCoderIdChange('chokudai', NOW, 'chokudai', NOW),
-    { status: 'unchanged' }
+    decide({ needsFetch: false, recentFetchTimes: [minutesAgo(1)] }),
+    { status: 'allowed' }
   );
 });
 
-test('submitting the current AtCoder ID in another case is a no-op', () => {
+test('blocks a new-ID fetch until the interval since the latest one has passed', () => {
   assert.deepEqual(
-    decideAtCoderIdChange('Chokudai', NOW, 'chokudai', NOW),
-    { status: 'unchanged' }
-  );
-});
-
-test('changing an AtCoder ID is blocked for seven days', () => {
-  const changedAt = new Date(NOW.getTime() - ATCODER_ID_CHANGE_COOLDOWN_MS + 1);
-  const availableAt = new Date(
-    changedAt.getTime() + ATCODER_ID_CHANGE_COOLDOWN_MS
-  );
-
-  assert.deepEqual(
-    decideAtCoderIdChange('chokudai', changedAt, 'tourist', NOW),
+    decide({ recentFetchTimes: [minutesAgo(4), minutesAgo(1)] }),
     {
-      availableAt,
+      availableAt: new Date(minutesAgo(1).getTime() + ATCODER_ID_FETCH_INTERVAL_MS),
       status: 'blocked',
     }
   );
 });
 
-test('changing an AtCoder ID is allowed at the cooldown boundary', () => {
-  const changedAt = new Date(NOW.getTime() - ATCODER_ID_CHANGE_COOLDOWN_MS);
-
-  assert.deepEqual(
-    decideAtCoderIdChange('chokudai', changedAt, 'tourist', NOW),
-    { status: 'allowed' }
-  );
-});
-
-test('legacy users without a change timestamp can change once', () => {
-  assert.deepEqual(
-    decideAtCoderIdChange('chokudai', null, 'tourist', NOW),
-    { status: 'allowed' }
-  );
+test('allows a new-ID fetch once the interval has passed', () => {
+  assert.deepEqual(decide({ recentFetchTimes: [minutesAgo(5)] }), {
+    status: 'allowed',
+  });
 });
