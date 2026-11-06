@@ -7,7 +7,6 @@ import { Prisma } from '@/generated/prisma/client';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { parseAtCoderId } from '@/features/auth/schemas/atcoder-id';
 import { getAtCoderFetchStatus } from '@/features/auth/functions/atcoder-fetch-status';
-import { ATCODER_ID_FETCH_INTERVAL_MS } from '@/features/auth/functions/atcoder-id-change-policy';
 import {
   applyAtCoderIdChange,
   getAtCoderIdChangeDecision,
@@ -158,5 +157,5 @@ function formatChangeBlockedMessage(availableAt: Date): string {
     timeStyle: 'short',
     timeZone: 'Asia/Tokyo',
   }).format(availableAt);
-  return `まだ誰も連携していないAtCoder IDのデータを取ったあとは、次の新しいIDまで${ATCODER_ID_FETCH_INTERVAL_MS / 60_000}分あけてください。${formatted}以降にもう一度お試しください。`;
+  return `${formatted}以降にもう一度お試しください。`;
 }
