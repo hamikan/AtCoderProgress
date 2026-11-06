@@ -118,8 +118,8 @@ export default function AtCoderIdSwitcher({
             <p>{retryError ?? 'データを取得できませんでした。'}</p>
             <Button
               size="sm"
-              variant="brand"
-              className="h-7 w-full"
+              variant="outline"
+              className="h-7 w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
               onClick={retryFetch}
               disabled={isRetrying}
             >
