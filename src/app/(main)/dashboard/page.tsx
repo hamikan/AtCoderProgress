@@ -2,6 +2,7 @@ import { StatCard } from '@/components/ui/stat-card';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LinkAtCoderPrompt from '@/features/auth/components/LinkAtCoderPrompt';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
+import { refreshAtCoderDataIfStale } from '@/features/auth/sync/refresh-atcoder-data';
 import { getTagStatistics } from '@/features/problems/api/get-tag-statistics';
 import TagRadar from '@/features/problems/components/TagRadar';
 import { getRatingHistory } from '@/features/ratings/api/get-rating-history';
@@ -21,6 +22,9 @@ import { buildHeatmapStats } from '@/features/submissions/functions/build-heatma
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   const userId = user?.id;
+  if (userId) {
+    await refreshAtCoderDataIfStale(userId);
+  }
   const [
     solvedProblemStats,
     ratingSummary,
