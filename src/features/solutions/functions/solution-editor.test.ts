@@ -5,6 +5,7 @@ import {
   formatSolutionRecordLabel,
   getDefaultContestId,
   getSolutionEditorKey,
+  hasUnsavedScopeMove,
 } from './solution-editor';
 import type { ProblemDetail } from '@/features/problems/types';
 
@@ -38,6 +39,21 @@ test('formatSolutionRecordLabel falls back to a numbered label', () => {
     }, 1),
     '記録 2'
   );
+});
+
+test('hasUnsavedScopeMove detects a problem or contest change', () => {
+  const saved = { problemId: 'abc001_a', contestId: 'abc001' };
+  assert.equal(hasUnsavedScopeMove(saved, { ...saved }), false);
+  assert.equal(
+    hasUnsavedScopeMove(saved, { problemId: 'abc001_b', contestId: 'abc001' }),
+    true
+  );
+  assert.equal(
+    hasUnsavedScopeMove(saved, { problemId: 'abc001_a', contestId: 'arc001' }),
+    true
+  );
+  assert.equal(hasUnsavedScopeMove(null, { ...saved }), false);
+  assert.equal(hasUnsavedScopeMove(saved, null), false);
 });
 
 test('getSolutionEditorKey identifies the editable record scope', () => {
