@@ -1,3 +1,9 @@
+export interface PersistSubmissionsResult {
+  storedCount: number;
+  updatedCount: number;
+  droppedCount: number;
+}
+
 export interface SubmissionPersistenceRecord {
   id: number;
   epochSecond: number;
@@ -22,6 +28,21 @@ export interface SubmissionWriterTransaction {
     createMany(args: {
       data: SubmissionPersistenceRecord[];
       skipDuplicates: true;
+    }): Promise<unknown>;
+    findMany(args: {
+      select: { id: true; result: true; point: true; executionTime: true };
+      where: { id: { in: number[] } };
+    }): Promise<
+      Array<{
+        id: number;
+        result: string;
+        point: number;
+        executionTime: number | null;
+      }>
+    >;
+    update(args: {
+      data: { result: string; point: number; executionTime: number | null };
+      where: { id: number };
     }): Promise<unknown>;
   };
 }
