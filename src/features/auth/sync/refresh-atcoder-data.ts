@@ -8,15 +8,9 @@ import {
 import { syncRatingHistory } from '@/features/ratings/sync/sync-rating-history';
 import { syncSubmissions } from '@/features/submissions/sync/sync-submissions';
 
+// 同じプロセスの中での重複だけを防ぐ（別のサーバーインスタンスでは同時に走りうる）
 const refreshInFlight = new Set<string>();
 
-/**
- * Refreshes a linked user's submissions and rating history when the
- * last fetch is stale (issue #109). Called from the dashboard load;
- * failures are logged and swallowed so the page still renders with
- * the data already stored. While a refresh for the user is running in
- * this process, further calls are skipped.
- */
 export async function refreshAtCoderDataIfStale(userId: string): Promise<void> {
   if (refreshInFlight.has(userId)) {
     return;

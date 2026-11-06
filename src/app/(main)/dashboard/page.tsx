@@ -23,8 +23,6 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   const userId = user?.id;
   if (userId) {
-    // Submissions and rating history are refreshed periodically here;
-    // they used to be fetched only when the AtCoder ID was linked.
     await refreshAtCoderDataIfStale(userId);
   }
   const [
