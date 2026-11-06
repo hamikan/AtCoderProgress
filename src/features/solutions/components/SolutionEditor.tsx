@@ -109,10 +109,7 @@ function SolutionEditorContent({
   );
   const isFirstRender = useRef(true);
   const isNavigatingRef = useRef(false);
-  // Saves run one at a time: while one is in flight, newer input waits
-  // in pendingSaveRef. The created record's ID lives in a ref so the
-  // next save updates that record instead of creating a second one
-  // (issue #127).
+  // 最初の保存で作られた記録の ID を次の保存に使い、記録が二重にできないよう、保存は1つずつ送る
   const savedSolutionIdRef = useRef<string | null>(
     initialSolution?.id ?? null
   );
@@ -222,7 +219,6 @@ function SolutionEditorContent({
       return;
     }
     pendingSaveRef.current = {
-      solutionId: savedSolutionIdRef.current,
       problemId: problem.id,
       contestId: debouncedContestId,
       title: debouncedTitle || null,
@@ -236,11 +232,11 @@ function SolutionEditorContent({
       saveInFlightRef.current = true;
       try {
         while (pendingSaveRef.current) {
-          const input = pendingSaveRef.current;
+          const input = {
+            ...pendingSaveRef.current,
+            solutionId: savedSolutionIdRef.current,
+          };
           pendingSaveRef.current = null;
-          // Read the ID at send time: a save queued behind the first
-          // one must update the record the first one created.
-          input.solutionId = savedSolutionIdRef.current;
           setSaveState('saving');
           try {
             const result = await saveSolution(input);
