@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useUnlinkProvider } from '@/features/auth/hooks/use-unlink-provider';
 
 const LOGIN_PROVIDERS = [
   { id: 'google', name: 'Google', Icon: FcGoogle },
@@ -33,6 +34,8 @@ interface UserMenuProps {
 
 export default function UserMenu({ user, linkedProviders }: UserMenuProps) {
   const pathname = usePathname();
+  const { error: unlinkError, isUnlinking, unlink } = useUnlinkProvider();
+  const canUnlink = linkedProviders.length > 1;
 
   return (
     <DropdownMenu>
@@ -66,6 +69,17 @@ export default function UserMenu({ user, linkedProviders }: UserMenuProps) {
                 <Check className="h-3.5 w-3.5" />
                 連携済み
               </span>
+              {canUnlink && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-1 h-6 px-2 text-xs text-red-600 hover:text-red-700"
+                  disabled={isUnlinking}
+                  onClick={() => unlink(id)}
+                >
+                  解除
+                </Button>
+              )}
             </div>
           ) : (
             <DropdownMenuItem key={id} onSelect={() => signIn(id, { callbackUrl: pathname })}>
@@ -74,6 +88,9 @@ export default function UserMenu({ user, linkedProviders }: UserMenuProps) {
               <span className="ml-auto text-xs text-blue-600">連携する</span>
             </DropdownMenuItem>
           )
+        )}
+        {unlinkError && (
+          <p className="px-2 py-1.5 text-xs text-red-600">{unlinkError}</p>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
