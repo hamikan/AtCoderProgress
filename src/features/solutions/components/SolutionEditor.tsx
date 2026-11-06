@@ -19,6 +19,7 @@ import { isEmptySolutionContent } from '@/features/solutions/functions/solution-
 import {
   getDefaultContestId,
   getSolutionEditorKey,
+  hasUnsavedScopeMove,
 } from '@/features/solutions/functions/solution-editor';
 import { useHydrated } from '@/features/solutions/hooks/use-hydrated';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -163,6 +164,20 @@ function SolutionEditorContent({
   const debouncedStatus = useDebounce(status, 300);
   const debouncedContestId = useDebounce(contestId, 300);
   const debouncedTagsKey = useDebounce(JSON.stringify(selectedTags), 300);
+  // Switching to another problem that shares the record's contest
+  // changes no editor state, so without this the move is never saved
+  // (issue #130).
+  const hasScopeMove = hasUnsavedScopeMove(
+    initialSolution
+      ? {
+          problemId: initialSolution.problemId,
+          contestId: initialSolution.contestId,
+        }
+      : null,
+    problem && contestId
+      ? { problemId: problem.id, contestId }
+      : null
+  );
   const shouldSaveInitialDraft = Boolean(
     problem?.id &&
       contestId &&
@@ -218,7 +233,7 @@ function SolutionEditorContent({
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      if (!shouldSaveInitialDraft) return;
+      if (!shouldSaveInitialDraft && !hasScopeMove) return;
     }
     if (
       !isAuthenticated ||
@@ -315,6 +330,7 @@ function SolutionEditorContent({
     debouncedStatus,
     debouncedTagsKey,
     debouncedTitle,
+    hasScopeMove,
     isAuthenticated,
     isDebouncedContestValid,
     problem?.id,
