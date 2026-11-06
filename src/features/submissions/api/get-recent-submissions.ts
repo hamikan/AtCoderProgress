@@ -3,13 +3,15 @@ import 'server-only';
 import type { RecentSubmission } from '@/features/submissions/types';
 import { prisma } from '@/lib/prisma';
 
-export async function getRecentSubmissions(userId?: string): Promise<RecentSubmission[]> {
-  if (!userId) {
+export async function getRecentSubmissions(
+  atcoderAccountId?: string | null
+): Promise<RecentSubmission[]> {
+  if (!atcoderAccountId) {
     return [];
   }
 
   const submissions = await prisma.submission.findMany({
-    where: { userId },
+    where: { atcoderAccountId },
     take: 10,
     orderBy: { epochSecond: 'desc' },
     include: {

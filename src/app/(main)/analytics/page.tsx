@@ -8,8 +8,8 @@ import ActivityHeatmap from '@/features/submissions/components/ActivityHeatmap';
 export default async function AnalyticsPage() {
   const user = await getCurrentUser();
   const [analytics, acceptedProblemHeatmap] = await Promise.all([
-    getAccountJourneyAnalytics(user?.id),
-    getAcceptedProblemHeatmap(user?.id),
+    getAccountJourneyAnalytics(user?.atcoderAccountId),
+    getAcceptedProblemHeatmap(user?.atcoderAccountId),
   ]);
 
   return (

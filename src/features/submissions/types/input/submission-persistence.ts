@@ -3,7 +3,7 @@ export interface SubmissionPersistenceRecord {
   epochSecond: number;
   problemId: string;
   contestId: string;
-  userId: string;
+  atcoderAccountId: string;
   language: string;
   point: number;
   length: number;
@@ -26,16 +26,20 @@ export interface SubmissionWriterTransaction {
   };
 }
 
-export interface SubmissionSyncTransaction
-  extends SubmissionWriterTransaction {
-  user: {
-    findUnique(args: {
-      select: { atcoderId: true };
+export interface AtCoderAccountUpsertTransaction {
+  atCoderAccount: {
+    upsert(args: {
+      create: {
+        id: string;
+        name: string;
+        submissionsLastFetchedAt?: Date | null;
+      };
+      update: { name?: string; submissionsLastFetchedAt?: Date };
       where: { id: string };
-    }): Promise<{ atcoderId: string | null } | null>;
-    updateMany(args: {
-      data: { submissionsLastFetchedAt: Date };
-      where: { id: string; atcoderId: string };
-    }): Promise<{ count: number }>;
+    }): Promise<unknown>;
   };
 }
+
+export interface SubmissionSyncTransaction
+  extends SubmissionWriterTransaction,
+    AtCoderAccountUpsertTransaction {}

@@ -13,7 +13,8 @@ import { prisma } from '@/lib/prisma';
 const TAG_THRESHOLD = 1;
 
 export async function getProblemList(
-  input: ProblemListFiltersInput
+  input: ProblemListFiltersInput,
+  atcoderAccountId?: string | null
 ): Promise<{ problems: ProblemListItem[]; totalProblems: number }> {
   const {
     search,
@@ -67,12 +68,18 @@ export async function getProblemList(
   }
 
   if (status && status !== 'ALL' && userId) {
+    const acceptedSubmission: Prisma.ProblemWhereInput[] = atcoderAccountId
+      ? [{ submissions: { some: { atcoderAccountId, result: 'AC' } } }]
+      : [];
+    const anySubmission: Prisma.ProblemWhereInput[] = atcoderAccountId
+      ? [{ submissions: { some: { atcoderAccountId } } }]
+      : [];
     switch (status) {
       case 'AC':
         andConditions.push({
           OR: [
             { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } },
-            { submissions: { some: { userId, result: 'AC' } } }
+            ...acceptedSubmission
           ]
         });
         break;
@@ -81,16 +88,16 @@ export async function getProblemList(
           {
             OR: [
               { solutions: { some: { userId, status: 'TRYING' } } },
-              { submissions: { some: { userId } } }
+              ...anySubmission
             ]
           },
-          { NOT: { submissions: { some: { userId, result: 'AC' } } } },
+          ...acceptedSubmission.map((condition) => ({ NOT: condition })),
           { NOT: { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } } }
         );
         break;
       case 'UNSOLVED':
         andConditions.push(
-          { NOT: { submissions: { some: { userId } } } },
+          ...anySubmission.map((condition) => ({ NOT: condition })),
           { NOT: { solutions: { some: { userId } } } }
         );
         break;
@@ -132,14 +139,14 @@ export async function getProblemList(
           select: { status: true }
         },
         submissions: {
-          where: { userId: userId ?? '', result: 'AC' },
+          where: { atcoderAccountId: atcoderAccountId ?? '', result: 'AC' },
           take: 1,
           select: { id: true }
         },
         _count: {
           select: {
             submissions: {
-              where: { userId: userId ?? '' }
+              where: { atcoderAccountId: atcoderAccountId ?? '' }
             }
           }
         }

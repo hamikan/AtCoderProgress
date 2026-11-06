@@ -1,6 +1,5 @@
 import 'server-only';
 
-import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import type { SubmissionResources } from '@/lib/atcoder/submissions/types';
 import type {
@@ -10,7 +9,7 @@ import type {
 
 export async function persistSubmissionsInTransaction(
   transaction: SubmissionWriterTransaction,
-  userId: string,
+  atcoderAccountId: string,
   data: SubmissionResources
 ) {
   const { submissions } = data;
@@ -28,7 +27,7 @@ export async function persistSubmissionsInTransaction(
       epochSecond: submission.epoch_second,
       problemId: submission.problem_id,
       contestId: submission.contest_id,
-      userId: userId,
+      atcoderAccountId,
       language: submission.language,
       point: submission.point,
       length: submission.length,
@@ -43,53 +42,47 @@ export async function persistSubmissionsInTransaction(
   }
 }
 
-export async function persistSubmissions(
-  userId: string,
-  atcoderId: string,
-  data: SubmissionResources,
-  fetchedAt: Date = new Date()
-) {
-  const { submissions } = data;
-  return prisma.$transaction(async (tx) => {
-    return persistSubmissionsForCurrentAtCoderId(
-      tx,
-      userId,
-      atcoderId,
-      { submissions },
-      fetchedAt
-    );
-  }, {
-    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-  });
+// 入力された ID は大文字小文字がずれていることがあるので、提出に書かれた AtCoder 側の表記があればそちらを使う
+export function getCanonicalAtCoderName(data: SubmissionResources): string | null {
+  return data.submissions[0]?.user_id ?? null;
 }
 
-export async function persistSubmissionsForCurrentAtCoderId(
+export async function persistSubmissionsForAccount(
   transaction: SubmissionSyncTransaction,
-  userId: string,
+  atcoderAccountId: string,
   atcoderId: string,
   data: SubmissionResources,
   fetchedAt: Date
-): Promise<boolean> {
-  if (!await hasCurrentAtCoderId(transaction, userId, atcoderId)) {
-    return false;
-  }
-
-  await persistSubmissionsInTransaction(transaction, userId, data);
-  const update = await transaction.user.updateMany({
-    where: { id: userId, atcoderId },
-    data: { submissionsLastFetchedAt: fetchedAt },
+): Promise<void> {
+  const canonicalName = getCanonicalAtCoderName(data);
+  await transaction.atCoderAccount.upsert({
+    where: { id: atcoderAccountId },
+    create: {
+      id: atcoderAccountId,
+      name: canonicalName ?? atcoderId,
+      submissionsLastFetchedAt: fetchedAt,
+    },
+    update: {
+      ...(canonicalName ? { name: canonicalName } : {}),
+      submissionsLastFetchedAt: fetchedAt,
+    },
   });
-  return update.count === 1;
+  await persistSubmissionsInTransaction(transaction, atcoderAccountId, data);
 }
 
-async function hasCurrentAtCoderId(
-  transaction: Pick<SubmissionSyncTransaction, 'user'>,
-  userId: string,
-  expectedAtCoderId: string
-): Promise<boolean> {
-  const user = await transaction.user.findUnique({
-    where: { id: userId },
-    select: { atcoderId: true },
-  });
-  return user?.atcoderId === expectedAtCoderId;
+export async function persistSubmissions(
+  atcoderAccountId: string,
+  atcoderId: string,
+  data: SubmissionResources,
+  fetchedAt: Date = new Date()
+): Promise<void> {
+  await prisma.$transaction((transaction) =>
+    persistSubmissionsForAccount(
+      transaction,
+      atcoderAccountId,
+      atcoderId,
+      data,
+      fetchedAt
+    )
+  );
 }

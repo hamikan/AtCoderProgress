@@ -7,30 +7,31 @@ import {
 } from '@/features/auth/functions/atcoder-data-refresh-policy';
 import { syncRatingHistory } from '@/features/ratings/sync/sync-rating-history';
 import { syncSubmissions } from '@/features/submissions/sync/sync-submissions';
+import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
 
 // 同じプロセスの中での重複だけを防ぐ（別のサーバーインスタンスでは同時に走りうる）
 const refreshInFlight = new Set<string>();
 
-export async function refreshAtCoderDataIfStale(userId: string): Promise<void> {
-  if (refreshInFlight.has(userId)) {
+export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void> {
+  const atcoderAccountId = toAtCoderAccountId(atcoderId);
+  if (refreshInFlight.has(atcoderAccountId)) {
     return;
   }
-  refreshInFlight.add(userId);
+  refreshInFlight.add(atcoderAccountId);
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { atcoderId: true, submissionsLastFetchedAt: true },
+    const account = await prisma.atCoderAccount.findUnique({
+      where: { id: atcoderAccountId },
+      select: { submissionsLastFetchedAt: true },
     });
-    if (!user?.atcoderId) {
-      return;
-    }
-    if (!shouldRefreshAtCoderData(user.submissionsLastFetchedAt, new Date())) {
+    if (
+      !shouldRefreshAtCoderData(account?.submissionsLastFetchedAt ?? null, new Date())
+    ) {
       return;
     }
 
     const latestSubmission = await prisma.submission.findFirst({
-      where: { userId },
+      where: { atcoderAccountId },
       orderBy: { epochSecond: 'desc' },
       select: { epochSecond: true },
     });
@@ -39,8 +40,8 @@ export async function refreshAtCoderDataIfStale(userId: string): Promise<void> {
     );
 
     const results = await Promise.allSettled([
-      syncSubmissions(userId, user.atcoderId, fromSecond),
-      syncRatingHistory(userId, user.atcoderId),
+      syncSubmissions(atcoderId, fromSecond),
+      syncRatingHistory(atcoderId),
     ]);
     for (const result of results) {
       if (result.status === 'rejected') {
@@ -50,6 +51,6 @@ export async function refreshAtCoderDataIfStale(userId: string): Promise<void> {
   } catch (error) {
     console.warn('[atcoder-refresh] failed', error);
   } finally {
-    refreshInFlight.delete(userId);
+    refreshInFlight.delete(atcoderAccountId);
   }
 }

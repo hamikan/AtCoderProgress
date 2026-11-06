@@ -14,11 +14,11 @@ import { buildRatingFitness } from '@/features/ratings/functions/account-journey
 import type { AccountJourneyAnalytics } from '@/features/ratings/types';
 
 export async function getAccountJourneyAnalytics(
-  userId?: string
+  atcoderAccountId?: string | null
 ): Promise<AccountJourneyAnalytics> {
   const [ratingHistory, submissions, curriculumRows] = await Promise.all([
-    userId ? prisma.userRatingHistory.findMany({
-      where: { userId, isRated: true },
+    atcoderAccountId ? prisma.userRatingHistory.findMany({
+      where: { atcoderAccountId, isRated: true },
       orderBy: { endTime: 'asc' },
       select: {
         oldRating: true,
@@ -29,9 +29,9 @@ export async function getAccountJourneyAnalytics(
         endTime: true,
       },
     }) : [],
-    userId ? prisma.submission.findMany({
+    atcoderAccountId ? prisma.submission.findMany({
       where: {
-        userId,
+        atcoderAccountId,
         NOT: {
           contestId: { startsWith: 'ahc' },
         },

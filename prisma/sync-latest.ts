@@ -11,30 +11,16 @@ async function main() {
 
   console.log(`Starting manual sync for AtCoder ID: ${atcoderId}`);
 
-  const user = await prisma.user.findUnique({
-    where: { atcoderId },
-    select: { id: true, name: true, atcoderId: true },
-  });
-
-  if (!user?.atcoderId) {
-    throw new Error(`User with atcoderId "${atcoderId}" was not found.`);
-  }
-
   console.log('1/3 Syncing contests and problems...');
   await syncContestsAndProblems();
 
   console.log('2/3 Syncing submissions...');
-  const submissionsSynced = await syncSubmissions(user.id, user.atcoderId, 0);
-  if (!submissionsSynced) {
-    throw new Error('AtCoder ID changed while submissions were syncing.');
-  }
-  console.log('3/3 Syncing rating history...');
-  const ratingSynced = await syncRatingHistory(user.id, user.atcoderId);
-  if (!ratingSynced) {
-    throw new Error('AtCoder ID changed while rating history was syncing.');
-  }
+  await syncSubmissions(atcoderId, 0);
 
-  console.log(`Manual sync finished for ${user.name ?? user.atcoderId}.`);
+  console.log('3/3 Syncing rating history...');
+  await syncRatingHistory(atcoderId);
+
+  console.log(`Manual sync finished for ${atcoderId}.`);
 }
 
 main()

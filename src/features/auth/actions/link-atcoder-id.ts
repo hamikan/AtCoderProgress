@@ -8,15 +8,18 @@ import { parseAtCoderId } from '@/features/auth/schemas/atcoder-id';
 import {
   applyAtCoderIdChange,
   getAtCoderIdChangeDecision,
-  isAtCoderIdAvailableForUser,
 } from '@/features/auth/sync/apply-atcoder-id-change';
 import {
   AtCoderProfileFetchError,
   synchronizeAtCoderIdChange,
 } from '@/features/auth/sync/synchronize-atcoder-id-change';
-import type { LinkAtCoderIdError } from '@/features/auth/types';
+import type {
+  AtCoderProfileData,
+  LinkAtCoderIdError,
+} from '@/features/auth/types';
 import { fetchRatingHistory } from '@/lib/atcoder/ratings/fetch-rating-history';
 import { fetchSubmissions } from '@/lib/atcoder/submissions/fetch-submissions';
+import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
 import { prisma } from '@/lib/prisma';
 import type { Result } from '@/lib/types/result';
 
@@ -57,33 +60,32 @@ export async function linkAtCoderId(
       return { ok: true, value: { status: 'unchanged' } };
     }
 
-    const isAvailable = await isAtCoderIdAvailableForUser(
-      prisma,
-      user.id,
-      parsedAtCoderId
-    );
-    if (!isAvailable) {
-      return failure('ALREADY_LINKED', 'このAtCoder IDはすでに登録されています。');
-    }
-
-    const result = await synchronizeAtCoderIdChange(parsedAtCoderId, {
-      fetchSubmissions,
-      fetchRatingHistory,
-      commit: (profileData) => {
-        const now = new Date();
-        return prisma.$transaction(
-          (transaction) =>
-            applyAtCoderIdChange(
-              transaction,
-              user.id,
-              parsedAtCoderId,
-              now,
-              profileData
-            ),
-          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
-        );
-      },
+    const commit = (profileData: AtCoderProfileData | null) => {
+      const now = new Date();
+      return prisma.$transaction(
+        (transaction) =>
+          applyAtCoderIdChange(
+            transaction,
+            user.id,
+            parsedAtCoderId,
+            now,
+            profileData
+          ),
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+      );
+    };
+    const existingAccount = await prisma.atCoderAccount.findUnique({
+      where: { id: toAtCoderAccountId(parsedAtCoderId) },
+      select: { submissionsLastFetchedAt: true },
     });
+    // すでに誰かが取ってある ID なら全件は取り直さない。新しい分はダッシュボードを開いたときの更新で入る
+    const result = existingAccount?.submissionsLastFetchedAt
+      ? await commit(null)
+      : await synchronizeAtCoderIdChange(parsedAtCoderId, {
+          fetchSubmissions,
+          fetchRatingHistory,
+          commit,
+        });
 
     if (result.status === 'blocked') {
       return failure('CHANGE_BLOCKED', formatChangeBlockedMessage(result.availableAt));
@@ -102,9 +104,6 @@ export async function linkAtCoderId(
         'UPSTREAM_UNAVAILABLE',
         'AtCoderのデータ取得に失敗しました。AtCoder IDは変更されていません。'
       );
-    }
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return failure('ALREADY_LINKED', 'このAtCoder IDはすでに登録されています。');
     }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034') {
       return failure('CONFLICT', '同時に更新が行われました。もう一度お試しください。');

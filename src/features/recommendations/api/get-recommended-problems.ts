@@ -15,6 +15,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function getRecommendedProblems(
   userId: string | undefined,
+  atcoderAccountId: string | null | undefined,
   currentRating: number
 ): Promise<RecommendedProblems> {
   if (!userId) {
@@ -28,8 +29,10 @@ export async function getRecommendedProblems(
   const now = new Date();
 
   const [unsolved, solved] = await Promise.all([
-    getUnsolvedRecommendations(userId, difficultyRange),
-    getSolvedRecommendations(userId, difficultyRange, now),
+    getUnsolvedRecommendations(userId, atcoderAccountId ?? null, difficultyRange),
+    atcoderAccountId
+      ? getSolvedRecommendations(userId, atcoderAccountId, difficultyRange, now)
+      : [],
   ]);
 
   return { solved, unsolved };
@@ -37,9 +40,14 @@ export async function getRecommendedProblems(
 
 async function getUnsolvedRecommendations(
   userId: string,
+  atcoderAccountId: string | null,
   difficultyRange: ProblemDifficultyRange
 ): Promise<RecommendedProblem[]> {
-  const tagStatistics = await getTagStatistics(userId, difficultyRange);
+  const tagStatistics = await getTagStatistics(
+    userId,
+    atcoderAccountId,
+    difficultyRange
+  );
   const difficulty = {
     gte: difficultyRange.min,
     lte: difficultyRange.max,
@@ -48,7 +56,9 @@ async function getUnsolvedRecommendations(
     difficulty,
     NOT: {
       OR: [
-        { submissions: { some: { result: 'AC', userId } } },
+        ...(atcoderAccountId
+          ? [{ submissions: { some: { result: 'AC', atcoderAccountId } } }]
+          : []),
         {
           solutions: {
             some: {
@@ -100,6 +110,7 @@ async function getUnsolvedRecommendations(
 
 async function getSolvedRecommendations(
   userId: string,
+  atcoderAccountId: string,
   difficultyRange: ProblemDifficultyRange,
   now: Date
 ): Promise<RecommendedProblem[]> {
@@ -113,7 +124,7 @@ async function getSolvedRecommendations(
     prisma.submission.groupBy({
       _max: { epochSecond: true },
       by: ['problemId'],
-      where: { problem: { difficulty }, result: 'AC', userId },
+      where: { problem: { difficulty }, result: 'AC', atcoderAccountId },
     }),
     prisma.problemReview.findMany({ where: { userId } }),
     prisma.problemReview.groupBy({

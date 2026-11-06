@@ -4,4 +4,5 @@ export interface CurrentUser {
   email: string | null;
   image: string | null;
   atcoderId: string | null;
+  atcoderAccountId: string | null;
 }

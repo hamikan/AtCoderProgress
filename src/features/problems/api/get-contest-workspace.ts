@@ -19,12 +19,14 @@ export async function getContestWorkspace(
 ): Promise<ContestWorkspaceResult> {
   const [contestPage, stats, submissionsLastFetchedAt] = await Promise.all([
     getContestPage(contestType, order, options),
-    getContestStatistics(contestType, options.userId),
-    options.userId ? getSubmissionsLastFetchedAt(options.userId) : null,
+    getContestStatistics(contestType, options.atcoderAccountId),
+    options.atcoderAccountId
+      ? getSubmissionsLastFetchedAt(options.atcoderAccountId)
+      : null,
   ]);
   const problemIds = getContestProblemIds(contestPage.contests);
-  const submissionSummary = options.userId
-    ? await getSubmissionSummaryByProblemIds(options.userId, problemIds)
+  const submissionSummary = options.atcoderAccountId
+    ? await getSubmissionSummaryByProblemIds(options.atcoderAccountId, problemIds)
     : { statusMap: {} };
 
   return {

@@ -3,13 +3,15 @@ import 'server-only';
 import { prisma } from '@/lib/prisma';
 import type { RatingData } from '@/features/ratings/types';
 
-export async function getRatingHistory(userId?: string): Promise<RatingData[]> {
-    if (!userId) {
+export async function getRatingHistory(
+    atcoderAccountId?: string | null
+): Promise<RatingData[]> {
+    if (!atcoderAccountId) {
         return [];
     }
 
     const history = await prisma.userRatingHistory.findMany({
-        where: { userId, isRated: true },
+        where: { atcoderAccountId, isRated: true },
         orderBy: { endTime: 'asc' },
         select: {
             endTime: true,

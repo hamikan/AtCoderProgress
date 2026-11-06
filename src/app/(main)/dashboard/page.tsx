@@ -22,8 +22,9 @@ import { buildHeatmapStats } from '@/features/submissions/functions/build-heatma
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   const userId = user?.id;
-  if (userId) {
-    await refreshAtCoderDataIfStale(userId);
+  const atcoderAccountId = user?.atcoderAccountId;
+  if (user?.atcoderId) {
+    await refreshAtCoderDataIfStale(user.atcoderId);
   }
   const [
     solvedProblemStats,
@@ -34,16 +35,17 @@ export default async function DashboardPage() {
     tagStats,
     inProgressSolutions,
   ] = await Promise.all([
-    getSolvedProblemStatistics(userId),
-    getRatingSummary(userId),
-    getRatingHistory(userId),
-    getAcceptedProblemHeatmap(userId),
-    getRecentSubmissions(userId),
-    getTagStatistics(userId),
+    getSolvedProblemStatistics(atcoderAccountId),
+    getRatingSummary(atcoderAccountId),
+    getRatingHistory(atcoderAccountId),
+    getAcceptedProblemHeatmap(atcoderAccountId),
+    getRecentSubmissions(atcoderAccountId),
+    getTagStatistics(userId, atcoderAccountId),
     getInProgressSolutions(userId),
   ]);
   const recommendedProblems = await getRecommendedProblems(
     userId,
+    atcoderAccountId,
     ratingSummary.currentRating
   );
 
