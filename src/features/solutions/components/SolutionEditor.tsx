@@ -250,8 +250,8 @@ function SolutionEditorContent({
           (!savedSolutionId || savedId !== savedSolutionId) &&
           !isNavigatingRef.current
         ) {
-          router.replace(`/solutions/${savedId}`);
-          router.refresh();
+          // ページを移るとエディタが作り直されて保存中に打った文字が消えるため、URL だけを書き換える
+          window.history.replaceState(null, '', `/solutions/${savedId}`);
         } else if (didMoveScope && !isNavigatingRef.current) {
           router.refresh();
         }
