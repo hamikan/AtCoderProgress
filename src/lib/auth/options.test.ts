@@ -14,14 +14,30 @@ test('auth options require credentials when they are created', async () => {
   );
 });
 
+test('auth options require Google credentials as well', async () => {
+  const { createAuthOptions } = await import('./options');
+
+  assert.throws(
+    () =>
+      createAuthOptions({
+        GITHUB_ID: 'github-client-id',
+        GITHUB_SECRET: 'github-client-secret',
+        NEXTAUTH_SECRET: 'next-auth-secret',
+      }),
+    { message: 'Missing required environment variable: GOOGLE_ID' }
+  );
+});
+
 test('auth options use the provided credentials', async () => {
   const { createAuthOptions } = await import('./options');
   const options = createAuthOptions({
     GITHUB_ID: 'github-client-id',
     GITHUB_SECRET: 'github-client-secret',
+    GOOGLE_ID: 'google-client-id',
+    GOOGLE_SECRET: 'google-client-secret',
     NEXTAUTH_SECRET: 'next-auth-secret',
   });
 
   assert.equal(options.secret, 'next-auth-secret');
-  assert.equal(options.providers.length, 1);
+  assert.equal(options.providers.length, 2);
 });

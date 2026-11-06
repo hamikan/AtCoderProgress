@@ -2,6 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { FaGithub } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
 
 interface LoginPanelProps {
   callbackUrl: string;
@@ -24,14 +25,24 @@ export default function LoginPanel({ callbackUrl, errorMessage }: LoginPanelProp
             {errorMessage}
           </p>
         )}
-        <button
-          type="button"
-          onClick={() => signIn('github', { callbackUrl })}
-          className="inline-flex w-full items-center justify-center rounded-md bg-gray-800 px-4 py-3 font-semibold text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2"
-        >
-          <FaGithub className="mr-3 h-6 w-6" />
-          GitHubでログイン
-        </button>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => signIn('google', { callbackUrl })}
+            className="inline-flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+          >
+            <FcGoogle className="mr-3 h-6 w-6" />
+            Googleでログイン
+          </button>
+          <button
+            type="button"
+            onClick={() => signIn('github', { callbackUrl })}
+            className="inline-flex w-full items-center justify-center rounded-md bg-gray-800 px-4 py-3 font-semibold text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2"
+          >
+            <FaGithub className="mr-3 h-6 w-6" />
+            GitHubでログイン
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ import 'server-only';
 type AuthEnvironmentVariable =
   | 'GITHUB_ID'
   | 'GITHUB_SECRET'
+  | 'GOOGLE_ID'
+  | 'GOOGLE_SECRET'
   | 'NEXTAUTH_SECRET';
 
 export type AuthEnvironment = Readonly<

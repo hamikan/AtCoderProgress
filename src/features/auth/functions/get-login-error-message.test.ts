@@ -12,7 +12,14 @@ test('getLoginErrorMessage returns null when there is no error', () => {
 test('getLoginErrorMessage explains a denied authorization', () => {
   assert.equal(
     getLoginErrorMessage('AccessDenied'),
-    'GitHubでのログインが許可されなかったため、ログインできませんでした。'
+    'ログインが許可されなかったため、ログインできませんでした。'
+  );
+});
+
+test('getLoginErrorMessage explains an account that could not be linked', () => {
+  assert.equal(
+    getLoginErrorMessage('OAuthAccountNotLinked'),
+    'このアカウントは、別のログイン方法で作ったアカウントとつながっていません。いつもの方法でログインしてから、右上のメニューで連携してください。'
   );
 });
 
