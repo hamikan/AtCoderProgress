@@ -82,6 +82,10 @@ export default function LinkAtCoderForm({ canSubmit }: LinkAtCoderFormProps) {
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
+          <p className="text-sm text-gray-500">
+            提出数が多い場合、連携に数十秒〜数分かかることがあります。完了するまでこのページを離れないでください。
+          </p>
+
           <button
             type="submit"
             disabled={isLoading || !canSubmit}
