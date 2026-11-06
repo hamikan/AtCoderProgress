@@ -3,6 +3,7 @@ import 'server-only';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import type { NextAuthOptions } from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
+import GoogleProvider from 'next-auth/providers/google';
 
 import { getRequiredAuthEnvironmentVariable } from '@/lib/auth/environment';
 import type { AuthEnvironment } from '@/lib/auth/environment';
@@ -17,6 +18,10 @@ export function createAuthOptions(
       GithubProvider({
         clientId: getRequiredAuthEnvironmentVariable('GITHUB_ID', environment),
         clientSecret: getRequiredAuthEnvironmentVariable('GITHUB_SECRET', environment),
+      }),
+      GoogleProvider({
+        clientId: getRequiredAuthEnvironmentVariable('GOOGLE_ID', environment),
+        clientSecret: getRequiredAuthEnvironmentVariable('GOOGLE_SECRET', environment),
       }),
     ],
     secret: getRequiredAuthEnvironmentVariable('NEXTAUTH_SECRET', environment),
