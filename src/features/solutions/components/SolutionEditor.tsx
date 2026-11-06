@@ -228,9 +228,7 @@ function SolutionEditorContent({
     ) {
       return;
     }
-    // A new draft earns a record only once something is written:
-    // merely opening or clicking the editor can trigger this effect
-    // and used to create an empty record (issue #129).
+    // 開いたりクリックしたりしただけで空の記録ができないよう、何か書かれるまでは記録を作らない
     if (
       savedSolutionIdRef.current === null &&
       isEmptySolutionContent(debouncedContent) &&

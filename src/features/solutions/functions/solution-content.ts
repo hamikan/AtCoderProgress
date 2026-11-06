@@ -4,12 +4,7 @@ interface ContentNode {
   children?: unknown;
 }
 
-/**
- * Whether serialized editor content carries nothing worth saving:
- * only empty paragraphs. Editor normalization can change the exact
- * JSON string of an untouched document, so this compares meaning,
- * not the raw string.
- */
+// エディタが中身を整えると何も書いていなくても文字列が変わるため、文字列ではなく中身で比べる
 export function isEmptySolutionContent(content: string): boolean {
   let parsed: unknown;
   try {
@@ -27,8 +22,6 @@ function isEmptyNode(node: ContentNode): boolean {
   if (typeof node.text === 'string') {
     return node.text === '';
   }
-  // Anything that is not a plain paragraph (an image, a code block, a
-  // heading the user inserted, ...) counts as content.
   if (node.type !== 'p') {
     return false;
   }
