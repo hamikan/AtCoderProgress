@@ -82,7 +82,12 @@ export default function AtCoderIdForm({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <Button type="submit" disabled={isLoading || !canSubmit} className="w-full">
+      <Button
+        type="submit"
+        variant="brand"
+        disabled={isLoading || !canSubmit}
+        className="w-full"
+      >
         {isLoading ? '設定中...' : canSubmit ? submitLabel : 'ログイン後に設定できます'}
       </Button>
 

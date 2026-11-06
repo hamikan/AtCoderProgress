@@ -14,7 +14,7 @@ export default function LinkAtCoderPrompt() {
       <p>
         AtCoder IDが連携されていません。連携すると、あなたの提出・レート・AC数が表示されます。
       </p>
-      <Button size="sm" onClick={() => setDialogOpen(true)}>
+      <Button size="sm" variant="brand" onClick={() => setDialogOpen(true)}>
         <Link2 className="h-4 w-4" />
         AtCoder IDを連携する
       </Button>
