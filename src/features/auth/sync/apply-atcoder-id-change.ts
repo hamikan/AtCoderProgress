@@ -2,7 +2,7 @@ import 'server-only';
 
 import {
   decideAtCoderIdChange,
-  getAtCoderIdFetchWindowStart,
+  getAtCoderIdFetchIntervalStart,
 } from '@/features/auth/functions/atcoder-id-change-policy';
 import type {
   ApplyAtCoderIdChangeResult,
@@ -76,7 +76,7 @@ async function readAtCoderIdChange(
       select: { atcoderId: true },
     }),
     reader.atCoderIdFetch.findMany({
-      where: { userId, createdAt: { gt: getAtCoderIdFetchWindowStart(now) } },
+      where: { userId, createdAt: { gt: getAtCoderIdFetchIntervalStart(now) } },
       select: { createdAt: true },
     }),
   ]);

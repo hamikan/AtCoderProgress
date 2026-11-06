@@ -2,10 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { applyAtCoderIdChange } from './apply-atcoder-id-change';
-import {
-  ATCODER_ID_FETCH_LIMIT,
-  ATCODER_ID_FETCH_WINDOW_MS,
-} from '@/features/auth/functions/atcoder-id-change-policy';
+import { ATCODER_ID_FETCH_INTERVAL_MS } from '@/features/auth/functions/atcoder-id-change-policy';
 import type { AtCoderProfileData } from '@/features/auth/types';
 
 const NOW = new Date('2026-07-14T00:00:00.000Z');
@@ -42,10 +39,7 @@ const PROFILE_DATA: AtCoderProfileData = {
   ],
 };
 
-const LIMIT_REACHED = Array.from(
-  { length: ATCODER_ID_FETCH_LIMIT },
-  (_, index) => new Date(NOW.getTime() - (index + 1) * 60 * 60 * 1000)
-);
+const JUST_FETCHED = [new Date(NOW.getTime() - 60 * 1000)];
 
 function createTransaction({
   atcoderId = 'chokudai',
@@ -144,7 +138,7 @@ test('stores fetched data under the new AtCoder ID and records the fetch', async
   assert.deepEqual(calls[1].args, {
     where: {
       userId: 'app-user-id',
-      createdAt: { gt: new Date(NOW.getTime() - ATCODER_ID_FETCH_WINDOW_MS) },
+      createdAt: { gt: new Date(NOW.getTime() - ATCODER_ID_FETCH_INTERVAL_MS) },
     },
     select: { createdAt: true },
   });
@@ -172,9 +166,9 @@ test('stores fetched data under the new AtCoder ID and records the fetch', async
   });
 });
 
-test('switches to a stored AtCoder ID without fetching, even at the daily limit', async () => {
+test('switches to a stored AtCoder ID without fetching, even right after a fetch', async () => {
   const { calls, transaction } = createTransaction({
-    recentFetchTimes: LIMIT_REACHED,
+    recentFetchTimes: JUST_FETCHED,
     storedAccountName: 'Tourist',
   });
 
@@ -227,9 +221,9 @@ test('does not write when the AtCoder ID is unchanged', async () => {
   );
 });
 
-test('does not fetch a new AtCoder ID once the daily limit is reached', async () => {
+test('does not fetch a new AtCoder ID right after another one', async () => {
   const { calls, transaction } = createTransaction({
-    recentFetchTimes: LIMIT_REACHED,
+    recentFetchTimes: JUST_FETCHED,
   });
 
   const result = await applyAtCoderIdChange(

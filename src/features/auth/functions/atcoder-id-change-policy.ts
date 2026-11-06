@@ -1,7 +1,6 @@
 import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
 
-export const ATCODER_ID_FETCH_LIMIT = 3;
-export const ATCODER_ID_FETCH_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const ATCODER_ID_FETCH_INTERVAL_MS = 5 * 60 * 1000;
 
 type AtCoderIdChangeDecision =
   | {
@@ -15,8 +14,8 @@ type AtCoderIdChangeDecision =
       status: 'unchanged';
     };
 
-export function getAtCoderIdFetchWindowStart(now: Date): Date {
-  return new Date(now.getTime() - ATCODER_ID_FETCH_WINDOW_MS);
+export function getAtCoderIdFetchIntervalStart(now: Date): Date {
+  return new Date(now.getTime() - ATCODER_ID_FETCH_INTERVAL_MS);
 }
 
 export function decideAtCoderIdChange({
@@ -39,24 +38,22 @@ export function decideAtCoderIdChange({
     return { status: 'unchanged' };
   }
 
-  // データがある ID への切り替えは取り直さないので制限しない。数えるのは新しい ID の全件取得だけ
+  // データがある ID への切り替えは取り直さないので制限しない。新しい ID の全件取得だけ、前の取得から間をあける
   if (!needsFetch) {
     return { status: 'allowed' };
   }
 
-  const windowStart = getAtCoderIdFetchWindowStart(now).getTime();
-  const recent = recentFetchTimes
-    .map((time) => time.getTime())
-    .filter((time) => time > windowStart)
-    .toSorted((left, right) => left - right);
-  if (recent.length < ATCODER_ID_FETCH_LIMIT) {
+  const intervalStart = getAtCoderIdFetchIntervalStart(now).getTime();
+  const latestFetch = Math.max(
+    ...recentFetchTimes.map((time) => time.getTime()),
+    Number.NEGATIVE_INFINITY
+  );
+  if (latestFetch <= intervalStart) {
     return { status: 'allowed' };
   }
 
   return {
-    availableAt: new Date(
-      recent[recent.length - ATCODER_ID_FETCH_LIMIT] + ATCODER_ID_FETCH_WINDOW_MS
-    ),
+    availableAt: new Date(latestFetch + ATCODER_ID_FETCH_INTERVAL_MS),
     status: 'blocked',
   };
 }

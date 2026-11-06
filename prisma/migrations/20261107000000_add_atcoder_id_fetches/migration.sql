@@ -1,4 +1,4 @@
--- AtCoder ID の変更制限を、7日間から「新しい ID の全件取得を24時間に何回まで」に変える (#159)
+-- AtCoder ID の変更制限を、7日間から「新しい ID の全件取得は前の取得から5分あける」に変える (#159)
 
 -- CreateTable
 CREATE TABLE "atcoder_id_fetches" (

@@ -61,7 +61,7 @@ model User {
   @@map("users")
 }
 
-// 連携で新しい AtCoder ID のデータを全部取った記録。1人が24時間に取れる回数を数える
+// 連携で新しい AtCoder ID のデータを全部取った記録。次の新しい ID を取れるまでの間を測る
 model AtCoderIdFetch {
   id                String      @id @default(cuid())
   userId            String      @map("user_id")
