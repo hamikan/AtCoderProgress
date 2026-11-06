@@ -250,11 +250,7 @@ function SolutionEditorContent({
           (!savedSolutionId || savedId !== savedSolutionId) &&
           !isNavigatingRef.current
         ) {
-          // The first save created the record. Reflect its ID in the
-          // URL without navigating: /solutions/new and
-          // /solutions/<id> are different pages, so navigating would
-          // rebuild the editor and drop whatever was typed or pasted
-          // while this save was in flight (issue #126).
+          // ページを移るとエディタが作り直されて保存中に打った文字が消えるため、URL だけを書き換える
           window.history.replaceState(null, '', `/solutions/${savedId}`);
         } else if (didMoveScope && !isNavigatingRef.current) {
           router.refresh();
