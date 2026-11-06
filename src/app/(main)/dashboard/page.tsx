@@ -1,5 +1,6 @@
 import { StatCard } from '@/components/ui/stat-card';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import LinkAtCoderPrompt from '@/features/auth/components/LinkAtCoderPrompt';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getTagStatistics } from '@/features/problems/api/get-tag-statistics';
 import TagRadar from '@/features/problems/components/TagRadar';
@@ -61,6 +62,11 @@ export default async function DashboardPage() {
             <LoginPrompt returnTo="/dashboard" />
           </div>
         )}
+        {user && !user.atcoderId && (
+          <div className="mb-6">
+            <LinkAtCoderPrompt />
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="AC数"
@@ -72,6 +78,11 @@ export default async function DashboardPage() {
             title="現在レート"
             value={ratingSummary.currentRating}
             change={ratingSummary.currentRatingChange}
+            changeLabel={
+              ratingSummary.lastMonthRating === null
+                ? undefined
+                : `先月最終 ${ratingSummary.lastMonthRating.toLocaleString()}`
+            }
             detail={ratingDetail}
           />
           <StatCard

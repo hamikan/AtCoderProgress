@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import ContestTable from './ContestTable';
 import ProblemStats from './ProblemStats';
 import { loadContestChunk } from '@/features/problems/actions/load-contest-chunk';
+import { buildContestListCacheKey } from '@/features/problems/functions/contest-workspace';
 import type {
   Contest,
   ContestKind,
@@ -23,6 +24,7 @@ interface ContestListEntry {
 }
 
 interface ContestWorkspaceProps {
+  readonly cacheScope: string;
   readonly contestType: ContestKind;
   readonly order: ContestOrder;
   readonly problemIndexes: string[];
@@ -37,11 +39,8 @@ interface ContestWorkspaceProps {
 const contestListCache = new Map<string, ContestListEntry>();
 const loadingCacheKeys = new Set<string>();
 
-function contestListCacheKey(contestType: ContestKind, order: ContestOrder): string {
-  return `${contestType}:${order}`;
-}
-
 export default function ContestWorkspace({
+  cacheScope,
   contestType,
   order,
   problemIndexes,
@@ -52,7 +51,7 @@ export default function ContestWorkspace({
   nextCursor,
   hasMore,
 }: ContestWorkspaceProps) {
-  const cacheKey = contestListCacheKey(contestType, order);
+  const cacheKey = buildContestListCacheKey(cacheScope, contestType, order);
 
   const [lists, setLists] = useState<Map<string, ContestListEntry>>(
     () => new Map(contestListCache)
