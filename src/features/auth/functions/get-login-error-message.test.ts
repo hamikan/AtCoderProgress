@@ -16,10 +16,10 @@ test('getLoginErrorMessage explains a denied authorization', () => {
   );
 });
 
-test('getLoginErrorMessage explains an unlinked account with the same email', () => {
+test('getLoginErrorMessage explains an account that could not be linked', () => {
   assert.equal(
     getLoginErrorMessage('OAuthAccountNotLinked'),
-    'このメールアドレスは別のログイン方法で登録されています。いつもの方法でログインしてから、AtCoder ID設定の画面で連携してください。'
+    'このアカウントは、別のログイン方法で作ったアカウントとつながっていません。いつもの方法でログインしてから、右上のメニューで連携してください。'
   );
 });
 

@@ -1,5 +1,11 @@
 'use client';
 
+import { Check, LogOut } from 'lucide-react';
+import { signIn, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
+import { FaGithub } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
+
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -10,8 +16,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+
+const LOGIN_PROVIDERS = [
+  { id: 'google', name: 'Google', Icon: FcGoogle },
+  { id: 'github', name: 'GitHub', Icon: FaGithub },
+] as const;
 
 interface UserMenuProps {
   user: {
@@ -19,9 +28,12 @@ interface UserMenuProps {
     image?: string | null;
     atcoderId?: string | null;
   };
+  linkedProviders: string[];
 }
 
-export default function UserMenu({ user }: UserMenuProps) {
+export default function UserMenu({ user, linkedProviders }: UserMenuProps) {
+  const pathname = usePathname();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,7 +44,7 @@ export default function UserMenu({ user }: UserMenuProps) {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-60" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user.name || 'Unknown'}</p>
@@ -41,6 +53,28 @@ export default function UserMenu({ user }: UserMenuProps) {
             )}
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          ログイン方法
+        </DropdownMenuLabel>
+        {LOGIN_PROVIDERS.map(({ id, name, Icon }) =>
+          linkedProviders.includes(id) ? (
+            <div key={id} className="flex items-center px-2 py-1.5 text-sm">
+              <Icon className="mr-2 h-4 w-4" />
+              <span>{name}</span>
+              <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <Check className="h-3.5 w-3.5" />
+                連携済み
+              </span>
+            </div>
+          ) : (
+            <DropdownMenuItem key={id} onSelect={() => signIn(id, { callbackUrl: pathname })}>
+              <Icon className="mr-2 h-4 w-4" />
+              <span>{name}</span>
+              <span className="ml-auto text-xs text-blue-600">連携する</span>
+            </DropdownMenuItem>
+          )
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
           <LogOut className="mr-2 h-4 w-4" /><span>ログアウト</span>
