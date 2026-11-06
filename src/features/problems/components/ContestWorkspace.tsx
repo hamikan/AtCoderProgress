@@ -1,27 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { Loader2 } from 'lucide-react';
 import ContestTable from './ContestTable';
 import ProblemStats from './ProblemStats';
 import { loadContestChunk } from '@/features/problems/actions/load-contest-chunk';
+import {
+  getContestListEntry,
+  loadRemainingContestLists,
+  seedContestListEntry,
+  subscribeContestList,
+  tryStartContestListLoading,
+} from '@/features/problems/functions/contest-list-store';
 import { buildContestListCacheKey } from '@/features/problems/functions/contest-workspace';
 import type {
   Contest,
   ContestKind,
+  ContestListEntry,
   ContestOrder,
   ContestStats,
 } from '@/features/problems/types';
 import type { SubmissionStatus } from '@/features/submissions/types';
-
-interface ContestListEntry {
-  contests: Contest[];
-  submissionStatusMap: Record<string, SubmissionStatus>;
-  totalContests: number;
-  nextCursor: string | null;
-  hasMore: boolean;
-  loadFailed: boolean;
-}
 
 interface ContestWorkspaceProps {
   readonly cacheScope: string;
@@ -35,9 +34,6 @@ interface ContestWorkspaceProps {
   readonly nextCursor: string | null;
   readonly hasMore: boolean;
 }
-
-const contestListCache = new Map<string, ContestListEntry>();
-const loadingCacheKeys = new Set<string>();
 
 export default function ContestWorkspace({
   cacheScope,
@@ -53,86 +49,41 @@ export default function ContestWorkspace({
 }: ContestWorkspaceProps) {
   const cacheKey = buildContestListCacheKey(cacheScope, contestType, order);
 
-  const [lists, setLists] = useState<Map<string, ContestListEntry>>(
-    () => new Map(contestListCache)
+  const initialEntry = useMemo<ContestListEntry>(
+    () => ({
+      contests,
+      submissionStatusMap,
+      totalContests,
+      nextCursor,
+      hasMore,
+      loadFailed: false,
+    }),
+    [contests, submissionStatusMap, totalContests, nextCursor, hasMore],
   );
 
-  const initialEntry: ContestListEntry = {
-    contests,
-    submissionStatusMap,
-    totalContests,
-    nextCursor,
-    hasMore,
-    loadFailed: false,
-  };
-  const view = lists.get(cacheKey) ?? initialEntry;
+  const view = useSyncExternalStore(
+    subscribeContestList,
+    () => getContestListEntry(cacheKey) ?? initialEntry,
+    () => initialEntry,
+  );
   const isLoading = view.hasMore && !view.loadFailed;
 
   useEffect(() => {
-    let entry = contestListCache.get(cacheKey);
-    if (!entry) {
-      entry = {
-        contests,
-        submissionStatusMap,
-        totalContests,
-        nextCursor,
-        hasMore,
-        loadFailed: false,
-      };
-      contestListCache.set(cacheKey, entry);
+    const entry = seedContestListEntry(cacheKey, initialEntry);
+    if (!entry.hasMore || entry.loadFailed) {
+      return;
     }
-
-    if (!entry.hasMore || entry.loadFailed || loadingCacheKeys.has(cacheKey)) {
+    if (!tryStartContestListLoading(cacheKey)) {
       return;
     }
 
-    loadingCacheKeys.add(cacheKey);
-    let current = entry;
-
-    const applyEntry = (next: ContestListEntry) => {
-      contestListCache.set(cacheKey, next);
-      setLists((previous) => new Map(previous).set(cacheKey, next));
-    };
-
-    void (async () => {
-      while (current.hasMore) {
-        try {
-          const chunk = await loadContestChunk({
-            contestType,
-            order,
-            cursor: current.nextCursor,
-          });
-          current = {
-            contests: [...current.contests, ...chunk.contests],
-            submissionStatusMap: {
-              ...current.submissionStatusMap,
-              ...chunk.submissionStatusMap,
-            },
-            totalContests: chunk.totalContests,
-            nextCursor: chunk.nextCursor,
-            hasMore: chunk.hasMore && chunk.contests.length > 0,
-            loadFailed: false,
-          };
-        } catch {
-          current = { ...current, loadFailed: true };
-          applyEntry(current);
-          break;
-        }
-
-        applyEntry(current);
-      }
-      loadingCacheKeys.delete(cacheKey);
-    })();
-  }, [
-    cacheKey,
-    contestType,
-    order,
-    contests,
-    submissionStatusMap,
-    totalContests,
-    nextCursor,
-    hasMore,
-  ]);
+    void loadRemainingContestLists({
+      cacheKey,
+      contestType,
+      order,
+      loadChunk: loadContestChunk,
+    });
+  }, [cacheKey, contestType, order, initialEntry]);
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
