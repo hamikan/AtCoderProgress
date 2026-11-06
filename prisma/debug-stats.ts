@@ -11,14 +11,14 @@ async function main() {
     const users = await prisma.user.findMany({
         include: {
             _count: {
-                select: { submissions: true, userTags: true }
+                select: { userTags: true }
             }
         }
     });
     console.table(users.map(u => ({
         id: u.id,
         name: u.name,
-        submissions: u._count.submissions,
+        atcoderId: u.atcoderId,
         userTags: u._count.userTags
     })));
 
@@ -30,6 +30,7 @@ async function main() {
     // Pick the user with most submissions or tags
     const targetUser = users.sort((a, b) => b._count.userTags - a._count.userTags)[0];
     console.log(`\nAnalyzing user: ${targetUser.name} (${targetUser.id})`);
+    const targetAccountId = targetUser.atcoderId?.toLowerCase() ?? '';
 
     const userTags = await prisma.userTag.findMany({
         where: { createdById: targetUser.id, tagId: { not: null } },
@@ -53,7 +54,7 @@ async function main() {
                 problemTags: { some: { tagId: ut.tagId! } },
                 submissions: {
                     some: {
-                        userId: targetUser.id,
+                        atcoderAccountId: targetAccountId,
                         result: 'AC'
                     }
                 }
@@ -66,7 +67,7 @@ async function main() {
         if (solved === 0 && total > 0) {
             // Debug: list a few ACs and a few Tagged problems to see why no overlap
             const someAcs = await prisma.submission.findMany({
-                where: { userId: targetUser.id, result: 'AC' },
+                where: { atcoderAccountId: targetAccountId, result: 'AC' },
                 take: 3,
                 select: { problemId: true }
             });

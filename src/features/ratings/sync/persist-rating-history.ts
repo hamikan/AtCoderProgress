@@ -1,6 +1,5 @@
 import 'server-only';
 
-import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import type { RatingHistoryResource } from '@/lib/atcoder/ratings/types';
 import type {
@@ -10,11 +9,11 @@ import type {
 
 export async function persistRatingHistoryInTransaction(
     transaction: RatingHistoryWriterTransaction,
-    userId: string,
+    atcoderAccountId: string,
     history: RatingHistoryResource[]
 ) {
     const data = history.map((item) => ({
-        userId,
+        atcoderAccountId,
         isRated: item.IsRated,
         place: item.Place,
         oldRating: item.OldRating,
@@ -35,32 +34,26 @@ export async function persistRatingHistoryInTransaction(
     }
 }
 
-export async function persistRatingHistory(
-    userId: string,
+export async function persistRatingHistoryForAccount(
+    transaction: RatingHistorySyncTransaction,
+    atcoderAccountId: string,
     atcoderId: string,
     history: RatingHistoryResource[]
-) {
-    return prisma.$transaction(async (transaction) => {
-        if (!await hasCurrentAtCoderId(transaction, userId, atcoderId)) {
-            return false;
-        }
-
-        await persistRatingHistoryInTransaction(transaction, userId, history);
-
-        return true;
-    }, {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+): Promise<void> {
+    await transaction.atCoderAccount.upsert({
+        where: { id: atcoderAccountId },
+        create: { id: atcoderAccountId, name: atcoderId },
+        update: {},
     });
+    await persistRatingHistoryInTransaction(transaction, atcoderAccountId, history);
 }
 
-async function hasCurrentAtCoderId(
-    transaction: Pick<RatingHistorySyncTransaction, 'user'>,
-    userId: string,
-    expectedAtCoderId: string
-): Promise<boolean> {
-    const user = await transaction.user.findUnique({
-        where: { id: userId },
-        select: { atcoderId: true },
-    });
-    return user?.atcoderId === expectedAtCoderId;
+export async function persistRatingHistory(
+    atcoderAccountId: string,
+    atcoderId: string,
+    history: RatingHistoryResource[]
+): Promise<void> {
+    await prisma.$transaction((transaction) =>
+        persistRatingHistoryForAccount(transaction, atcoderAccountId, atcoderId, history)
+    );
 }

@@ -5,11 +5,11 @@ import type { SolvedProblemStatistics } from '@/features/submissions/types';
 import { prisma } from '@/lib/prisma';
 
 export async function getSolvedProblemStatistics(
-  userId?: string
+  atcoderAccountId?: string | null
 ): Promise<SolvedProblemStatistics> {
-  const submissions = userId
+  const submissions = atcoderAccountId
     ? await prisma.submission.findMany({
-        where: { userId, result: 'AC' },
+        where: { atcoderAccountId, result: 'AC' },
         select: { problemId: true, epochSecond: true },
       })
     : [];

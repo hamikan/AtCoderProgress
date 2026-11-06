@@ -7,8 +7,12 @@ import type {
 } from '@/features/auth/types';
 import { persistRatingHistoryInTransaction } from '@/features/ratings/sync/persist-rating-history';
 import type { RatingHistoryWriterTransaction } from '@/features/ratings/types';
-import { persistSubmissionsInTransaction } from '@/features/submissions/sync/persist-submissions';
+import {
+  getCanonicalAtCoderName,
+  persistSubmissionsInTransaction,
+} from '@/features/submissions/sync/persist-submissions';
 import type { SubmissionWriterTransaction } from '@/features/submissions/types';
+import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
 
 interface UserAtCoderIdReader {
   user: {
@@ -25,32 +29,30 @@ interface UserAtCoderIdReader {
   };
 }
 
-interface AtCoderIdOwnerReader {
-  user: {
-    findUnique(args: {
-      select: { id: true };
-      where: { atcoderId: string };
-    }): Promise<{ id: string } | null>;
-  };
-}
-
-interface UserAtCoderIdTransaction extends UserAtCoderIdReader {
+interface UserAtCoderIdTransaction
+  extends UserAtCoderIdReader,
+    SubmissionWriterTransaction,
+    RatingHistoryWriterTransaction {
   user: UserAtCoderIdReader['user'] & {
     update(args: {
       data: {
         atcoderId: string;
         atcoderIdChangedAt: Date;
-        submissionsLastFetchedAt: Date;
       };
       where: { id: string };
     }): Promise<unknown>;
   };
-  problem: SubmissionWriterTransaction['problem'];
-  submission: SubmissionWriterTransaction['submission'] & {
-    deleteMany(args: { where: { userId: string } }): Promise<unknown>;
-  };
-  userRatingHistory: RatingHistoryWriterTransaction['userRatingHistory'] & {
-    deleteMany(args: { where: { userId: string } }): Promise<unknown>;
+  atCoderAccount: {
+    upsert(args: {
+      create: {
+        id: string;
+        name: string;
+        submissionsLastFetchedAt: Date | null;
+      };
+      select: { name: true };
+      update: { name?: string; submissionsLastFetchedAt?: Date };
+      where: { id: string };
+    }): Promise<{ name: string }>;
   };
 }
 
@@ -72,15 +74,12 @@ async function readAtCoderIdChange(
     throw new Error('User not found');
   }
 
-  return {
-    decision: decideAtCoderIdChange(
-      user.atcoderId,
-      user.atcoderIdChangedAt,
-      nextAtCoderId,
-      now
-    ),
-    user,
-  };
+  return decideAtCoderIdChange(
+    user.atcoderId,
+    user.atcoderIdChangedAt,
+    nextAtCoderId,
+    now
+  );
 }
 
 export async function getAtCoderIdChangeDecision(
@@ -89,35 +88,18 @@ export async function getAtCoderIdChangeDecision(
   nextAtCoderId: string,
   now: Date
 ) {
-  const { decision } = await readAtCoderIdChange(
-    reader,
-    userId,
-    nextAtCoderId,
-    now
-  );
-  return decision;
+  return readAtCoderIdChange(reader, userId, nextAtCoderId, now);
 }
 
-export async function isAtCoderIdAvailableForUser(
-  reader: AtCoderIdOwnerReader,
-  userId: string,
-  atcoderId: string
-): Promise<boolean> {
-  const owner = await reader.user.findUnique({
-    where: { atcoderId },
-    select: { id: true },
-  });
-  return !owner || owner.id === userId;
-}
-
+// profileData が null のときは、その ID のデータがすでにあるので取り直さずに連携だけを切り替える
 export async function applyAtCoderIdChange(
   transaction: UserAtCoderIdTransaction,
   userId: string,
   nextAtCoderId: string,
   now: Date,
-  profileData: AtCoderProfileData
+  profileData: AtCoderProfileData | null
 ): Promise<ApplyAtCoderIdChangeResult> {
-  const { decision, user } = await readAtCoderIdChange(
+  const decision = await readAtCoderIdChange(
     transaction,
     userId,
     nextAtCoderId,
@@ -127,34 +109,44 @@ export async function applyAtCoderIdChange(
     return decision;
   }
 
+  const atcoderAccountId = toAtCoderAccountId(nextAtCoderId);
+  const canonicalName = profileData
+    ? getCanonicalAtCoderName(profileData.submissionData)
+    : null;
+  const account = await transaction.atCoderAccount.upsert({
+    where: { id: atcoderAccountId },
+    create: {
+      id: atcoderAccountId,
+      name: canonicalName ?? nextAtCoderId,
+      submissionsLastFetchedAt: profileData ? now : null,
+    },
+    update: {
+      ...(canonicalName ? { name: canonicalName } : {}),
+      ...(profileData ? { submissionsLastFetchedAt: now } : {}),
+    },
+    select: { name: true },
+  });
+
+  if (profileData) {
+    await persistSubmissionsInTransaction(
+      transaction,
+      atcoderAccountId,
+      profileData.submissionData
+    );
+    await persistRatingHistoryInTransaction(
+      transaction,
+      atcoderAccountId,
+      profileData.ratingHistory
+    );
+  }
+
   await transaction.user.update({
     where: { id: userId },
     data: {
-      atcoderId: nextAtCoderId,
+      atcoderId: account.name,
       atcoderIdChangedAt: now,
-      submissionsLastFetchedAt: now,
     },
   });
-
-  if (user.atcoderId) {
-    await transaction.submission.deleteMany({
-      where: { userId },
-    });
-    await transaction.userRatingHistory.deleteMany({
-      where: { userId },
-    });
-  }
-
-  await persistSubmissionsInTransaction(
-    transaction,
-    userId,
-    profileData.submissionData
-  );
-  await persistRatingHistoryInTransaction(
-    transaction,
-    userId,
-    profileData.ratingHistory
-  );
 
   return { status: 'changed' };
 }

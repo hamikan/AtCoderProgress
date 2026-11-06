@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-  applyAtCoderIdChange,
-  isAtCoderIdAvailableForUser,
-} from './apply-atcoder-id-change';
+import { applyAtCoderIdChange } from './apply-atcoder-id-change';
 import type { AtCoderProfileData } from '@/features/auth/types';
 
 const NOW = new Date('2026-07-14T00:00:00.000Z');
@@ -45,7 +42,8 @@ function createTransaction(
   user: {
     atcoderId: string | null;
     atcoderIdChangedAt: Date | null;
-  }
+  },
+  storedAccountName: string | null = null
 ) {
   const calls: Array<{ name: string; args: unknown }> = [];
   const transaction = {
@@ -59,21 +57,19 @@ function createTransaction(
         return user;
       },
     },
-    submission: {
-      async deleteMany(args: unknown) {
-        calls.push({ name: 'submission.deleteMany', args });
-        return { count: 1 };
+    atCoderAccount: {
+      async upsert(args: { create: { name: string } }) {
+        calls.push({ name: 'atCoderAccount.upsert', args });
+        return { name: storedAccountName ?? args.create.name };
       },
+    },
+    submission: {
       async createMany(args: unknown) {
         calls.push({ name: 'submission.createMany', args });
         return { count: 1 };
       },
     },
     userRatingHistory: {
-      async deleteMany(args: unknown) {
-        calls.push({ name: 'userRatingHistory.deleteMany', args });
-        return { count: 1 };
-      },
       async createMany(args: unknown) {
         calls.push({ name: 'userRatingHistory.createMany', args });
         return { count: 1 };
@@ -90,7 +86,7 @@ function createTransaction(
   return { calls, transaction };
 }
 
-test('atomically replaces the public AtCoder ID data without touching private records', async () => {
+test('stores fetched data under the new AtCoder ID and links it without deleting anything', async () => {
   const { calls, transaction } = createTransaction({
     atcoderId: 'chokudai',
     atcoderIdChangedAt: new Date('2026-07-01T00:00:00.000Z'),
@@ -99,7 +95,7 @@ test('atomically replaces the public AtCoder ID data without touching private re
   const result = await applyAtCoderIdChange(
     transaction,
     'app-user-id',
-    'tourist',
+    'TOURIST',
     NOW,
     PROFILE_DATA
   );
@@ -109,56 +105,67 @@ test('atomically replaces the public AtCoder ID data without touching private re
     calls.map((call) => call.name),
     [
       'user.findUnique',
-      'user.update',
-      'submission.deleteMany',
-      'userRatingHistory.deleteMany',
+      'atCoderAccount.upsert',
       'problem.findMany',
       'submission.createMany',
       'userRatingHistory.createMany',
+      'user.update',
     ]
   );
   assert.deepEqual(calls[1].args, {
-    data: {
-      atcoderId: 'tourist',
-      atcoderIdChangedAt: NOW,
+    where: { id: 'tourist' },
+    create: {
+      id: 'tourist',
+      name: 'tourist',
       submissionsLastFetchedAt: NOW,
     },
+    update: { name: 'tourist', submissionsLastFetchedAt: NOW },
+    select: { name: true },
+  });
+  assert.equal(
+    (calls[3].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
+      .atcoderAccountId,
+    'tourist'
+  );
+  assert.equal(
+    (calls[4].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
+      .atcoderAccountId,
+    'tourist'
+  );
+  assert.deepEqual(calls[5].args, {
+    data: { atcoderId: 'tourist', atcoderIdChangedAt: NOW },
     where: { id: 'app-user-id' },
   });
-  assert.deepEqual(calls[5].args, {
-    data: [
-      {
-        id: 1,
-        epochSecond: 1,
-        problemId: 'abc001_a',
-        contestId: 'abc001',
-        userId: 'app-user-id',
-        language: 'C++',
-        point: 100,
-        length: 100,
-        result: 'AC',
-        executionTime: 1,
-      },
-    ],
-    skipDuplicates: true,
+});
+
+test('switches to an AtCoder ID that is already stored without fetching', async () => {
+  const { calls, transaction } = createTransaction(
+    { atcoderId: 'chokudai', atcoderIdChangedAt: null },
+    'Tourist'
+  );
+
+  const result = await applyAtCoderIdChange(
+    transaction,
+    'app-user-id',
+    'TOURIST',
+    NOW,
+    null
+  );
+
+  assert.deepEqual(result, { status: 'changed' });
+  assert.deepEqual(
+    calls.map((call) => call.name),
+    ['user.findUnique', 'atCoderAccount.upsert', 'user.update']
+  );
+  assert.deepEqual(calls[1].args, {
+    where: { id: 'tourist' },
+    create: { id: 'tourist', name: 'TOURIST', submissionsLastFetchedAt: null },
+    update: {},
+    select: { name: true },
   });
-  assert.deepEqual(calls[6].args, {
-    data: [
-      {
-        userId: 'app-user-id',
-        isRated: true,
-        place: 1,
-        oldRating: 3800,
-        newRating: 3900,
-        performance: 4000,
-        innerPerformance: 4000,
-        contestScreenName: 'abc001.contest.atcoder.jp',
-        contestName: 'AtCoder Beginner Contest 001',
-        contestNameEn: 'AtCoder Beginner Contest 001',
-        endTime: new Date('2026-07-13T00:00:00.000Z'),
-      },
-    ],
-    skipDuplicates: true,
+  assert.deepEqual(calls[2].args, {
+    data: { atcoderId: 'Tourist', atcoderIdChangedAt: NOW },
+    where: { id: 'app-user-id' },
   });
 });
 
@@ -197,39 +204,4 @@ test('does not write while the seven-day cooldown is active', async () => {
 
   assert.equal(result.status, 'blocked');
   assert.deepEqual(calls.map((call) => call.name), ['user.findUnique']);
-});
-
-test('detects an AtCoder ID registered by another app user', async () => {
-  const createReader = (ownerId: string | null) => ({
-    user: {
-      async findUnique() {
-        return ownerId ? { id: ownerId } : null;
-      },
-    },
-  });
-
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader('other-user-id'),
-      'app-user-id',
-      'tourist'
-    ),
-    false
-  );
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader('app-user-id'),
-      'app-user-id',
-      'tourist'
-    ),
-    true
-  );
-  assert.equal(
-    await isAtCoderIdAvailableForUser(
-      createReader(null),
-      'app-user-id',
-      'tourist'
-    ),
-    true
-  );
 });

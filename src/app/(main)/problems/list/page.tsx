@@ -19,7 +19,7 @@ export default async function ProblemListPage({ searchParams }: ProblemListPageP
   const filters = normalizeProblemListSearchParams(params, userId);
 
   const [{ problems, totalProblems }, availableTags] = await Promise.all([
-    getProblemList(filters),
+    getProblemList(filters, user?.atcoderAccountId),
     getSelectableTags(userId),
   ]);
 

@@ -6,6 +6,7 @@ export type { RecentSubmission } from './output/recent-submission';
 export type { SolvedProblemStatistics } from './output/solved-problem-statistics';
 export type {
   SubmissionPersistenceRecord,
+  AtCoderAccountUpsertTransaction,
   SubmissionSyncTransaction,
   SubmissionWriterTransaction,
 } from './input/submission-persistence';

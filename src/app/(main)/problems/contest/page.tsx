@@ -13,11 +13,10 @@ interface ContestPageProps {
 
 export default async function ContestPage({ searchParams }: ContestPageProps) {
   const user = await getCurrentUser();
-  const userId = user?.id;
   const { contestType, order } = normalizeContestSearchParams(await searchParams);
 
   const contestPage = await getContestWorkspace(contestType, order, {
-    userId,
+    atcoderAccountId: user?.atcoderAccountId,
     pageSize: INITIAL_CONTEST_PAGE_SIZE,
   });
   const problemIndexes = getContestProblemIndexes(contestType);

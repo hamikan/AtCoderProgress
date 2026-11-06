@@ -17,3 +17,8 @@ export function parseAtCoderId(input: unknown): string {
   }
   return result.data;
 }
+
+// AtCoder ID は大文字小文字を区別しないので、保存するデータは小文字にそろえた ID で引く
+export function toAtCoderAccountId(atcoderId: string): string {
+  return atcoderId.toLowerCase();
+}

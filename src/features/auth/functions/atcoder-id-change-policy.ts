@@ -1,3 +1,5 @@
+import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
+
 export const ATCODER_ID_CHANGE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 type AtCoderIdChangeDecision =
@@ -18,7 +20,10 @@ export function decideAtCoderIdChange(
   nextAtCoderId: string,
   now: Date
 ): AtCoderIdChangeDecision {
-  if (currentAtCoderId === nextAtCoderId) {
+  if (
+    currentAtCoderId !== null &&
+    toAtCoderAccountId(currentAtCoderId) === toAtCoderAccountId(nextAtCoderId)
+  ) {
     return { status: 'unchanged' };
   }
 

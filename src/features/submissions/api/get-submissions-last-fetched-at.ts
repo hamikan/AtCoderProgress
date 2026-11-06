@@ -2,10 +2,12 @@ import 'server-only';
 
 import { prisma } from '@/lib/prisma';
 
-export async function getSubmissionsLastFetchedAt(userId: string): Promise<Date | null> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
+export async function getSubmissionsLastFetchedAt(
+  atcoderAccountId: string
+): Promise<Date | null> {
+  const account = await prisma.atCoderAccount.findUnique({
+    where: { id: atcoderAccountId },
     select: { submissionsLastFetchedAt: true },
   });
-  return user?.submissionsLastFetchedAt ?? null;
+  return account?.submissionsLastFetchedAt ?? null;
 }

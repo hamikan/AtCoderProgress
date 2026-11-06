@@ -4,8 +4,10 @@ import { prisma } from '@/lib/prisma';
 import { getTokyoMonthStartEpochSecond } from '@/lib/date/tokyo-date';
 import type { RatingSummary } from '@/features/ratings/types';
 
-export async function getRatingSummary(userId?: string): Promise<RatingSummary> {
-  if (!userId) {
+export async function getRatingSummary(
+  atcoderAccountId?: string | null
+): Promise<RatingSummary> {
+  if (!atcoderAccountId) {
     return {
       currentRating: 0,
       currentRatingChange: 0,
@@ -18,7 +20,7 @@ export async function getRatingSummary(userId?: string): Promise<RatingSummary> 
     getTokyoMonthStartEpochSecond(new Date()) * 1000
   );
   const history = await prisma.userRatingHistory.findMany({
-    where: { userId, isRated: true },
+    where: { atcoderAccountId, isRated: true },
     orderBy: { endTime: 'desc' },
     select: { endTime: true, newRating: true },
   });

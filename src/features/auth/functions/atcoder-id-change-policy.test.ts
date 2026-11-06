@@ -21,6 +21,13 @@ test('submitting the current AtCoder ID is a no-op', () => {
   );
 });
 
+test('submitting the current AtCoder ID in another case is a no-op', () => {
+  assert.deepEqual(
+    decideAtCoderIdChange('Chokudai', NOW, 'chokudai', NOW),
+    { status: 'unchanged' }
+  );
+});
+
 test('changing an AtCoder ID is blocked for seven days', () => {
   const changedAt = new Date(NOW.getTime() - ATCODER_ID_CHANGE_COOLDOWN_MS + 1);
   const availableAt = new Date(
