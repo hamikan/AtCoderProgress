@@ -3,42 +3,8 @@ import test from 'node:test';
 
 import { applyAtCoderIdChange } from './apply-atcoder-id-change';
 import { ATCODER_ID_FETCH_INTERVAL_MS } from '@/features/auth/functions/atcoder-id-change-policy';
-import type { AtCoderProfileData } from '@/features/auth/types';
 
 const NOW = new Date('2026-07-14T00:00:00.000Z');
-const PROFILE_DATA: AtCoderProfileData = {
-  submissionData: {
-    submissions: [
-      {
-        id: 1,
-        epoch_second: 1,
-        problem_id: 'abc001_a',
-        contest_id: 'abc001',
-        user_id: 'tourist',
-        language: 'C++',
-        point: 100,
-        length: 100,
-        result: 'AC',
-        execution_time: 1,
-      },
-    ],
-  },
-  ratingHistory: [
-    {
-      IsRated: true,
-      Place: 1,
-      OldRating: 3800,
-      NewRating: 3900,
-      Performance: 4000,
-      InnerPerformance: 4000,
-      ContestScreenName: 'abc001.contest.atcoder.jp',
-      ContestName: 'AtCoder Beginner Contest 001',
-      ContestNameEn: 'AtCoder Beginner Contest 001',
-      EndTime: '2026-07-13T00:00:00.000Z',
-    },
-  ],
-};
-
 const JUST_FETCHED = [new Date(NOW.getTime() - 60 * 1000)];
 
 function createTransaction({
@@ -78,38 +44,12 @@ function createTransaction({
         return { name: storedAccountName ?? args.create.name };
       },
     },
-    submission: {
-      async findMany(args: unknown) {
-        calls.push({ name: 'submission.findMany', args });
-        return [];
-      },
-      async createMany(args: unknown) {
-        calls.push({ name: 'submission.createMany', args });
-        return { count: 1 };
-      },
-      async update(args: unknown) {
-        calls.push({ name: 'submission.update', args });
-        return {};
-      },
-    },
-    userRatingHistory: {
-      async createMany(args: unknown) {
-        calls.push({ name: 'userRatingHistory.createMany', args });
-        return { count: 1 };
-      },
-    },
-    problem: {
-      async findMany(args: unknown) {
-        calls.push({ name: 'problem.findMany', args });
-        return [{ id: 'abc001_a' }];
-      },
-    },
   };
 
   return { calls, transaction };
 }
 
-test('stores fetched data under the new AtCoder ID and records the fetch', async () => {
+test('marks a new AtCoder ID as fetching, records the fetch, and links it', async () => {
   const { calls, transaction } = createTransaction();
 
   const result = await applyAtCoderIdChange(
@@ -117,7 +57,7 @@ test('stores fetched data under the new AtCoder ID and records the fetch', async
     'app-user-id',
     'TOURIST',
     NOW,
-    PROFILE_DATA
+    true
   );
 
   assert.deepEqual(result, { status: 'changed' });
@@ -128,10 +68,6 @@ test('stores fetched data under the new AtCoder ID and records the fetch', async
       'atCoderIdFetch.findMany',
       'atCoderAccount.upsert',
       'atCoderIdFetch.create',
-      'problem.findMany',
-      'submission.findMany',
-      'submission.createMany',
-      'userRatingHistory.createMany',
       'user.update',
     ]
   );
@@ -144,24 +80,15 @@ test('stores fetched data under the new AtCoder ID and records the fetch', async
   });
   assert.deepEqual(calls[2].args, {
     where: { id: 'tourist' },
-    create: {
-      id: 'tourist',
-      name: 'tourist',
-      submissionsLastFetchedAt: NOW,
-    },
-    update: { name: 'tourist', submissionsLastFetchedAt: NOW },
+    create: { id: 'tourist', name: 'TOURIST', fetchStartedAt: NOW },
+    update: { fetchStartedAt: NOW, fetchFailedAt: null },
     select: { name: true },
   });
   assert.deepEqual(calls[3].args, {
     data: { userId: 'app-user-id', atcoderAccountId: 'tourist' },
   });
-  assert.equal(
-    (calls[6].args as { data: Array<{ atcoderAccountId: string }> }).data[0]
-      .atcoderAccountId,
-    'tourist'
-  );
-  assert.deepEqual(calls[8].args, {
-    data: { atcoderId: 'tourist', atcoderIdChangedAt: NOW },
+  assert.deepEqual(calls[4].args, {
+    data: { atcoderId: 'TOURIST', atcoderIdChangedAt: NOW },
     where: { id: 'app-user-id' },
   });
 });
@@ -177,7 +104,7 @@ test('switches to a stored AtCoder ID without fetching, even right after a fetch
     'app-user-id',
     'TOURIST',
     NOW,
-    null
+    false
   );
 
   assert.deepEqual(result, { status: 'changed' });
@@ -192,7 +119,7 @@ test('switches to a stored AtCoder ID without fetching, even right after a fetch
   );
   assert.deepEqual(calls[2].args, {
     where: { id: 'tourist' },
-    create: { id: 'tourist', name: 'TOURIST', submissionsLastFetchedAt: null },
+    create: { id: 'tourist', name: 'TOURIST', fetchStartedAt: null },
     update: {},
     select: { name: true },
   });
@@ -206,13 +133,7 @@ test('does not write when the AtCoder ID is unchanged', async () => {
   const { calls, transaction } = createTransaction();
 
   assert.deepEqual(
-    await applyAtCoderIdChange(
-      transaction,
-      'app-user-id',
-      'chokudai',
-      NOW,
-      PROFILE_DATA
-    ),
+    await applyAtCoderIdChange(transaction, 'app-user-id', 'chokudai', NOW, true),
     { status: 'unchanged' }
   );
   assert.deepEqual(
@@ -221,7 +142,7 @@ test('does not write when the AtCoder ID is unchanged', async () => {
   );
 });
 
-test('does not fetch a new AtCoder ID right after another one', async () => {
+test('does not start a new AtCoder ID fetch right after another one', async () => {
   const { calls, transaction } = createTransaction({
     recentFetchTimes: JUST_FETCHED,
   });
@@ -231,7 +152,7 @@ test('does not fetch a new AtCoder ID right after another one', async () => {
     'app-user-id',
     'tourist',
     NOW,
-    PROFILE_DATA
+    true
   );
 
   assert.equal(result.status, 'blocked');

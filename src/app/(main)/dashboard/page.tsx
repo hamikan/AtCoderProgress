@@ -1,5 +1,7 @@
 import { StatCard } from '@/components/ui/stat-card';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import { getLinkedAtCoderFetchStatus } from '@/features/auth/api/get-linked-atcoder-fetch-status';
+import AtCoderFetchStatusBanner from '@/features/auth/components/AtCoderFetchStatusBanner';
 import LinkAtCoderPrompt from '@/features/auth/components/LinkAtCoderPrompt';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { refreshAtCoderDataIfStale } from '@/features/auth/sync/refresh-atcoder-data';
@@ -26,6 +28,7 @@ export default async function DashboardPage() {
   if (user?.atcoderId) {
     await refreshAtCoderDataIfStale(user.atcoderId);
   }
+  const fetchStatus = await getLinkedAtCoderFetchStatus(atcoderAccountId);
   const [
     solvedProblemStats,
     ratingSummary,
@@ -71,6 +74,11 @@ export default async function DashboardPage() {
         {user && !user.atcoderId && (
           <div className="mb-6">
             <LinkAtCoderPrompt />
+          </div>
+        )}
+        {fetchStatus && fetchStatus !== 'ready' && (
+          <div className="mb-6">
+            <AtCoderFetchStatusBanner status={fetchStatus} />
           </div>
         )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

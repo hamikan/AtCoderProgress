@@ -3,3 +3,7 @@ export type { AtCoderProfileData } from './input/atcoder-profile-data';
 export type { LoginSearchParamsInput } from './input/login-search-params';
 export type { ApplyAtCoderIdChangeResult } from './output/atcoder-id-change-result';
 export type { LinkAtCoderIdError } from './error/link-atcoder-id-error';
+export type {
+  AtCoderFetchState,
+  AtCoderFetchStatus,
+} from './output/atcoder-fetch-status';

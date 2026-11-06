@@ -19,7 +19,7 @@ export default function AtCoderIdForm({
   onLinked,
 }: AtCoderIdFormProps) {
   const [atcoderId, setAtCoderId] = useState('');
-  const { error, isLoading, link, setError, showSlowNote } = useLinkAtCoderId();
+  const { error, isLoading, link, setError } = useLinkAtCoderId();
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -61,11 +61,6 @@ export default function AtCoderIdForm({
         {isLoading ? '設定中...' : canSubmit ? submitLabel : 'ログイン後に設定できます'}
       </Button>
 
-      {showSlowNote && (
-        <p role="status" className="text-sm text-gray-600">
-          AtCoderからデータを取得しています。提出の多いIDだと数十秒かかることがあります。このままお待ちください。
-        </p>
-      )}
     </form>
   );
 }

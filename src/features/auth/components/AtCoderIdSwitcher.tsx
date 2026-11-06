@@ -1,22 +1,38 @@
 'use client';
 
-import { useState } from 'react';
-import { Loader2, Pencil } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AlertTriangle, Loader2, Pencil } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
+import type { AtCoderFetchStatus } from '@/features/auth/types';
 import { useLinkAtCoderId } from '@/features/auth/hooks/use-link-atcoder-id';
+
+const FETCH_STATUS_POLL_MS = 3000;
 
 interface AtCoderIdSwitcherProps {
   currentAtCoderId: string | null;
+  fetchStatus: AtCoderFetchStatus | null;
 }
 
-export default function AtCoderIdSwitcher({ currentAtCoderId }: AtCoderIdSwitcherProps) {
+export default function AtCoderIdSwitcher({
+  currentAtCoderId,
+  fetchStatus,
+}: AtCoderIdSwitcherProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState('');
-  const { error, isLoading, link, setError, showSlowNote } = useLinkAtCoderId();
+  const { error, isLoading, link, setError } = useLinkAtCoderId();
   const router = useRouter();
   const { update } = useSession();
+
+  // 裏で全件を取っている間は、終わったら表示されるように画面を読み直し続ける
+  useEffect(() => {
+    if (fetchStatus !== 'fetching') {
+      return;
+    }
+    const timer = setInterval(() => router.refresh(), FETCH_STATUS_POLL_MS);
+    return () => clearInterval(timer);
+  }, [fetchStatus, router]);
 
   function startEditing() {
     setValue(currentAtCoderId ?? '');
@@ -54,17 +70,28 @@ export default function AtCoderIdSwitcher({ currentAtCoderId }: AtCoderIdSwitche
       <button
         type="button"
         onClick={startEditing}
+        title={
+          fetchStatus === 'fetching'
+            ? 'AtCoderからデータを取得しています'
+            : fetchStatus === 'failed'
+              ? 'データを取得できませんでした。ダッシュボードからもう一度取得できます'
+              : undefined
+        }
         className="inline-flex h-9 min-w-48 items-center justify-between gap-2 rounded-md border border-slate-300 px-3 text-sm text-slate-900 hover:bg-slate-50"
       >
-        <span>{currentAtCoderId ?? 'AtCoder IDを連携'}</span>
+        <span className="inline-flex items-center gap-2">
+          {fetchStatus === 'fetching' && (
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600" aria-label="取得中" />
+          )}
+          {fetchStatus === 'failed' && (
+            <AlertTriangle className="h-4 w-4 text-amber-600" aria-label="取得に失敗" />
+          )}
+          {currentAtCoderId ?? 'AtCoder IDを連携'}
+        </span>
         <Pencil className="h-4 w-4 text-slate-500" />
       </button>
     );
   }
-
-  const message = error ?? (showSlowNote
-    ? 'AtCoderからデータを取得しています。提出の多いIDだと数十秒かかることがあります。'
-    : null);
 
   return (
     <div className="relative">
@@ -88,12 +115,12 @@ export default function AtCoderIdSwitcher({ currentAtCoderId }: AtCoderIdSwitche
       {isLoading && (
         <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
       )}
-      {message && (
+      {error && (
         <p
-          role={error ? 'alert' : 'status'}
-          className={`absolute right-0 top-full z-10 mt-1 w-64 rounded-md border bg-white px-3 py-2 text-xs ${error ? 'border-red-200 text-red-600' : 'border-slate-200 text-slate-600'}`}
+          role="alert"
+          className="absolute right-0 top-full z-10 mt-1 w-64 rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-600"
         >
-          {message}
+          {error}
         </p>
       )}
     </div>
