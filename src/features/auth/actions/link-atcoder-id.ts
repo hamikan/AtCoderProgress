@@ -10,13 +10,19 @@ import {
   getAtCoderIdChangeDecision,
 } from '@/features/auth/sync/apply-atcoder-id-change';
 import {
+  endLinkAttempt,
+  tryBeginLinkAttempt,
+} from '@/features/auth/sync/link-attempt-guard';
+import {
   AtCoderProfileFetchError,
   synchronizeAtCoderIdChange,
 } from '@/features/auth/sync/synchronize-atcoder-id-change';
 import type {
+  ApplyAtCoderIdChangeResult,
   AtCoderProfileData,
   LinkAtCoderIdError,
 } from '@/features/auth/types';
+import { checkAtCoderUserExists } from '@/lib/atcoder/check-user-exists';
 import { fetchRatingHistory } from '@/lib/atcoder/ratings/fetch-rating-history';
 import { fetchSubmissions } from '@/lib/atcoder/submissions/fetch-submissions';
 import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
@@ -60,33 +66,23 @@ export async function linkAtCoderId(
       return { ok: true, value: { status: 'unchanged' } };
     }
 
-    const commit = (profileData: AtCoderProfileData | null) => {
-      const now = new Date();
-      return prisma.$transaction(
-        (transaction) =>
-          applyAtCoderIdChange(
-            transaction,
-            user.id,
-            parsedAtCoderId,
-            now,
-            profileData
-          ),
-        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    if (!tryBeginLinkAttempt(user.id)) {
+      return failure(
+        'CONFLICT',
+        'AtCoder IDの連携処理が進行中です。完了してからもう一度お試しください。'
       );
-    };
-    const existingAccount = await prisma.atCoderAccount.findUnique({
-      where: { id: toAtCoderAccountId(parsedAtCoderId) },
-      select: { submissionsLastFetchedAt: true },
-    });
-    // すでに誰かが取ってある ID なら全件は取り直さない。新しい分はダッシュボードを開いたときの更新で入る
-    const result = existingAccount?.submissionsLastFetchedAt
-      ? await commit(null)
-      : await synchronizeAtCoderIdChange(parsedAtCoderId, {
-          fetchSubmissions,
-          fetchRatingHistory,
-          commit,
-        });
+    }
+    let changed: Result<ApplyAtCoderIdChangeResult, LinkAtCoderIdError>;
+    try {
+      changed = await changeAtCoderId(user.id, parsedAtCoderId);
+    } finally {
+      endLinkAttempt(user.id);
+    }
+    if (!changed.ok) {
+      return changed;
+    }
 
+    const result = changed.value;
     if (result.status === 'blocked') {
       return failure('CHANGE_BLOCKED', formatChangeBlockedMessage(result.availableAt));
     }
@@ -110,6 +106,53 @@ export async function linkAtCoderId(
     }
     return failure('INTERNAL_ERROR', 'AtCoder IDの更新に失敗しました。');
   }
+}
+
+async function changeAtCoderId(
+  userId: string,
+  atcoderId: string
+): Promise<Result<ApplyAtCoderIdChangeResult, LinkAtCoderIdError>> {
+  const commit = (profileData: AtCoderProfileData | null) => {
+    const now = new Date();
+    return prisma.$transaction(
+      (transaction) =>
+        applyAtCoderIdChange(transaction, userId, atcoderId, now, profileData),
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
+  };
+
+  const existingAccount = await prisma.atCoderAccount.findUnique({
+    where: { id: toAtCoderAccountId(atcoderId) },
+    select: { submissionsLastFetchedAt: true },
+  });
+  // すでに誰かが取ってある ID なら全件は取り直さない。新しい分はダッシュボードを開いたときの更新で入る
+  if (existingAccount?.submissionsLastFetchedAt) {
+    return { ok: true, value: await commit(null) };
+  }
+
+  // AtCoder Problems は存在しない ID にも空の結果を返すので、取る前に AtCoder のユーザーページで確かめる
+  const existence = await checkAtCoderUserExists(atcoderId);
+  if (existence === 'not-found') {
+    return failure(
+      'USER_NOT_FOUND',
+      'そのAtCoder IDのユーザーが見つかりませんでした。IDを確認してください。'
+    );
+  }
+  if (existence === 'unknown') {
+    return failure(
+      'UPSTREAM_UNAVAILABLE',
+      'AtCoder IDの存在を確認できませんでした。時間をおいてもう一度お試しください。'
+    );
+  }
+
+  return {
+    ok: true,
+    value: await synchronizeAtCoderIdChange(atcoderId, {
+      fetchSubmissions,
+      fetchRatingHistory,
+      commit,
+    }),
+  };
 }
 
 function failure(
