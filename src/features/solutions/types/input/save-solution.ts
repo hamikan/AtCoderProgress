@@ -9,3 +9,5 @@ export interface SaveSolutionInput {
   status: SolutionStatus;
   tagNames: string[];
 }
+
+export type SavePayload = Omit<SaveSolutionInput, 'solutionId'>;

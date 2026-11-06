@@ -27,6 +27,20 @@ export function getDefaultContestId(
   return problem.contests[0]?.contestId ?? null;
 }
 
+export function hasUnsavedScopeMove(
+  savedScope: { problemId: string; contestId: string } | null,
+  currentScope: { problemId: string; contestId: string } | null
+): boolean {
+  if (!savedScope || !currentScope) {
+    return false;
+  }
+
+  return (
+    savedScope.problemId !== currentScope.problemId ||
+    savedScope.contestId !== currentScope.contestId
+  );
+}
+
 export function formatSolutionRecordLabel(
   record: SolutionRecordListItem,
   index: number

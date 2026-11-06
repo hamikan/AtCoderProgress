@@ -1,7 +1,7 @@
 'use client';
 
 import { LogIn } from 'lucide-react';
-import Link from 'next/link';
+import { signIn } from 'next-auth/react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,15 @@ export default function LoginLink() {
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const returnTo = query ? `${pathname}?${query}` : pathname;
-  const href = `/login?callbackUrl=${encodeURIComponent(returnTo)}`;
 
   return (
-    <Button asChild size="sm" variant="outline">
-      <Link href={href}>
-        <LogIn className="h-4 w-4" />
-        ログイン
-      </Link>
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={() => signIn('github', { callbackUrl: returnTo })}
+    >
+      <LogIn className="h-4 w-4" />
+      ログイン
     </Button>
   );
 }

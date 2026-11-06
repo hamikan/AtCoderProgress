@@ -10,6 +10,7 @@ export type {
   ContestStats,
   ContestWorkspaceResult,
 } from './output/contest-workspace';
+export type { ContestListEntry } from './output/contest-list-entry';
 export type { Problem, ProblemListItem, ProblemStatus } from './output/problem';
 export type { ProblemContestOption, ProblemDetail } from './output/problem-detail';
 export type { ProblemSearchResult } from './output/problem-search-result';

@@ -1,17 +1,11 @@
 import { Code2, Home } from 'lucide-react';
 import Link from 'next/link';
-import LoginLink from './LoginLink';
-import UserMenu from './UserMenu';
 
 interface HeaderProps {
-  user: {
-    name: string | null;
-    image: string | null;
-    atcoderId: string | null;
-  } | null;
+  account: React.ReactNode;
 }
 
-export default function Header({ user }: HeaderProps) {
+export default function Header({ account }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
@@ -34,7 +28,7 @@ export default function Header({ user }: HeaderProps) {
           </nav>
         </div>
         <div className="flex items-center space-x-4">
-          {user ? <UserMenu user={user} /> : <LoginLink />}
+          {account}
         </div>
       </div>
     </header>

@@ -1,4 +1,4 @@
-export type { SaveSolutionInput } from './input/save-solution';
+export type { SavePayload, SaveSolutionInput } from './input/save-solution';
 export type { SolutionInput } from './input/solution-input';
 export type {
   SolutionDraftState,
