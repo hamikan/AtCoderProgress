@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './load-env';
 
 import { UTApi } from 'uploadthing/server';
 
@@ -161,7 +161,7 @@ async function main() {
 
   if (!tokenInfo.apiKey) {
     throw new Error(
-      'UPLOADTHING_TOKEN から API キーを取り出せませんでした。.env を確認してください。'
+      'UPLOADTHING_TOKEN から API キーを取り出せませんでした。.env.local か .env を確認してください。'
     );
   }
 
