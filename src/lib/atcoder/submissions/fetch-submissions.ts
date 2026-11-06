@@ -11,7 +11,8 @@ const FETCH_DELAY_MS = 2_000;
 
 export async function fetchSubmissions(
   atcoderId: string,
-  fromSecond: number
+  fromSecond: number,
+  signal?: AbortSignal
 ): Promise<SubmissionResources> {
   const parsedAtCoderId = parseAtCoderId(atcoderId);
   if (!Number.isInteger(fromSecond) || fromSecond < 0) {
@@ -20,13 +21,15 @@ export async function fetchSubmissions(
 
   const submissions = await collectSubmissions(
     (cursor) => {
+      signal?.throwIfAborted();
       const params = new URLSearchParams({
         from_second: String(cursor),
         user: parsedAtCoderId,
       });
       return fetchJson(
         `${SUBMISSIONS_ENDPOINT}?${params.toString()}`,
-        rawSubmissionsSchema
+        rawSubmissionsSchema,
+        { signal }
       );
     },
     fromSecond,

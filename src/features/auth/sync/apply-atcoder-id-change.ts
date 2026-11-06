@@ -27,13 +27,18 @@ interface UserAtCoderIdReader {
       atcoderIdChangedAt: Date | null;
     } | null>;
   };
+  submission: {
+    count(args: { where: { atcoderAccountId: string } }): Promise<number>;
+  };
+  userRatingHistory: {
+    count(args: { where: { atcoderAccountId: string } }): Promise<number>;
+  };
 }
 
-interface UserAtCoderIdTransaction
-  extends UserAtCoderIdReader,
-    SubmissionWriterTransaction,
-    RatingHistoryWriterTransaction {
-  user: UserAtCoderIdReader['user'] & {
+type UserAtCoderIdTransaction = UserAtCoderIdReader &
+  SubmissionWriterTransaction &
+  RatingHistoryWriterTransaction & {
+  user: {
     update(args: {
       data: {
         atcoderId: string;
@@ -54,7 +59,7 @@ interface UserAtCoderIdTransaction
       where: { id: string };
     }): Promise<{ name: string }>;
   };
-}
+};
 
 async function readAtCoderIdChange(
   reader: UserAtCoderIdReader,
@@ -74,12 +79,25 @@ async function readAtCoderIdChange(
     throw new Error('User not found');
   }
 
-  return decideAtCoderIdChange(
+  const decision = decideAtCoderIdChange(
     user.atcoderId,
     user.atcoderIdChangedAt,
     nextAtCoderId,
     now
   );
+  if (decision.status !== 'blocked' || !user.atcoderId) {
+    return decision;
+  }
+
+  // 提出もレート履歴も1件もない ID（打ち間違いなど）で、7日間変えられなくなるのを防ぐ
+  const atcoderAccountId = toAtCoderAccountId(user.atcoderId);
+  const [submissionCount, ratingHistoryCount] = await Promise.all([
+    reader.submission.count({ where: { atcoderAccountId } }),
+    reader.userRatingHistory.count({ where: { atcoderAccountId } }),
+  ]);
+  return submissionCount + ratingHistoryCount === 0
+    ? { status: 'allowed' as const }
+    : decision;
 }
 
 export async function getAtCoderIdChangeDecision(

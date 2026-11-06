@@ -6,10 +6,14 @@ import type { AtCoderProfileData } from '@/features/auth/types';
 
 interface SynchronizeAtCoderIdChangeDependencies<Result> {
   commit(profileData: AtCoderProfileData): Promise<Result>;
-  fetchRatingHistory(atcoderId: string): Promise<RatingHistoryResource[]>;
+  fetchRatingHistory(
+    atcoderId: string,
+    signal?: AbortSignal
+  ): Promise<RatingHistoryResource[]>;
   fetchSubmissions(
     atcoderId: string,
-    fromSecond: number
+    fromSecond: number,
+    signal?: AbortSignal
   ): Promise<SubmissionResources>;
 }
 
@@ -26,9 +30,22 @@ export async function synchronizeAtCoderIdChange<Result>(
 ): Promise<Result> {
   let profileData: AtCoderProfileData;
   try {
+    // 片方が失敗したらもう片方も止める。提出の全件取得は、止めないと失敗後も何分もページを取り続ける
+    const controller = new AbortController();
+    const abortOnFailure = async <Value>(
+      run: (signal: AbortSignal) => Promise<Value>
+    ): Promise<Value> => {
+      try {
+        return await run(controller.signal);
+      } catch (error) {
+        controller.abort();
+        throw error;
+      }
+    };
+
     const [submissionData, ratingHistory] = await Promise.all([
-      dependencies.fetchSubmissions(atcoderId, 0),
-      dependencies.fetchRatingHistory(atcoderId),
+      abortOnFailure((signal) => dependencies.fetchSubmissions(atcoderId, 0, signal)),
+      abortOnFailure((signal) => dependencies.fetchRatingHistory(atcoderId, signal)),
     ]);
     profileData = { ratingHistory, submissionData };
   } catch (error) {

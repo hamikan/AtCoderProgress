@@ -43,7 +43,8 @@ function createTransaction(
     atcoderId: string | null;
     atcoderIdChangedAt: Date | null;
   },
-  storedAccountName: string | null = null
+  storedAccountName: string | null = null,
+  currentAccountDataCount = 1
 ) {
   const calls: Array<{ name: string; args: unknown }> = [];
   const transaction = {
@@ -64,12 +65,20 @@ function createTransaction(
       },
     },
     submission: {
+      async count(args: unknown) {
+        calls.push({ name: 'submission.count', args });
+        return currentAccountDataCount;
+      },
       async createMany(args: unknown) {
         calls.push({ name: 'submission.createMany', args });
         return { count: 1 };
       },
     },
     userRatingHistory: {
+      async count(args: unknown) {
+        calls.push({ name: 'userRatingHistory.count', args });
+        return 0;
+      },
       async createMany(args: unknown) {
         calls.push({ name: 'userRatingHistory.createMany', args });
         return { count: 1 };
@@ -203,5 +212,31 @@ test('does not write while the seven-day cooldown is active', async () => {
   );
 
   assert.equal(result.status, 'blocked');
-  assert.deepEqual(calls.map((call) => call.name), ['user.findUnique']);
+  assert.deepEqual(calls.map((call) => call.name), [
+    'user.findUnique',
+    'submission.count',
+    'userRatingHistory.count',
+  ]);
+});
+
+test('allows leaving an AtCoder ID that brought no data even during the cooldown', async () => {
+  const { calls, transaction } = createTransaction(
+    {
+      atcoderId: 'Typo_Id',
+      atcoderIdChangedAt: new Date('2026-07-13T00:00:00.000Z'),
+    },
+    null,
+    0
+  );
+
+  const result = await applyAtCoderIdChange(
+    transaction,
+    'app-user-id',
+    'tourist',
+    NOW,
+    PROFILE_DATA
+  );
+
+  assert.deepEqual(result, { status: 'changed' });
+  assert.deepEqual(calls[1].args, { where: { atcoderAccountId: 'typo_id' } });
 });
