@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -17,6 +18,10 @@ import { saveSolution } from '@/features/solutions/actions/save-solution';
 import SolutionEditorSidebar from '@/features/solutions/components/SolutionEditorSidebar';
 import { isEmptySolutionContent } from '@/features/solutions/functions/solution-content';
 import {
+  buildSaveSignature,
+  getUnflushedPayload,
+} from '@/features/solutions/functions/save-signature';
+import {
   getDefaultContestId,
   getSolutionEditorKey,
   hasUnsavedScopeMove,
@@ -29,6 +34,7 @@ import type {
   SelectableTag,
 } from '@/features/problems/types';
 import type {
+  SavePayload,
   SaveSolutionInput,
   SolutionDraftState,
   SolutionRecordListItem,
@@ -119,6 +125,14 @@ function SolutionEditorContent({
   const isMountedRef = useRef(true);
   const saveInFlightRef = useRef(false);
   const pendingSaveRef = useRef<SaveSolutionInput | null>(null);
+  // 保存側が引き受け済みの最新ペイロードの控えと、入力途中の値の控え。画面を離れるときにデバウンス待ちの入力を流すために使う
+  const lastHandledSignatureRef = useRef<string | null>(null);
+  const latestSnapshotRef = useRef<{
+    payload: SavePayload;
+    isContestValid: boolean;
+    isAuthenticated: boolean;
+  } | null>(null);
+  const flushPendingSaveRef = useRef<() => void>(() => {});
   const savedScopeRef = useRef<{
     problemId: string;
     contestId: string;
@@ -156,6 +170,16 @@ function SolutionEditorContent({
           problemId: initialSolution.problemId,
           contestId: initialSolution.contestId,
         }
+      : null;
+    lastHandledSignatureRef.current = initialSolution
+      ? buildSaveSignature({
+          problemId: initialSolution.problemId,
+          contestId: initialSolution.contestId,
+          title: initialSolution.title,
+          content: initialSolution.content ?? DEFAULT_CONTENT,
+          status: initialSolution.status,
+          tagNames: initialSolution.userTags.map((tag) => tag.userTag.name),
+        })
       : null;
   }, [initialSolution]);
 
@@ -229,6 +253,141 @@ function SolutionEditorContent({
   ]);
 
   useEffect(() => {
+    latestSnapshotRef.current =
+      problem && contestId
+        ? {
+            payload: {
+              problemId: problem.id,
+              contestId,
+              title: title.trim() || null,
+              content: editorContent,
+              status,
+              tagNames: selectedTags,
+            },
+            isContestValid: problem.contests.some(
+              (contest) => contest.contestId === contestId
+            ),
+            isAuthenticated,
+          }
+        : null;
+  }, [
+    contestId,
+    editorContent,
+    isAuthenticated,
+    problem,
+    selectedTags,
+    status,
+    title,
+  ]);
+
+  const drainSaveQueue = useCallback(async () => {
+    if (saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
+    try {
+      while (pendingSaveRef.current) {
+        const input = {
+          ...pendingSaveRef.current,
+          solutionId: savedSolutionIdRef.current,
+        };
+        pendingSaveRef.current = null;
+        setSaveState('saving');
+        try {
+          const result = await saveSolution(input);
+          if (!result.ok) {
+            setSaveState('error');
+            return;
+          }
+
+          const savedId = result.value.solutionId;
+          const isFirstSave = savedSolutionIdRef.current === null;
+          savedSolutionIdRef.current = savedId;
+          setSavedSolutionId(savedId);
+          setSaveState('saved');
+
+          const previousScope = savedScopeRef.current;
+          const nextScope = {
+            problemId: input.problemId,
+            contestId: input.contestId,
+          };
+          const didMoveScope = Boolean(
+            previousScope &&
+              (previousScope.problemId !== nextScope.problemId ||
+                previousScope.contestId !== nextScope.contestId)
+          );
+          savedScopeRef.current = nextScope;
+
+          if (
+            isFirstSave &&
+            !isNavigatingRef.current &&
+            isMountedRef.current
+          ) {
+            // ページを移るとエディタが作り直されて保存中に打った文字が消えるため、URL だけを書き換える
+            window.history.replaceState(null, '', `/solutions/${savedId}`);
+          } else if (
+            didMoveScope &&
+            !isNavigatingRef.current &&
+            isMountedRef.current
+          ) {
+            router.refresh();
+          }
+        } catch {
+          setSaveState('error');
+          return;
+        }
+      }
+    } finally {
+      saveInFlightRef.current = false;
+    }
+  }, [router]);
+
+  function flushPendingSave() {
+    const snapshot = latestSnapshotRef.current;
+    if (!snapshot || !snapshot.isAuthenticated || !snapshot.isContestValid) {
+      return;
+    }
+    const { payload } = snapshot;
+    // デバウンス保存と同じ、空の記録を作らないための条件
+    if (
+      savedSolutionIdRef.current === null &&
+      isEmptySolutionContent(payload.content) &&
+      payload.title === null &&
+      payload.status === DEFAULT_STATUS &&
+      payload.tagNames.length === 0
+    ) {
+      return;
+    }
+    const unflushed = getUnflushedPayload(
+      payload,
+      lastHandledSignatureRef.current
+    );
+    if (!unflushed) {
+      return;
+    }
+    lastHandledSignatureRef.current = buildSaveSignature(unflushed);
+    pendingSaveRef.current = {
+      ...unflushed,
+      solutionId: savedSolutionIdRef.current,
+    };
+    void drainSaveQueue();
+  }
+
+  useEffect(() => {
+    flushPendingSaveRef.current = flushPendingSave;
+  });
+
+  // デバウンス待ちの間に画面を離れると直前の入力が落ちるため、離脱時に同じ保存キューへ流す（タブを閉じる場合はベストエフォート）
+  useEffect(() => {
+    const handlePageHide = () => {
+      flushPendingSaveRef.current();
+    };
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      flushPendingSaveRef.current();
+    };
+  }, []);
+
+  useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       if (!shouldSaveInitialDraft && !hasScopeMove) return;
@@ -252,7 +411,7 @@ function SolutionEditorContent({
       return;
     }
 
-    pendingSaveRef.current = {
+    const payload: SavePayload = {
       problemId: problem.id,
       contestId: debouncedContestId,
       title: debouncedTitle || null,
@@ -260,66 +419,11 @@ function SolutionEditorContent({
       status: debouncedStatus,
       tagNames: JSON.parse(debouncedTagsKey) as string[],
     };
-
-    async function drainSaveQueue() {
-      if (saveInFlightRef.current) return;
-      saveInFlightRef.current = true;
-      try {
-        while (pendingSaveRef.current) {
-          const input = {
-            ...pendingSaveRef.current,
-            solutionId: savedSolutionIdRef.current,
-          };
-          pendingSaveRef.current = null;
-          setSaveState('saving');
-          try {
-            const result = await saveSolution(input);
-            if (!result.ok) {
-              setSaveState('error');
-              return;
-            }
-
-            const savedId = result.value.solutionId;
-            const isFirstSave = savedSolutionIdRef.current === null;
-            savedSolutionIdRef.current = savedId;
-            setSavedSolutionId(savedId);
-            setSaveState('saved');
-
-            const previousScope = savedScopeRef.current;
-            const nextScope = {
-              problemId: input.problemId,
-              contestId: input.contestId,
-            };
-            const didMoveScope = Boolean(
-              previousScope &&
-                (previousScope.problemId !== nextScope.problemId ||
-                  previousScope.contestId !== nextScope.contestId)
-            );
-            savedScopeRef.current = nextScope;
-
-            if (
-              isFirstSave &&
-              !isNavigatingRef.current &&
-              isMountedRef.current
-            ) {
-              // ページを移るとエディタが作り直されて保存中に打った文字が消えるため、URL だけを書き換える
-              window.history.replaceState(null, '', `/solutions/${savedId}`);
-            } else if (
-              didMoveScope &&
-              !isNavigatingRef.current &&
-              isMountedRef.current
-            ) {
-              router.refresh();
-            }
-          } catch {
-            setSaveState('error');
-            return;
-          }
-        }
-      } finally {
-        saveInFlightRef.current = false;
-      }
-    }
+    pendingSaveRef.current = {
+      ...payload,
+      solutionId: savedSolutionIdRef.current,
+    };
+    lastHandledSignatureRef.current = buildSaveSignature(payload);
 
     void drainSaveQueue();
   }, [
@@ -328,11 +432,11 @@ function SolutionEditorContent({
     debouncedStatus,
     debouncedTagsKey,
     debouncedTitle,
+    drainSaveQueue,
     hasScopeMove,
     isAuthenticated,
     isDebouncedContestValid,
     problem?.id,
-    router,
     shouldSaveInitialDraft,
   ]);
 
