@@ -1,6 +1,7 @@
 import Header from "@/components/layout/Header";
 import LoginLink from '@/components/layout/LoginLink';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import { getLinkedAtCoderFetchStatus } from '@/features/auth/api/get-linked-atcoder-fetch-status';
 import AtCoderIdSwitcher from '@/features/auth/components/AtCoderIdSwitcher';
 import UserMenu from '@/features/auth/components/UserMenu';
 
@@ -10,6 +11,7 @@ export default async function MainLayout({
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
+  const fetchStatus = await getLinkedAtCoderFetchStatus(user?.atcoderAccountId);
 
   return (
     <div className="flex flex-col h-svh overflow-hidden">
@@ -17,7 +19,10 @@ export default async function MainLayout({
         account={
           user ? (
             <>
-              <AtCoderIdSwitcher currentAtCoderId={user.atcoderId} />
+              <AtCoderIdSwitcher
+                currentAtCoderId={user.atcoderId}
+                fetchStatus={fetchStatus}
+              />
               <UserMenu user={user} />
             </>
           ) : (

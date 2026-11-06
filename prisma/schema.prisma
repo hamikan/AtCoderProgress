@@ -80,6 +80,9 @@ model AtCoderAccount {
   id                        String      @id
   name                      String
   submissionsLastFetchedAt  DateTime?   @map("submissions_last_fetched_at")
+  // 全件の取得は裏で続けるので、取得中と失敗をここで持つ
+  fetchStartedAt            DateTime?   @map("fetch_started_at")
+  fetchFailedAt             DateTime?   @map("fetch_failed_at")
   createdAt                 DateTime    @default(now()) @map("created_at")
 
   submissions               Submission[]
