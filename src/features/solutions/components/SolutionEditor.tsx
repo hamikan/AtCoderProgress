@@ -15,6 +15,7 @@ import { EditorKit } from '@/components/editor/editor-kit';
 import { Editor, EditorContainer } from '@/components/ui/editor';
 import { saveSolution } from '@/features/solutions/actions/save-solution';
 import SolutionEditorSidebar from '@/features/solutions/components/SolutionEditorSidebar';
+import { isEmptySolutionContent } from '@/features/solutions/functions/solution-content';
 import {
   getDefaultContestId,
   getSolutionEditorKey,
@@ -227,6 +228,17 @@ function SolutionEditorContent({
     ) {
       return;
     }
+    // 開いたりクリックしたりしただけで空の記録ができないよう、何か書かれるまでは記録を作らない
+    if (
+      savedSolutionIdRef.current === null &&
+      isEmptySolutionContent(debouncedContent) &&
+      debouncedTitle === '' &&
+      debouncedStatus === DEFAULT_STATUS &&
+      debouncedTagsKey === '[]'
+    ) {
+      return;
+    }
+
     pendingSaveRef.current = {
       problemId: problem.id,
       contestId: debouncedContestId,
