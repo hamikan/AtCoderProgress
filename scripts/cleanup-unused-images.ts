@@ -2,6 +2,7 @@ import './load-env';
 
 import { UTApi } from 'uploadthing/server';
 
+import { formatTokyoDate } from '@/lib/date/tokyo-date';
 import { prisma } from '@/lib/prisma';
 import {
   extractUploadThingFileKeys,
@@ -191,7 +192,7 @@ async function main() {
   const totalBytes = candidates.reduce((sum, file) => sum + file.size, 0);
   console.log(`\n削除候補: ${candidates.length} 件（合計 ${formatBytes(totalBytes)}）`);
   for (const file of candidates) {
-    const uploadedDate = new Date(file.uploadedAt).toISOString().slice(0, 10);
+    const uploadedDate = formatTokyoDate(new Date(file.uploadedAt));
     console.log(
       `- ${file.key}  ${file.name}  ${formatBytes(file.size)}  ${uploadedDate}`
     );
