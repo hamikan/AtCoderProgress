@@ -1,6 +1,13 @@
 'use client';
 
-import { SOLUTION_STATUS_OPTIONS } from '@/features/solutions/functions/solution-status';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Check, ChevronDown } from 'lucide-react';
+
+import {
+  getSolutionStatusOption,
+  SOLUTION_STATUS_OPTIONS,
+} from '@/features/solutions/functions/solution-status';
+import { useDismissOnOutside } from '@/features/solutions/hooks/use-dismiss-on-outside';
 import type { SolutionStatus } from '@/features/solutions/types';
 import { cn } from '@/lib/utils';
 
@@ -13,24 +20,78 @@ export default function SolutionStatusPicker({
   status,
   onStatusChange,
 }: SolutionStatusPickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  // 外側を押して閉じたときは、押した先のフォーカスを奪わない
+  const shouldRestoreFocusRef = useRef(false);
+  const current = getSolutionStatusOption(status) ?? SOLUTION_STATUS_OPTIONS[0];
+
+  const close = useCallback((restoreFocus: boolean) => {
+    shouldRestoreFocusRef.current = restoreFocus;
+    setIsOpen(false);
+  }, []);
+  const dismiss = useCallback(
+    (reason: 'outside' | 'escape') => close(reason === 'escape'),
+    [close]
+  );
+
+  useDismissOnOutside({ enabled: isOpen, onDismiss: dismiss, ref: listRef });
+
+  useEffect(() => {
+    if (!isOpen && shouldRestoreFocusRef.current) {
+      shouldRestoreFocusRef.current = false;
+      toggleRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  if (!isOpen) {
+    return (
+      <button
+        ref={toggleRef}
+        type="button"
+        aria-expanded={false}
+        aria-label={`ステータス: ${current.label}`}
+        onClick={() => setIsOpen(true)}
+        className={cn(
+          'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+          current.badgeClassName
+        )}
+      >
+        <span className={cn('size-2 rounded-full', current.dotClassName)} />
+        {current.label}
+        <ChevronDown className="size-3.5 opacity-60" />
+      </button>
+    );
+  }
+
   return (
-    <div role="group" aria-label="ステータス" className="flex flex-wrap gap-1.5">
+    <div
+      ref={listRef}
+      role="group"
+      aria-label="ステータス"
+      className="rounded-lg border border-slate-200 bg-white p-1"
+    >
       {SOLUTION_STATUS_OPTIONS.map((option) => {
-        const isSelected = option.value === status;
+        const isSelected = option.value === current.value;
         return (
           <button
             key={option.value}
             type="button"
             aria-pressed={isSelected}
-            onClick={() => onStatusChange(option.value)}
+            autoFocus={isSelected}
+            onClick={() => {
+              onStatusChange(option.value);
+              close(true);
+            }}
             className={cn(
-              'rounded-full border px-3 py-1 text-sm transition-colors',
-              isSelected
-                ? cn('font-medium', option.selectedClassName)
-                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-50',
+              isSelected ? cn('font-medium', option.textClassName) : 'text-slate-700'
             )}
           >
-            {option.label}
+            <span className={cn('size-2 shrink-0 rounded-full', option.dotClassName)} />
+            <span className="flex-1">{option.label}</span>
+            {isSelected && <Check className="size-3.5" />}
           </button>
         );
       })}

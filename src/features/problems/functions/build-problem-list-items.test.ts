@@ -45,6 +45,19 @@ test('buildProblemListItems chooses the strongest saved status for a user', () =
   assert.equal(item.status, 'SELF_AC');
 });
 
+test('buildProblemListItems leaves unset records to submissions', () => {
+  const items = buildProblemListItems(
+    [
+      createRow({ id: 'accepted', solutions: [{ status: 'UNSET' }], submissions: [{ id: 1 }] }),
+      createRow({ id: 'untouched', solutions: [{ status: 'UNSET' }] }),
+      createRow({ id: 'mixed', solutions: [{ status: 'UNSET' }, { status: 'TRYING' }] }),
+    ],
+    'user-1'
+  );
+
+  assert.deepEqual(items.map((item) => item.status), ['AC', 'UNSOLVED', 'TRYING']);
+});
+
 test('buildProblemListItems derives AC and trying from submissions', () => {
   const items = buildProblemListItems(
     [

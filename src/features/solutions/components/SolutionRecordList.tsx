@@ -149,7 +149,8 @@ function SolutionRecordRow({
   const content = (
     <>
       <span className="min-w-0 truncate">{label}</span>
-      {statusOption && (
+      {/* 未設定はどの行にも出ると目障りなので、付けたものだけ出す */}
+      {statusOption && status !== 'UNSET' && (
         <span className={cn('shrink-0 text-xs', statusOption.textClassName)}>
           {statusOption.label}
         </span>

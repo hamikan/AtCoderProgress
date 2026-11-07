@@ -18,12 +18,14 @@ function getProblemStatus(row: ProblemListRow, hasUser: boolean): ProblemStatus 
     return 'UNSOLVED';
   }
 
-  if (row.solutions.length > 0) {
-    return row.solutions.reduce((bestStatus, solution) =>
-      STATUS_PRIORITY[solution.status] > STATUS_PRIORITY[bestStatus]
-        ? solution.status
-        : bestStatus
-    , row.solutions[0].status);
+  // 未設定の記録は解けたかどうかを表さないため、AtCoder の提出から決める
+  const statuses = row.solutions
+    .map((solution) => solution.status)
+    .filter((status): status is ProblemStatus => status !== 'UNSET');
+  if (statuses.length > 0) {
+    return statuses.reduce((bestStatus, status) =>
+      STATUS_PRIORITY[status] > STATUS_PRIORITY[bestStatus] ? status : bestStatus
+    );
   }
 
   if (row.submissions.length > 0) {

@@ -114,7 +114,7 @@ function buildSolvedConditions(
         some: {
           userId,
           status: {
-            in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'],
+            in: ['SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'],
           },
         },
       },

@@ -64,7 +64,6 @@ async function getUnsolvedRecommendations(
             some: {
               status: {
                 in: [
-                  SolutionStatus.AC,
                   SolutionStatus.SELF_AC,
                   SolutionStatus.EXPLANATION_AC,
                   SolutionStatus.REVIEW_AC,

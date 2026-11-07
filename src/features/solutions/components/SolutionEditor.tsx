@@ -23,6 +23,7 @@ import { saveSolution } from '@/features/solutions/actions/save-solution';
 import SolutionEditorSidebar from '@/features/solutions/components/SolutionEditorSidebar';
 import SolutionTitleInput from '@/features/solutions/components/SolutionTitleInput';
 import { isEmptySolutionContent } from '@/features/solutions/functions/solution-content';
+import { DEFAULT_SOLUTION_STATUS } from '@/features/solutions/functions/solution-status';
 import {
   buildSaveSignature,
   getUnflushedPayload,
@@ -52,7 +53,6 @@ import 'katex/dist/katex.min.css';
 const DEFAULT_CONTENT = JSON.stringify([
   { type: 'p', children: [{ text: '' }] },
 ]);
-const DEFAULT_STATUS: SolutionStatus = 'AC';
 
 interface SolutionEditorProps {
   problem: ProblemDetail | null;
@@ -96,7 +96,7 @@ function SolutionEditorContent({
     initialSolution?.title ?? draftState?.title ?? ''
   );
   const [status, setStatus] = useState<SolutionStatus>(
-    initialSolution?.status ?? draftState?.status ?? DEFAULT_STATUS
+    initialSolution?.status ?? draftState?.status ?? DEFAULT_SOLUTION_STATUS
   );
   const [selectedTags, setSelectedTags] = useState<string[]>(
     initialSolution?.userTags.map((tag) => tag.userTag.name) ??
@@ -211,7 +211,7 @@ function SolutionEditorContent({
       draftState &&
       (draftState.content !== DEFAULT_CONTENT ||
         draftState.title.trim().length > 0 ||
-        draftState.status !== DEFAULT_STATUS ||
+        draftState.status !== DEFAULT_SOLUTION_STATUS ||
         draftState.tags.length > 0)
   );
   const currentContest = useMemo(
@@ -368,7 +368,7 @@ function SolutionEditorContent({
       savedSolutionIdRef.current === null &&
       isEmptySolutionContent(payload.content) &&
       payload.title === null &&
-      payload.status === DEFAULT_STATUS &&
+      payload.status === DEFAULT_SOLUTION_STATUS &&
       payload.tagNames.length === 0
     ) {
       return;
@@ -423,7 +423,7 @@ function SolutionEditorContent({
       savedSolutionIdRef.current === null &&
       isEmptySolutionContent(debouncedContent) &&
       debouncedTitle === '' &&
-      debouncedStatus === DEFAULT_STATUS &&
+      debouncedStatus === DEFAULT_SOLUTION_STATUS &&
       debouncedTagsKey === '[]'
     ) {
       return;

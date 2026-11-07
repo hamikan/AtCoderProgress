@@ -16,9 +16,10 @@ interface ProblemsListProps {
 const getStatusIcon = (status: ProblemStatus) => {
   switch (status) {
     case 'SELF_AC':
-    case 'REVIEW_AC':
     case 'AC':
       return <CheckCircle className="h-4 w-4 text-emerald-600" />;
+    case 'REVIEW_AC':
+      return <CheckCircle className="h-4 w-4 text-purple-600" />;
     case 'EXPLANATION_AC':
       return <Eye className="h-4 w-4 text-blue-600" />;
     case 'TRYING':

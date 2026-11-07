@@ -1,9 +1,9 @@
 export type SolutionStatus =
-  | 'SELF_AC'
-  | 'EXPLANATION_AC'
-  | 'REVIEW_AC'
-  | 'AC'
+  | 'UNSET'
   | 'TRYING'
+  | 'EXPLANATION_AC'
+  | 'SELF_AC'
+  | 'REVIEW_AC'
   | 'UNSOLVED';
 
 export interface InProgressSolutionItem {

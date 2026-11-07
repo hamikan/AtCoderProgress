@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Loader2, X } from 'lucide-react';
 
+import { useDismissOnOutside } from '@/features/solutions/hooks/use-dismiss-on-outside';
 import type { SolutionRecordDeletePhase } from '@/features/solutions/types';
 
 interface SolutionRecordDeleteConfirmProps {
@@ -21,30 +22,7 @@ export default function SolutionRecordDeleteConfirm({
   const containerRef = useRef<HTMLDivElement>(null);
   const isDeleting = phase === 'deleting';
 
-  useEffect(() => {
-    if (isDeleting) {
-      return;
-    }
-    // Safari はボタンを押してもフォーカスが移らず blur では外側を押したか判別できないため、押した場所で判断する
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        onCancel();
-      }
-    };
-    // 小さい画面でサイドバーを閉じる Esc より先に受け取り、確認だけを閉じる
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        onCancel();
-      }
-    };
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isDeleting, onCancel]);
+  useDismissOnOutside({ enabled: !isDeleting, onDismiss: onCancel, ref: containerRef });
 
   return (
     <div ref={containerRef}>
