@@ -11,8 +11,6 @@ import {
 
 import DifficultyCircle from '@/components/atcoder/DifficultyCircle';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import ProblemInlineSearch from '@/features/solutions/components/ProblemInlineSearch';
 import SolutionContestMenu from '@/features/solutions/components/SolutionContestMenu';
 import SolutionRecordList from '@/features/solutions/components/SolutionRecordList';
@@ -42,7 +40,6 @@ interface SolutionEditorSidebarProps {
   onSelectRecord: (solutionId: string) => void;
   onStatusChange: (status: SolutionStatus) => void;
   onTagsChange: (tags: string[]) => void;
-  onTitleChange: (title: string) => void;
   problem: ProblemDetail | null;
   relatedSolutions: SolutionRecordListItem[];
   saveState: SolutionSaveState;
@@ -68,7 +65,6 @@ export default function SolutionEditorSidebar({
   onSelectRecord,
   onStatusChange,
   onTagsChange,
-  onTitleChange,
   problem,
   relatedSolutions,
   saveState,
@@ -236,20 +232,6 @@ export default function SolutionEditorSidebar({
       )}
 
       <section className="space-y-4 px-5 py-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="solution-title" className={SECTION_LABEL_CLASS_NAME}>
-            タイトル
-          </Label>
-          <Input
-            id="solution-title"
-            value={title}
-            onChange={(event) => onTitleChange(event.target.value)}
-            maxLength={120}
-            placeholder="本番AC解法 / 別解 / 復習用"
-            className="border-slate-200"
-          />
-        </div>
-
         <div className="space-y-1.5">
           <p className={SECTION_LABEL_CLASS_NAME}>ステータス</p>
           <SolutionStatusPicker status={status} onStatusChange={onStatusChange} />

@@ -19,12 +19,14 @@ import { Editor, EditorContainer } from '@/components/ui/editor';
 import { deleteSolution } from '@/features/solutions/actions/delete-solution';
 import { saveSolution } from '@/features/solutions/actions/save-solution';
 import SolutionEditorSidebar from '@/features/solutions/components/SolutionEditorSidebar';
+import SolutionTitleInput from '@/features/solutions/components/SolutionTitleInput';
 import { isEmptySolutionContent } from '@/features/solutions/functions/solution-content';
 import {
   buildSaveSignature,
   getUnflushedPayload,
 } from '@/features/solutions/functions/save-signature';
 import {
+  formatSolutionRecordLabel,
   getDefaultContestId,
   getPathAfterDeletingRecord,
   getSolutionEditorKey,
@@ -230,6 +232,14 @@ function SolutionEditorContent({
     () =>
       relatedSolutions.filter((solution) => solution.contestId === contestId),
     [contestId, relatedSolutions]
+  );
+  const activeRecordIndex = visibleRelatedSolutions.findIndex(
+    (solution) => solution.id === activeSolutionId
+  );
+  // 一覧に出る名前と同じにして、空のままだとどう呼ばれるかを見せる
+  const titlePlaceholder = formatSolutionRecordLabel(
+    { title: null },
+    activeRecordIndex === -1 ? visibleRelatedSolutions.length : activeRecordIndex
   );
 
   useEffect(() => {
@@ -449,12 +459,17 @@ function SolutionEditorContent({
   function handleEditorSurfaceMouseDown(event: MouseEvent<HTMLDivElement>) {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    if (target.closest('[data-slate-editor="true"], [contenteditable="true"]')) {
+    if (target.closest('[data-slate-editor="true"], [contenteditable="true"], input')) {
       return;
     }
 
     event.preventDefault();
     editor.tf.focus({ edge: 'endEditor' });
+  }
+
+  function handleMoveToBody() {
+    if (!mounted) return;
+    editor.tf.focus({ edge: 'startEditor' });
   }
 
   function handleCreateNewRecord() {
@@ -531,6 +546,12 @@ function SolutionEditorContent({
             onMouseDown={handleEditorSurfaceMouseDown}
             className="mx-auto flex h-full min-h-0 max-w-3xl cursor-text flex-col rounded-2xl border border-slate-200 bg-white shadow-sm"
           >
+            <SolutionTitleInput
+              value={title}
+              placeholder={titlePlaceholder}
+              onChange={setTitle}
+              onMoveToBody={handleMoveToBody}
+            />
             {!mounted ? (
               <div className="animate-pulse space-y-6 p-4 sm:p-6">
                 <div className="h-4 w-full rounded bg-slate-50" />
@@ -547,7 +568,7 @@ function SolutionEditorContent({
                 <EditorContainer className="min-h-0 flex-1 overflow-x-auto overflow-y-auto border-none p-0 shadow-none">
                   <Editor
                     variant="none"
-                    className="min-h-full max-w-none px-4 pb-32 pt-4 text-base leading-relaxed text-slate-700 prose prose-slate sm:px-6 sm:pt-6"
+                    className="min-h-full max-w-none px-4 pb-32 pt-3 text-base leading-relaxed text-slate-700 prose prose-slate sm:px-6 sm:pt-4"
                   />
                 </EditorContainer>
               </Plate>
@@ -571,7 +592,6 @@ function SolutionEditorContent({
         onSelectRecord={handleSelectSolutionRecord}
         onStatusChange={setStatus}
         onTagsChange={setSelectedTags}
-        onTitleChange={setTitle}
         problem={problem}
         relatedSolutions={visibleRelatedSolutions}
         saveState={saveState}
