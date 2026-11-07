@@ -15,8 +15,11 @@ export async function getProblemDetail(problemId: string): Promise<ProblemDetail
     return null;
   }
 
+  // 元のコンテスト（ABC など）を先頭に置き、あとから同じ問題が出たコンテスト（ADT など）は新しい順に並べる
   const contests = [...problem.contests].sort(
     (left, right) =>
+      Number(right.contestId === problem.firstContestId) -
+        Number(left.contestId === problem.firstContestId) ||
       right.contest.startEpochSecond - left.contest.startEpochSecond ||
       left.contestId.localeCompare(right.contestId)
   );
