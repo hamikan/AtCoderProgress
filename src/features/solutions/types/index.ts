@@ -2,6 +2,7 @@ export type { SavePayload, SaveSolutionInput } from './input/save-solution';
 export type { SolutionInput } from './input/solution-input';
 export type {
   SolutionDraftState,
+  SolutionRecordDeletePhase,
   SolutionSaveState,
 } from './input/solution-draft-state';
 export type {

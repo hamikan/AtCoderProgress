@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 
-import DeleteSolutionDialog from '@/features/solutions/components/DeleteSolutionDialog';
+import SolutionRecordDeleteConfirm from '@/features/solutions/components/SolutionRecordDeleteConfirm';
 import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
 import { getSolutionStatusOption } from '@/features/solutions/functions/solution-status';
 import type {
+  SolutionRecordDeletePhase,
   SolutionRecordListItem,
   SolutionStatus,
 } from '@/features/solutions/types';
@@ -24,7 +25,7 @@ interface SolutionRecordListProps {
 
 interface DeleteTarget {
   id: string;
-  label: string;
+  phase: SolutionRecordDeletePhase;
 }
 
 export default function SolutionRecordList({
@@ -45,48 +46,75 @@ export default function SolutionRecordList({
   // 何も書いていない新しい記録をもう1つ作っても意味がないため、保存済みの記録を開いているときだけ出す
   const canCreateRecord = activeSolutionId !== null;
 
-  async function handleDelete(target: DeleteTarget): Promise<boolean> {
-    const ok = await onDeleteRecord(target.id);
-    // 開いている記録を消したときは別の画面へ移るので、移り終わるまでダイアログを出したままにする
-    if (ok && target.id !== activeSolutionId) {
-      setDeletedIds((ids) => [...ids, target.id]);
+  async function handleConfirmDelete(solutionId: string) {
+    setDeleteTarget({ id: solutionId, phase: 'deleting' });
+    const ok = await onDeleteRecord(solutionId);
+    if (!ok) {
+      setDeleteTarget({ id: solutionId, phase: 'failed' });
+      return;
+    }
+    // 開いている記録を消したときは別の画面へ移るので、移り終わるまで「消しています」のままにする
+    if (solutionId !== activeSolutionId) {
+      setDeletedIds((ids) => [...ids, solutionId]);
       setDeleteTarget(null);
     }
-    return ok;
+  }
+
+  function renderRecord({
+    id,
+    label,
+    status: recordStatus,
+    isActive,
+    onSelect,
+  }: {
+    id: string | null;
+    label: string;
+    status: SolutionStatus;
+    isActive: boolean;
+    onSelect?: () => void;
+  }) {
+    if (id && deleteTarget?.id === id) {
+      return (
+        <SolutionRecordDeleteConfirm
+          key={id}
+          label={label}
+          phase={deleteTarget.phase}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleConfirmDelete(id)}
+        />
+      );
+    }
+    return (
+      <SolutionRecordRow
+        key={id ?? 'draft'}
+        label={label}
+        status={recordStatus}
+        isActive={isActive}
+        onSelect={onSelect}
+        onDelete={id ? () => setDeleteTarget({ id, phase: 'confirming' }) : undefined}
+      />
+    );
   }
 
   return (
     <div className="space-y-1.5">
       {shownRecords.map((record, index) => {
         const isActive = record.id === activeSolutionId;
-        const label = formatSolutionRecordLabel(isActive ? { title } : record, index);
-        return (
-          <SolutionRecordRow
-            key={record.id}
-            label={label}
-            status={isActive ? status : record.status}
-            isActive={isActive}
-            onSelect={() => onSelectRecord(record.id)}
-            onDelete={() => setDeleteTarget({ id: record.id, label })}
-          />
-        );
+        return renderRecord({
+          id: record.id,
+          label: formatSolutionRecordLabel(isActive ? { title } : record, index),
+          status: isActive ? status : record.status,
+          isActive,
+          onSelect: () => onSelectRecord(record.id),
+        });
       })}
-      {!isActiveRecordListed && (
-        <SolutionRecordRow
-          label={formatSolutionRecordLabel({ title }, shownRecords.length)}
-          status={status}
-          isActive
-          onDelete={
-            activeSolutionId
-              ? () =>
-                  setDeleteTarget({
-                    id: activeSolutionId,
-                    label: formatSolutionRecordLabel({ title }, shownRecords.length),
-                  })
-              : undefined
-          }
-        />
-      )}
+      {!isActiveRecordListed &&
+        renderRecord({
+          id: activeSolutionId,
+          label: formatSolutionRecordLabel({ title }, shownRecords.length),
+          status,
+          isActive: true,
+        })}
       {canCreateRecord && (
         <button
           type="button"
@@ -97,14 +125,6 @@ export default function SolutionRecordList({
         >
           <Plus className="size-4" />
         </button>
-      )}
-      {deleteTarget && (
-        <DeleteSolutionDialog
-          key={deleteTarget.id}
-          label={deleteTarget.label}
-          onCancel={() => setDeleteTarget(null)}
-          onDelete={() => handleDelete(deleteTarget)}
-        />
       )}
     </div>
   );
