@@ -28,17 +28,9 @@ test('getDefaultContestId prefers a valid requested contest', () => {
 });
 
 test('formatSolutionRecordLabel falls back to a numbered label', () => {
-  assert.equal(
-    formatSolutionRecordLabel({
-      id: 'solution-1',
-      contestId: 'abc001',
-      title: '  ',
-      createdAt: '2026-01-01T00:00:00.000Z',
-      updatedAt: '2026-01-01T00:00:00.000Z',
-      status: 'AC',
-    }, 1),
-    '記録 2'
-  );
+  assert.equal(formatSolutionRecordLabel({ title: '  ' }, 1), '記録 2');
+  assert.equal(formatSolutionRecordLabel({ title: null }, 2), '記録 3');
+  assert.equal(formatSolutionRecordLabel({ title: ' 別解 ' }, 0), '別解');
 });
 
 test('hasUnsavedScopeMove detects a problem or contest change', () => {

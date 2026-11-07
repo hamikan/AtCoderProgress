@@ -42,7 +42,7 @@ export function hasUnsavedScopeMove(
 }
 
 export function formatSolutionRecordLabel(
-  record: SolutionRecordListItem,
+  record: Pick<SolutionRecordListItem, 'title'>,
   index: number
 ): string {
   return record.title?.trim() || `記録 ${index + 1}`;

@@ -6,7 +6,6 @@ import {
   Check,
   ExternalLink,
   Loader2,
-  Plus,
   X,
 } from 'lucide-react';
 
@@ -16,10 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ProblemInlineSearch from '@/features/solutions/components/ProblemInlineSearch';
 import SolutionContestMenu from '@/features/solutions/components/SolutionContestMenu';
+import SolutionRecordList from '@/features/solutions/components/SolutionRecordList';
 import SolutionStatusPicker from '@/features/solutions/components/SolutionStatusPicker';
 import SolutionTagSelector from '@/features/solutions/components/SolutionTagSelector';
-import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
-import { getSolutionStatusOption } from '@/features/solutions/functions/solution-status';
 import type { ProblemDetail, SelectableTag } from '@/features/problems/types';
 import type {
   SolutionRecordListItem,
@@ -218,57 +216,18 @@ export default function SolutionEditorSidebar({
 
       {problem && (
         <section className="space-y-2 border-b border-slate-100 px-5 py-4">
-          <div className="flex items-center justify-between">
-            <p className={SECTION_LABEL_CLASS_NAME}>この問題の記録</p>
-            {contestId && (
-              <button
-                type="button"
-                onClick={onCreateRecord}
-                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
-              >
-                <Plus className="size-3.5" />
-                新しい記録
-              </button>
-            )}
-          </div>
-
-          {relatedSolutions.length > 0 ? (
-            <div className="space-y-1.5">
-              {relatedSolutions.map((record, index) => {
-                const isActive = record.id === activeSolutionId;
-                const shownRecord = isActive ? { ...record, title, status } : record;
-                const statusOption = getSolutionStatusOption(shownRecord.status);
-                return (
-                  <button
-                    key={record.id}
-                    type="button"
-                    aria-current={isActive ? 'true' : undefined}
-                    onClick={() => onSelectRecord(record.id)}
-                    className={cn(
-                      'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-                      isActive
-                        ? 'border-blue-600 bg-blue-50 text-blue-900'
-                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                    )}
-                  >
-                    <span className="min-w-0 truncate">
-                      {formatSolutionRecordLabel(shownRecord, index)}
-                    </span>
-                    {statusOption && (
-                      <span className={cn('shrink-0 text-xs', statusOption.textClassName)}>
-                        {statusOption.label}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          <p className={SECTION_LABEL_CLASS_NAME}>この問題の記録</p>
+          {contestId ? (
+            <SolutionRecordList
+              activeSolutionId={activeSolutionId}
+              records={relatedSolutions}
+              title={title}
+              status={status}
+              onCreateRecord={onCreateRecord}
+              onSelectRecord={onSelectRecord}
+            />
           ) : (
-            <p className="text-xs text-slate-400">
-              {contestId
-                ? 'この問題の記録はまだありません。'
-                : '上でコンテストを選ぶと表示されます。'}
-            </p>
+            <p className="text-xs text-slate-400">上でコンテストを選ぶと表示されます。</p>
           )}
         </section>
       )}
