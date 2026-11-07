@@ -95,6 +95,9 @@ export default function SolutionEditorSidebar({
     (contest) => contest.contestId === contestId
   );
   const linkContestId = currentContest?.contestId ?? problem?.firstContest.id;
+  const contestLabel = currentContest
+    ? currentContest.contestId.toUpperCase()
+    : 'コンテストを選ぶ';
   const canChooseContest =
     problem !== null && (problem.contests.length > 1 || !hasCurrentContest);
   const idleHint = getIdleHint({
@@ -130,18 +133,16 @@ export default function SolutionEditorSidebar({
         {problem ? (
           <>
             <div className="flex items-center justify-between gap-2 text-xs">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-slate-500">
-                  {currentContest ? currentContest.contestId.toUpperCase() : 'コンテスト未選択'}
-                </span>
-                {canChooseContest && (
-                  <SolutionContestMenu
-                    contestId={contestId}
-                    contests={problem.contests}
-                    onContestChange={onContestChange}
-                  />
-                )}
-              </div>
+              {canChooseContest ? (
+                <SolutionContestMenu
+                  label={contestLabel}
+                  contestId={contestId}
+                  contests={problem.contests}
+                  onContestChange={onContestChange}
+                />
+              ) : (
+                <span className="min-w-0 truncate text-slate-500">{contestLabel}</span>
+              )}
               <SaveStatus saveState={saveState} />
             </div>
             <h1 className="break-words text-lg font-bold leading-snug text-slate-900">
@@ -253,7 +254,7 @@ export default function SolutionEditorSidebar({
             <p className="text-xs text-slate-400">
               {contestId
                 ? 'この問題の記録はまだありません。'
-                : '上の「変更」でコンテストを選ぶと表示されます。'}
+                : '上でコンテストを選ぶと表示されます。'}
             </p>
           )}
         </section>
