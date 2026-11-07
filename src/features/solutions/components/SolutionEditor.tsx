@@ -16,6 +16,8 @@ import { Plate, usePlateEditor } from 'platejs/react';
 import { EditorKit } from '@/components/editor/editor-kit';
 import { Button } from '@/components/ui/button';
 import { Editor, EditorContainer } from '@/components/ui/editor';
+import { FixedToolbar } from '@/components/ui/fixed-toolbar';
+import { FixedToolbarButtons } from '@/components/ui/fixed-toolbar-buttons';
 import { deleteSolution } from '@/features/solutions/actions/delete-solution';
 import { saveSolution } from '@/features/solutions/actions/save-solution';
 import SolutionEditorSidebar from '@/features/solutions/components/SolutionEditorSidebar';
@@ -459,7 +461,11 @@ function SolutionEditorContent({
   function handleEditorSurfaceMouseDown(event: MouseEvent<HTMLDivElement>) {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    if (target.closest('[data-slate-editor="true"], [contenteditable="true"], input')) {
+    if (
+      target.closest(
+        '[data-slate-editor="true"], [contenteditable="true"], input, [role="toolbar"]'
+      )
+    ) {
       return;
     }
 
@@ -546,12 +552,6 @@ function SolutionEditorContent({
             onMouseDown={handleEditorSurfaceMouseDown}
             className="mx-auto flex h-full min-h-0 max-w-3xl cursor-text flex-col rounded-2xl border border-slate-200 bg-white shadow-sm"
           >
-            <SolutionTitleInput
-              value={title}
-              placeholder={titlePlaceholder}
-              onChange={setTitle}
-              onMoveToBody={handleMoveToBody}
-            />
             {!mounted ? (
               <div className="animate-pulse space-y-6 p-4 sm:p-6">
                 <div className="h-4 w-full rounded bg-slate-50" />
@@ -565,6 +565,15 @@ function SolutionEditorContent({
                   setEditorContent(JSON.stringify(value))
                 }
               >
+                <FixedToolbar className="rounded-t-2xl">
+                  <FixedToolbarButtons />
+                </FixedToolbar>
+                <SolutionTitleInput
+                  value={title}
+                  placeholder={titlePlaceholder}
+                  onChange={setTitle}
+                  onMoveToBody={handleMoveToBody}
+                />
                 <EditorContainer className="min-h-0 flex-1 overflow-x-auto overflow-y-auto border-none p-0 shadow-none">
                   <Editor
                     variant="none"
