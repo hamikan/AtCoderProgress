@@ -1,11 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Plus, Search, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+
 import type { SelectableTag } from '@/features/problems/types';
+import {
+  buildTagChoices,
+  filterTagChoices,
+  findTagToCreate,
+  normalizeTagName,
+  toTagKey,
+} from '@/features/solutions/functions/solution-tags';
+import { useInlineDisclosure } from '@/features/solutions/hooks/use-inline-disclosure';
+import { cn } from '@/lib/utils';
 
 interface SolutionTagSelectorProps {
   availableTags: SelectableTag[];
@@ -13,144 +20,172 @@ interface SolutionTagSelectorProps {
   onSelectedTagsChange: (tags: string[]) => void;
 }
 
-function normalizeTagName(value: string): string {
-  return value.trim().replace(/\s+/g, ' ');
-}
-
-function toTagKey(value: string): string {
-  return value.toLocaleLowerCase();
-}
+const CHIP_CLASS_NAME =
+  'inline-flex h-5.5 max-w-full items-center gap-1 rounded-md border px-2 text-xs transition-colors';
 
 export default function SolutionTagSelector({
   availableTags,
   selectedTags,
   onSelectedTagsChange,
 }: SolutionTagSelectorProps) {
-  const [tagSearch, setTagSearch] = useState('');
-  const normalizedSearch = normalizeTagName(tagSearch);
-  const selectedTagKeys = useMemo(
+  const { isOpen, open, panelRef, toggleRef } = useInlineDisclosure();
+  const [search, setSearch] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+  const selectedKeys = useMemo(
     () => new Set(selectedTags.map((tag) => toTagKey(tag))),
     [selectedTags]
   );
+  const choices = useMemo(
+    () => buildTagChoices(availableTags, selectedTags),
+    [availableTags, selectedTags]
+  );
+  const shownChoices = filterTagChoices(choices, search);
+  const tagToCreate = findTagToCreate(choices, search);
 
-  const allTagNames = useMemo(() => {
-    const tagNamesByKey = new Map<string, string>();
-
-    for (const tag of availableTags) {
-      tagNamesByKey.set(toTagKey(tag.name), tag.name);
+  function addTag(tagName: string) {
+    if (!selectedKeys.has(toTagKey(tagName))) {
+      onSelectedTagsChange([...selectedTags, tagName]);
     }
+  }
 
-    for (const tagName of selectedTags) {
-      tagNamesByKey.set(toTagKey(tagName), tagName);
+  function removeTag(tagName: string) {
+    const key = toTagKey(tagName);
+    onSelectedTagsChange(selectedTags.filter((tag) => toTagKey(tag) !== key));
+  }
+
+  // 探して付けたあとは、続けて次のタグを探せるように検索欄へ戻す
+  function clearSearch() {
+    setSearch('');
+    searchRef.current?.focus();
+  }
+
+  function toggleTag(tagName: string) {
+    if (selectedKeys.has(toTagKey(tagName))) {
+      removeTag(tagName);
+    } else {
+      addTag(tagName);
     }
+    if (search) {
+      clearSearch();
+    }
+  }
 
-    return [...tagNamesByKey.values()].sort((a, b) => a.localeCompare(b));
-  }, [availableTags, selectedTags]);
-
-  const matchingTags = useMemo(() => {
-    if (!normalizedSearch) return [];
-
-    const searchKey = toTagKey(normalizedSearch);
-
-    return allTagNames.filter((tagName) =>
-      toTagKey(tagName).includes(searchKey) && !selectedTagKeys.has(toTagKey(tagName))
-    );
-  }, [allTagNames, normalizedSearch, selectedTagKeys]);
-
-  const addTag = (tagName: string) => {
-    const normalizedTagName = normalizeTagName(tagName);
-    if (!normalizedTagName) return;
-    const tagKey = toTagKey(normalizedTagName);
-    if (selectedTagKeys.has(tagKey)) {
-      setTagSearch('');
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    // 変換を確定する Enter でタグを作らないようにする
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing) {
       return;
     }
+    event.preventDefault();
+    const name = normalizeTagName(search);
+    if (!name) {
+      return;
+    }
+    const sameChoice = choices.find((choice) => toTagKey(choice.name) === toTagKey(name));
+    addTag(sameChoice?.name ?? name);
+    clearSearch();
+  }
 
-    const existingTagName = allTagNames.find((name) => toTagKey(name) === tagKey);
-    onSelectedTagsChange([...selectedTags, existingTagName ?? normalizedTagName]);
-    setTagSearch('');
-  };
-
-  const removeTag = (tagName: string) => {
-    const tagKey = toTagKey(tagName);
-    onSelectedTagsChange(selectedTags.filter((tag) => toTagKey(tag) !== tagKey));
-  };
-
-  const canCreateTag = normalizedSearch.length > 0 && !selectedTagKeys.has(toTagKey(normalizedSearch));
+  function handleOpen() {
+    setSearch('');
+    open();
+  }
 
   return (
     <div className="space-y-1.5">
-      <Label htmlFor="solution-tag-search" className="text-xs font-medium text-slate-500">
-        タグ
-      </Label>
-
-      {selectedTags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+      <p className="text-xs font-medium text-slate-500">タグ</p>
+      {isOpen ? (
+        <div ref={panelRef} className="rounded-lg border border-slate-200 bg-white p-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
+            <input
+              ref={searchRef}
+              type="text"
+              autoFocus
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              aria-label="タグを探す・作る"
+              placeholder="タグを探す・作る"
+              className="h-8 w-full rounded-md border border-slate-200 pl-8 pr-2 text-sm outline-none transition-colors focus:border-slate-400"
+            />
+          </div>
+          <div role="group" aria-label="タグの候補" className="mt-2 flex flex-wrap gap-1.5">
+            {tagToCreate && (
+              <button
+                type="button"
+                onClick={() => {
+                  addTag(tagToCreate);
+                  clearSearch();
+                }}
+                className={cn(
+                  CHIP_CLASS_NAME,
+                  'border-dashed border-blue-400 text-blue-700 hover:bg-blue-50'
+                )}
+              >
+                <Plus className="size-3 shrink-0" />
+                <span className="truncate">「{tagToCreate}」を作る</span>
+              </button>
+            )}
+            {shownChoices.map((choice) => {
+              const isSelected = selectedKeys.has(toTagKey(choice.name));
+              return (
+                <button
+                  key={choice.name}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => toggleTag(choice.name)}
+                  className={cn(
+                    CHIP_CLASS_NAME,
+                    isSelected
+                      ? 'border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  )}
+                >
+                  <span className="truncate">{choice.name}</span>
+                </button>
+              );
+            })}
+          </div>
+          {choices.length === 0 && !tagToCreate && (
+            <p className="mt-2 text-xs text-slate-400">
+              タグはまだありません。名前を打つと作れます。
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-1.5">
           {selectedTags.map((tagName) => (
             <button
               key={tagName}
               type="button"
               onClick={() => removeTag(tagName)}
               aria-label={`${tagName} を外す`}
-              className="flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
+              className={cn(
+                CHIP_CLASS_NAME,
+                'border-transparent bg-blue-50 font-medium text-blue-700 hover:bg-blue-100'
+              )}
             >
-              <span>{tagName}</span>
-              <X className="size-3 opacity-60" />
+              <span className="truncate">{tagName}</span>
+              <X className="size-3 shrink-0 opacity-60" />
             </button>
           ))}
+          <button
+            ref={toggleRef}
+            type="button"
+            aria-expanded={false}
+            aria-label="タグを付ける"
+            title="タグを付ける"
+            onClick={handleOpen}
+            className={cn(
+              CHIP_CLASS_NAME,
+              'border-dashed border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-700'
+            )}
+          >
+            <Plus className="size-3 shrink-0" />
+            {selectedTags.length === 0 && 'タグを付ける'}
+          </button>
         </div>
       )}
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-        <Input
-          id="solution-tag-search"
-          placeholder="タグを探す・作る"
-          value={tagSearch}
-          onChange={(event) => setTagSearch(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              addTag(normalizedSearch);
-            }
-          }}
-          className="pl-9 pr-10"
-        />
-        <Button
-          type="button"
-          size="icon"
-          onClick={() => addTag(normalizedSearch)}
-          disabled={!canCreateTag}
-          title="入力中の名前でタグを追加"
-          variant="ghost"
-          aria-label="入力中の名前でタグを追加"
-          className="absolute right-1 top-1/2 size-7 -translate-y-1/2 text-blue-600 hover:bg-blue-50 hover:text-blue-700 disabled:text-slate-300"
-        >
-          <Plus className="size-4" />
-        </Button>
-      </div>
-
-      {normalizedSearch && matchingTags.length > 0 && (
-        <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-slate-200 p-1">
-          {matchingTags.map((tagName) => (
-            <button
-              key={tagName}
-              type="button"
-              onClick={() => addTag(tagName)}
-              className="w-full rounded-md px-3 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100"
-            >
-              {tagName}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {normalizedSearch && matchingTags.length === 0 && (
-        <p className="text-xs text-slate-400">
-          一致するタグがありません。Enter か + で新しく作れます。
-        </p>
-      )}
-
     </div>
   );
 }

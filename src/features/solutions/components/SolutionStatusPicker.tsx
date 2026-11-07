@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 
 import {
   getSolutionStatusOption,
   SOLUTION_STATUS_OPTIONS,
 } from '@/features/solutions/functions/solution-status';
-import { useDismissOnOutside } from '@/features/solutions/hooks/use-dismiss-on-outside';
+import { useInlineDisclosure } from '@/features/solutions/hooks/use-inline-disclosure';
 import type { SolutionStatus } from '@/features/solutions/types';
 import { cn } from '@/lib/utils';
 
@@ -20,30 +19,8 @@ export default function SolutionStatusPicker({
   status,
   onStatusChange,
 }: SolutionStatusPickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const listRef = useRef<HTMLDivElement>(null);
-  const toggleRef = useRef<HTMLButtonElement>(null);
-  // 外側を押して閉じたときは、押した先のフォーカスを奪わない
-  const shouldRestoreFocusRef = useRef(false);
+  const { close, isOpen, open, panelRef, toggleRef } = useInlineDisclosure();
   const current = getSolutionStatusOption(status) ?? SOLUTION_STATUS_OPTIONS[0];
-
-  const close = useCallback((restoreFocus: boolean) => {
-    shouldRestoreFocusRef.current = restoreFocus;
-    setIsOpen(false);
-  }, []);
-  const dismiss = useCallback(
-    (reason: 'outside' | 'escape') => close(reason === 'escape'),
-    [close]
-  );
-
-  useDismissOnOutside({ enabled: isOpen, onDismiss: dismiss, ref: listRef });
-
-  useEffect(() => {
-    if (!isOpen && shouldRestoreFocusRef.current) {
-      shouldRestoreFocusRef.current = false;
-      toggleRef.current?.focus();
-    }
-  }, [isOpen]);
 
   if (!isOpen) {
     return (
@@ -52,7 +29,7 @@ export default function SolutionStatusPicker({
         type="button"
         aria-expanded={false}
         aria-label={`ステータス: ${current.label}`}
-        onClick={() => setIsOpen(true)}
+        onClick={open}
         className={cn(
           'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors',
           current.badgeClassName
@@ -67,7 +44,7 @@ export default function SolutionStatusPicker({
 
   return (
     <div
-      ref={listRef}
+      ref={panelRef}
       role="group"
       aria-label="ステータス"
       className="rounded-lg border border-slate-200 bg-white p-1"
