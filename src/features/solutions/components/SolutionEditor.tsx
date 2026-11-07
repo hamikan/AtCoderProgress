@@ -10,9 +10,11 @@ import {
   type ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
+import { SlidersHorizontal } from 'lucide-react';
 import { Plate, usePlateEditor } from 'platejs/react';
 
 import { EditorKit } from '@/components/editor/editor-kit';
+import { Button } from '@/components/ui/button';
 import { Editor, EditorContainer } from '@/components/ui/editor';
 import { saveSolution } from '@/features/solutions/actions/save-solution';
 import SolutionEditorSidebar from '@/features/solutions/components/SolutionEditorSidebar';
@@ -107,6 +109,8 @@ function SolutionEditorContent({
     initialSolution?.content ?? draftState?.content ?? DEFAULT_CONTENT
   );
   const [saveState, setSaveState] = useState<SolutionSaveState>('idle');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
   const [savedSolutionId, setSavedSolutionId] = useState<string | null>(
     initialSolution?.id ?? null
   );
@@ -467,13 +471,25 @@ function SolutionEditorContent({
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full bg-slate-50">
+    <div className="relative flex h-full min-h-0 w-full bg-slate-50">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {notice && (
           <div className="shrink-0 px-4 pt-4 sm:px-6">
             {notice}
           </div>
         )}
+        <div className="flex shrink-0 justify-end px-4 pt-3 sm:px-6 xl:hidden">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-expanded={isSidebarOpen}
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <SlidersHorizontal className="size-4" />
+            記録の設定
+          </Button>
+        </div>
         <div className="min-h-0 flex-1 overflow-hidden px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-4">
           <div
             onMouseDown={handleEditorSurfaceMouseDown}
@@ -510,6 +526,8 @@ function SolutionEditorContent({
         contestId={contestId}
         hasCurrentContest={Boolean(currentContest)}
         isAuthenticated={isAuthenticated}
+        isOpen={isSidebarOpen}
+        onClose={closeSidebar}
         onContestChange={setContestId}
         onCreateRecord={handleCreateNewRecord}
         onProblemSelected={onProblemSelected}

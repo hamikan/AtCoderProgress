@@ -1,6 +1,14 @@
 'use client';
 
-import { CheckCircle2, Loader2, Plus, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  ArrowLeftRight,
+  Check,
+  ExternalLink,
+  Loader2,
+  Plus,
+  X,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +21,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ProblemInlineSearch from '@/features/solutions/components/ProblemInlineSearch';
+import SolutionStatusPicker from '@/features/solutions/components/SolutionStatusPicker';
 import SolutionTagSelector from '@/features/solutions/components/SolutionTagSelector';
 import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
+import { getSolutionStatusOption } from '@/features/solutions/functions/solution-status';
 import type {
   ProblemDetail,
   ProblemSearchResult,
@@ -26,6 +36,7 @@ import type {
   SolutionStatus,
 } from '@/features/solutions/types';
 import { getDifficultyColor } from '@/lib/atcoder/difficulty';
+import { cn } from '@/lib/utils';
 
 interface SolutionEditorSidebarProps {
   activeSolutionId: string | null;
@@ -33,6 +44,8 @@ interface SolutionEditorSidebarProps {
   contestId: string | null;
   hasCurrentContest: boolean;
   isAuthenticated: boolean;
+  isOpen: boolean;
+  onClose: () => void;
   onContestChange: (contestId: string) => void;
   onCreateRecord: () => void;
   onProblemSelected?: (problemId: string) => void;
@@ -50,12 +63,16 @@ interface SolutionEditorSidebarProps {
   title: string;
 }
 
+const SECTION_LABEL_CLASS_NAME = 'text-xs font-medium text-slate-500';
+
 export default function SolutionEditorSidebar({
   activeSolutionId,
   availableTags,
   contestId,
   hasCurrentContest,
   isAuthenticated,
+  isOpen,
+  onClose,
   onContestChange,
   onCreateRecord,
   onProblemSelected,
@@ -72,238 +89,280 @@ export default function SolutionEditorSidebar({
   status,
   title,
 }: SolutionEditorSidebarProps) {
-  return (
-    <aside className="hidden w-80 flex-shrink-0 flex-col overflow-y-auto border-l border-slate-200 bg-white xl:flex">
-      {problem ? (
-        <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-          <div className="mb-2 flex items-center gap-3">
-            <span className="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">
-              {contestId ?? problem.firstContest.id}
-            </span>
-            {problem.difficulty !== null && (
-              <span
-                className={`text-xs font-bold ${getDifficultyColor(problem.difficulty)}`}
-              >
-                Diff: {problem.difficulty}
-              </span>
-            )}
-          </div>
-          <h1 className="truncate text-2xl font-extrabold leading-tight text-slate-900">
-            {problem.name}
-          </h1>
-        </div>
-      ) : (
-        <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-          {onProblemSelected ? (
-            <ProblemInlineSearch
-              onSelectProblem={onProblemSelected}
-              results={problemSearchResults}
-              initialQuery={problemSearchQuery}
-            />
-          ) : (
-            <p className="text-sm font-medium text-slate-500">
-              問題を選択してください。
-            </p>
-          )}
-        </div>
-      )}
+  const [isChangingProblem, setIsChangingProblem] = useState(
+    problemSearchQuery.length > 0
+  );
 
-      {problem && onProblemSelected && (
-        <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const currentContest = problem?.contests.find(
+    (contest) => contest.contestId === contestId
+  );
+  const linkContestId = currentContest?.contestId ?? problem?.firstContest.id;
+  const canChooseContest =
+    problem !== null && (problem.contests.length > 1 || !hasCurrentContest);
+  const idleHint = getIdleHint({
+    hasCurrentContest,
+    hasProblemAndContest: Boolean(problem && contestId),
+    isAuthenticated,
+  });
+
+  return (
+    <aside
+      aria-label="記録の設定"
+      className={cn(
+        'w-80 flex-shrink-0 flex-col overflow-y-auto border-l border-slate-200 bg-white xl:static xl:flex xl:shadow-none',
+        isOpen
+          ? 'absolute inset-y-0 right-0 z-30 flex shadow-xl animate-in fade-in-0 duration-200'
+          : 'hidden'
+      )}
+    >
+      <div className="flex justify-end px-3 pt-3 xl:hidden">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8 text-slate-500"
+          onClick={onClose}
+          aria-label="記録の設定を閉じる"
+        >
+          <X className="size-4" />
+        </Button>
+      </div>
+
+      <section className="space-y-2 border-b border-slate-100 px-5 py-4">
+        {problem ? (
+          <>
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-slate-500">
+                {(contestId ?? problem.firstContest.id).toUpperCase()} ·{' '}
+                {currentContest?.problemIndex ?? problem.problemIndex}
+                {problem.difficulty !== null && (
+                  <span className={cn('ml-2 font-medium', getDifficultyColor(problem.difficulty))}>
+                    ● {problem.difficulty}
+                  </span>
+                )}
+              </span>
+              <SaveStatus saveState={saveState} />
+            </div>
+            <h1 className="break-words text-lg font-bold leading-snug text-slate-900">
+              {problem.name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+              <a
+                href={`https://atcoder.jp/contests/${linkContestId}/tasks/${problem.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+              >
+                <ExternalLink className="size-3.5" />
+                AtCoderで開く
+              </a>
+              {onProblemSelected && (
+                <button
+                  type="button"
+                  aria-expanded={isChangingProblem}
+                  onClick={() => setIsChangingProblem((value) => !value)}
+                  className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900"
+                >
+                  <ArrowLeftRight className="size-3.5" />
+                  問題を変える
+                </button>
+              )}
+            </div>
+            {onProblemSelected && isChangingProblem && (
+              <div className="pt-2">
+                <ProblemInlineSearch
+                  onSelectProblem={onProblemSelected}
+                  results={problemSearchResults}
+                  initialQuery={problemSearchQuery}
+                  title="問題を変える"
+                  description={
+                    isAuthenticated
+                      ? 'この記録を、選んだ問題の記録に移します。'
+                      : '選んだ問題に切り替えます。'
+                  }
+                  placeholder="abc301_d / 問題名"
+                />
+              </div>
+            )}
+          </>
+        ) : onProblemSelected ? (
           <ProblemInlineSearch
             onSelectProblem={onProblemSelected}
             results={problemSearchResults}
             initialQuery={problemSearchQuery}
-            title="問題を切り替え"
-            description={
-              isAuthenticated
-                ? '現在の解法記録を別の問題に移動できます。変更は自動保存されます。'
-                : '問題を切り替えて編集できます。ログイン後に保存できます。'
-            }
-            placeholder="移動先の問題 ID / 問題名"
           />
-        </div>
+        ) : (
+          <p className="text-sm text-slate-500">問題を選んでください。</p>
+        )}
+      </section>
+
+      {problem && (
+        <section className="space-y-2 border-b border-slate-100 px-5 py-4">
+          {canChooseContest && (
+            <div className="space-y-1.5 pb-2">
+              <p className={SECTION_LABEL_CLASS_NAME}>コンテスト</p>
+              <Select value={contestId ?? undefined} onValueChange={onContestChange}>
+                <SelectTrigger className="w-full border-slate-200 bg-white text-sm shadow-none">
+                  <SelectValue placeholder="コンテストを選ぶ" />
+                </SelectTrigger>
+                <SelectContent>
+                  {problem.contests.map((contest) => (
+                    <SelectItem key={contest.contestId} value={contest.contestId}>
+                      {contest.contestId.toUpperCase()} / {contest.problemIndex}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <p className={SECTION_LABEL_CLASS_NAME}>この問題の記録</p>
+            {contestId && (
+              <button
+                type="button"
+                onClick={onCreateRecord}
+                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+              >
+                <Plus className="size-3.5" />
+                新しい記録
+              </button>
+            )}
+          </div>
+
+          {relatedSolutions.length > 0 ? (
+            <div className="space-y-1.5">
+              {relatedSolutions.map((record, index) => {
+                const isActive = record.id === activeSolutionId;
+                const shownRecord = isActive ? { ...record, title, status } : record;
+                const statusOption = getSolutionStatusOption(shownRecord.status);
+                return (
+                  <button
+                    key={record.id}
+                    type="button"
+                    aria-current={isActive ? 'true' : undefined}
+                    onClick={() => onSelectRecord(record.id)}
+                    className={cn(
+                      'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
+                      isActive
+                        ? 'border-blue-600 bg-blue-50 text-blue-900'
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    )}
+                  >
+                    <span className="min-w-0 truncate">
+                      {formatSolutionRecordLabel(shownRecord, index)}
+                    </span>
+                    {statusOption && (
+                      <span className={cn('shrink-0 text-xs', statusOption.textClassName)}>
+                        {statusOption.label}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400">
+              {contestId
+                ? 'この問題の記録はまだありません。'
+                : 'コンテストを選ぶと表示されます。'}
+            </p>
+          )}
+        </section>
       )}
 
-      <div className="space-y-2 border-b border-slate-100 px-5 py-5 text-left sm:px-6">
-        <Label className="ml-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          タイトル
-        </Label>
-        <Input
-          value={title}
-          onChange={(event) => onTitleChange(event.target.value)}
-          maxLength={120}
-          placeholder="例: 本番AC解法 / 別解 / 復習用"
-          className="rounded-xl border-slate-200"
-        />
-      </div>
-
-      <div className="space-y-2 border-b border-slate-100 px-5 py-5 text-left sm:px-6">
-        <Label className="ml-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          コンテスト
-        </Label>
-        <Select
-          value={contestId ?? undefined}
-          onValueChange={onContestChange}
-          disabled={!problem}
-        >
-          <SelectTrigger className="h-auto w-full rounded-xl border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-900 shadow-none transition-all focus:ring-2 focus:ring-slate-200">
-            <SelectValue placeholder="コンテストを選択" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-            {problem?.contests.map((contest) => (
-              <SelectItem key={contest.contestId} value={contest.contestId}>
-                {contest.contestId.toUpperCase()} / {contest.problemIndex}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {!activeSolutionId && problem && problem.contests.length > 1 && !contestId && (
-          <p className="px-1 text-xs text-slate-400">
-            どのコンテストで記録するか選択してください。
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2 border-b border-slate-100 px-5 py-5 text-left sm:px-6">
-        <div className="flex items-center justify-between">
-          <Label className="ml-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            解法記録
+      <section className="space-y-4 px-5 py-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="solution-title" className={SECTION_LABEL_CLASS_NAME}>
+            タイトル
           </Label>
-          {contestId && problem && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 rounded-lg"
-              onClick={onCreateRecord}
-            >
-              <Plus className="size-4" />
-              <span>新規</span>
-            </Button>
-          )}
+          <Input
+            id="solution-title"
+            value={title}
+            onChange={(event) => onTitleChange(event.target.value)}
+            maxLength={120}
+            placeholder="本番AC解法 / 別解 / 復習用"
+            className="border-slate-200"
+          />
         </div>
 
-        {relatedSolutions.length > 0 ? (
-          <div className="space-y-2">
-            {relatedSolutions.map((record, index) => (
-              <button
-                key={record.id}
-                type="button"
-                onClick={() => onSelectRecord(record.id)}
-                className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors ${
-                  record.id === activeSolutionId
-                    ? 'border-slate-900 bg-slate-900 text-white'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <div className="min-w-0">
-                  <div className="truncate font-medium">
-                    {formatSolutionRecordLabel(record, index)}
-                  </div>
-                  {!record.title?.trim() && (
-                    <div
-                      className={`text-xs ${
-                        record.id === activeSolutionId
-                          ? 'text-slate-300'
-                          : 'text-slate-400'
-                      }`}
-                    >
-                      タイトル未設定
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p className="px-1 text-xs text-slate-400">
-            {problem && contestId
-              ? 'この問題・コンテストの解法記録はまだありません。'
-              : '問題とコンテストを選択すると表示されます。'}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2 border-b border-slate-100 px-5 py-5 text-left sm:px-6">
-        <Label className="ml-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          ステータス
-        </Label>
-        <div className="relative">
-          <Select
-            value={status}
-            onValueChange={(value) => onStatusChange(value as SolutionStatus)}
-          >
-            <SelectTrigger className="h-auto w-full rounded-xl border-slate-200 bg-white py-2.5 pl-9 pr-10 text-sm font-medium text-slate-900 shadow-none transition-all focus:ring-2 focus:ring-slate-200">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-              <SelectItem value="AC" className="font-semibold text-emerald-600">
-                Accepted (AC)
-              </SelectItem>
-              <SelectItem value="SELF_AC" className="font-semibold text-amber-600">
-                Self AC
-              </SelectItem>
-              <SelectItem value="EXPLANATION_AC" className="font-semibold text-blue-600">
-                Editorial AC
-              </SelectItem>
-              <SelectItem value="REVIEW_AC" className="font-semibold text-purple-600">
-                Reviewing
-              </SelectItem>
-              <SelectItem value="TRYING" className="font-semibold text-slate-600">
-                Trying
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-amber-500">
-            <CheckCircle2 className="h-4 w-4 fill-current opacity-80" />
-          </div>
+        <div className="space-y-1.5">
+          <p className={SECTION_LABEL_CLASS_NAME}>ステータス</p>
+          <SolutionStatusPicker status={status} onStatusChange={onStatusChange} />
         </div>
-      </div>
 
-      <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
         <SolutionTagSelector
           availableTags={availableTags}
           selectedTags={selectedTags}
           onSelectedTagsChange={onTagsChange}
         />
-      </div>
 
-      <div className="flex min-h-12 items-center justify-center gap-2 px-5 py-4 text-sm sm:px-6">
-        {saveState === 'saving' && (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-            <span className="text-slate-400">保存中...</span>
-          </>
+        {saveState === 'idle' && idleHint && (
+          <p className="text-xs text-slate-400">{idleHint}</p>
         )}
-        {saveState === 'saved' && (
-          <>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span className="font-medium text-emerald-600">保存済み</span>
-          </>
-        )}
-        {saveState === 'error' && (
-          <>
-            <X className="h-4 w-4 text-red-500" />
-            <span className="text-red-600">保存エラー</span>
-          </>
-        )}
-        {saveState === 'idle' && !isAuthenticated && (
-          <span className="text-xs text-slate-300">
-            ログインすると解法記録を保存できます
-          </span>
-        )}
-        {saveState === 'idle' && isAuthenticated && (!problem || !contestId) && (
-          <span className="text-xs text-slate-300">
-            問題とコンテストを選択してください
-          </span>
-        )}
-        {saveState === 'idle' && isAuthenticated && problem && contestId && !hasCurrentContest && (
-          <span className="text-xs text-slate-300">
-            有効なコンテストを選択してください
-          </span>
-        )}
-      </div>
+      </section>
     </aside>
   );
+}
+
+function SaveStatus({ saveState }: { saveState: SolutionSaveState }) {
+  if (saveState === 'saving') {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 text-slate-400">
+        <Loader2 className="size-3.5 animate-spin" />
+        保存中
+      </span>
+    );
+  }
+  if (saveState === 'saved') {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 text-emerald-600">
+        <Check className="size-3.5" />
+        保存済み
+      </span>
+    );
+  }
+  if (saveState === 'error') {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 text-red-600">
+        <X className="size-3.5" />
+        保存できませんでした
+      </span>
+    );
+  }
+  return null;
+}
+
+function getIdleHint({
+  hasCurrentContest,
+  hasProblemAndContest,
+  isAuthenticated,
+}: {
+  hasCurrentContest: boolean;
+  hasProblemAndContest: boolean;
+  isAuthenticated: boolean;
+}): string | null {
+  if (!isAuthenticated) {
+    return 'ログインすると、記録を保存できます。';
+  }
+  if (!hasProblemAndContest) {
+    return '問題とコンテストを選ぶと、保存されます。';
+  }
+  if (!hasCurrentContest) {
+    return 'この問題が入っているコンテストを選んでください。';
+  }
+  return null;
 }

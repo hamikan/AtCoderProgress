@@ -85,7 +85,7 @@ export default function ProblemInlineSearch({
               role="option"
               aria-selected="false"
               onClick={() => onSelectProblem(problem.id)}
-              className="flex w-full flex-col gap-1 rounded-xl border border-slate-100 bg-white px-3 py-2.5 text-left transition-all hover:border-emerald-200 hover:bg-emerald-50/70 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="flex w-full flex-col gap-1 rounded-xl border border-slate-100 bg-white px-3 py-2.5 text-left transition-all hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {problem.firstContestId} / {problem.id}

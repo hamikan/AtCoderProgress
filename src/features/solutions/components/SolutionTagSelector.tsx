@@ -79,19 +79,33 @@ export default function SolutionTagSelector({
   const canCreateTag = normalizedSearch.length > 0 && !selectedTagKeys.has(toTagKey(normalizedSearch));
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <Label className="ml-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          タグ
-        </Label>
-        <span className="text-[10px] text-slate-400">{selectedTags.length} selected</span>
-      </div>
+    <div className="space-y-1.5">
+      <Label htmlFor="solution-tag-search" className="text-xs font-medium text-slate-500">
+        タグ
+      </Label>
+
+      {selectedTags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedTags.map((tagName) => (
+            <button
+              key={tagName}
+              type="button"
+              onClick={() => removeTag(tagName)}
+              aria-label={`${tagName} を外す`}
+              className="flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
+            >
+              <span>{tagName}</span>
+              <X className="size-3 opacity-60" />
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
         <Input
-          aria-label="タグを検索または作成"
-          placeholder="タグを検索または作成..."
+          id="solution-tag-search"
+          placeholder="タグを探す・作る"
           value={tagSearch}
           onChange={(event) => setTagSearch(event.target.value)}
           onKeyDown={(event) => {
@@ -108,20 +122,22 @@ export default function SolutionTagSelector({
           onClick={() => addTag(normalizedSearch)}
           disabled={!canCreateTag}
           title="入力中の名前でタグを追加"
-          className="absolute right-1 top-1/2 size-7 -translate-y-1/2 bg-slate-900 hover:bg-slate-800 disabled:opacity-40"
+          variant="ghost"
+          aria-label="入力中の名前でタグを追加"
+          className="absolute right-1 top-1/2 size-7 -translate-y-1/2 text-blue-600 hover:bg-blue-50 hover:text-blue-700 disabled:text-slate-300"
         >
           <Plus className="size-4" />
         </Button>
       </div>
 
       {normalizedSearch && matchingTags.length > 0 && (
-        <div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-slate-100 p-1 shadow-sm">
+        <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-slate-200 p-1">
           {matchingTags.map((tagName) => (
             <button
               key={tagName}
               type="button"
               onClick={() => addTag(tagName)}
-              className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800"
+              className="w-full rounded-md px-3 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100"
             >
               {tagName}
             </button>
@@ -130,26 +146,11 @@ export default function SolutionTagSelector({
       )}
 
       {normalizedSearch && matchingTags.length === 0 && (
-        <p className="px-1 text-xs text-slate-400">
-          一致するタグがありません。+ で新しく追加できます。
+        <p className="text-xs text-slate-400">
+          一致するタグがありません。Enter か + で新しく作れます。
         </p>
       )}
 
-      {selectedTags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {selectedTags.map((tagName) => (
-            <button
-              key={tagName}
-              type="button"
-              onClick={() => removeTag(tagName)}
-              className="flex items-center gap-1 rounded-lg border border-slate-300 bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-800 transition-colors hover:bg-slate-300"
-            >
-              <span>{tagName}</span>
-              <X className="size-3 opacity-60" />
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
