@@ -145,9 +145,28 @@ export default function SolutionEditorSidebar({
               )}
               <SaveStatus saveState={saveState} />
             </div>
-            <h1 className="break-words text-lg font-bold leading-snug text-slate-900">
-              {currentContest?.problemIndex ?? problem.problemIndex} - {problem.name}
-            </h1>
+            <div className="flex items-start gap-1">
+              <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-snug text-slate-900">
+                {currentContest?.problemIndex ?? problem.problemIndex} - {problem.name}
+              </h1>
+              {onProblemSelected && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-expanded={isChangingProblem}
+                  aria-label="問題を変える"
+                  title="問題を変える"
+                  onClick={() => setIsChangingProblem((value) => !value)}
+                  className={cn(
+                    'size-7 shrink-0 text-slate-400 hover:text-slate-900',
+                    isChangingProblem && 'bg-slate-100 text-slate-900'
+                  )}
+                >
+                  <ArrowLeftRight className="size-4" />
+                </Button>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
               {problem.difficulty !== null && (
                 <span
@@ -169,17 +188,6 @@ export default function SolutionEditorSidebar({
                 <ExternalLink className="size-3.5" />
                 AtCoderで開く
               </a>
-              {onProblemSelected && (
-                <button
-                  type="button"
-                  aria-expanded={isChangingProblem}
-                  onClick={() => setIsChangingProblem((value) => !value)}
-                  className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900"
-                >
-                  <ArrowLeftRight className="size-3.5" />
-                  問題を変える
-                </button>
-              )}
             </div>
             {onProblemSelected && isChangingProblem && (
               <div className="pt-2">
