@@ -2,7 +2,6 @@ import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
 import { getProblemDetail } from '@/features/problems/api/get-problem-detail';
-import { searchProblems } from '@/features/problems/api/search-problems';
 import { getSolutionRecords } from '@/features/solutions/api/get-solution-records';
 import { getSidebarContestProblems } from '@/features/solutions/api/get-sidebar-contest-problems';
 import { getUserSolutions } from '@/features/solutions/api/get-user-solutions';
@@ -17,17 +16,16 @@ interface NewSolutionPageProps {
 export default async function NewSolutionPage({ searchParams }: NewSolutionPageProps) {
   const user = await getCurrentUser();
   const userId = user?.id;
-  const { problemId, contestId, problemSearch } = normalizeSolutionSearchParams(
+  const { problemId, contestId } = normalizeSolutionSearchParams(
     await searchParams
   );
 
-  const [solutions, contestProblems, availableTags, initialProblem, problemSearchResults] =
+  const [solutions, contestProblems, availableTags, initialProblem] =
     await Promise.all([
       getUserSolutions(userId),
       getSidebarContestProblems(userId),
       getSelectableTags(userId),
       problemId ? getProblemDetail(problemId) : Promise.resolve(null),
-      searchProblems(problemSearch),
     ]);
   const initialRelatedSolutions = initialProblem
     ? await getSolutionRecords(userId, initialProblem.id)
@@ -42,8 +40,6 @@ export default async function NewSolutionPage({ searchParams }: NewSolutionPageP
       initialSolution={null}
       initialContestId={contestId}
       initialRelatedSolutions={initialRelatedSolutions}
-      problemSearchQuery={problemSearch}
-      problemSearchResults={problemSearchResults}
       isAuthenticated={Boolean(user)}
       notice={!user ? <LoginPrompt returnTo="/solutions/new" /> : null}
     />

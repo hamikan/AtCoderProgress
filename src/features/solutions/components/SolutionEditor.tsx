@@ -30,11 +30,7 @@ import {
 } from '@/features/solutions/functions/solution-editor';
 import { useHydrated } from '@/features/solutions/hooks/use-hydrated';
 import { useDebounce } from '@/hooks/use-debounce';
-import type {
-  ProblemDetail,
-  ProblemSearchResult,
-  SelectableTag,
-} from '@/features/problems/types';
+import type { ProblemDetail, SelectableTag } from '@/features/problems/types';
 import type {
   SavePayload,
   SaveSolutionInput,
@@ -62,8 +58,6 @@ interface SolutionEditorProps {
   onDraftChange?: (draftState: SolutionDraftState) => void;
   onProblemSelected?: (problemId: string) => void;
   onSelectSolution?: (solutionId: string) => void;
-  problemSearchQuery: string;
-  problemSearchResults: ProblemSearchResult[];
   isAuthenticated: boolean;
   notice?: ReactNode;
 }
@@ -87,8 +81,6 @@ function SolutionEditorContent({
   onDraftChange,
   onProblemSelected,
   onSelectSolution,
-  problemSearchQuery,
-  problemSearchResults,
   isAuthenticated,
   notice,
 }: SolutionEditorProps) {
@@ -536,8 +528,6 @@ function SolutionEditorContent({
         onTagsChange={setSelectedTags}
         onTitleChange={setTitle}
         problem={problem}
-        problemSearchQuery={problemSearchQuery}
-        problemSearchResults={problemSearchResults}
         relatedSolutions={visibleRelatedSolutions}
         saveState={saveState}
         selectedTags={selectedTags}

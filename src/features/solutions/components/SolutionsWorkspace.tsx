@@ -14,11 +14,7 @@ import type {
   SolutionWithTags,
   SolutionStatus,
 } from '@/features/solutions/types';
-import type {
-  ProblemDetail,
-  ProblemSearchResult,
-  SelectableTag,
-} from '@/features/problems/types';
+import type { ProblemDetail, SelectableTag } from '@/features/problems/types';
 
 interface SolutionsWorkspaceProps {
   solutions: SolutionListItem[];
@@ -28,8 +24,6 @@ interface SolutionsWorkspaceProps {
   initialSolution: SolutionWithTags | null;
   initialContestId: string | null;
   initialRelatedSolutions: SolutionRecordListItem[];
-  problemSearchQuery: string;
-  problemSearchResults: ProblemSearchResult[];
   isAuthenticated: boolean;
   notice?: ReactNode;
 }
@@ -52,8 +46,6 @@ export default function SolutionsWorkspace({
   initialSolution,
   initialContestId,
   initialRelatedSolutions,
-  problemSearchQuery,
-  problemSearchResults,
   isAuthenticated,
   notice,
 }: SolutionsWorkspaceProps) {
@@ -110,8 +102,6 @@ export default function SolutionsWorkspace({
             onDraftChange={setDraftState}
             onProblemSelected={handleSelectProblem}
             onSelectSolution={handleSelectSolution}
-            problemSearchQuery={problemSearchQuery}
-            problemSearchResults={problemSearchResults}
             isAuthenticated={isAuthenticated}
             notice={notice}
           />

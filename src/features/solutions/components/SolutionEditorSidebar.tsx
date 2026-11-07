@@ -25,11 +25,7 @@ import SolutionStatusPicker from '@/features/solutions/components/SolutionStatus
 import SolutionTagSelector from '@/features/solutions/components/SolutionTagSelector';
 import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
 import { getSolutionStatusOption } from '@/features/solutions/functions/solution-status';
-import type {
-  ProblemDetail,
-  ProblemSearchResult,
-  SelectableTag,
-} from '@/features/problems/types';
+import type { ProblemDetail, SelectableTag } from '@/features/problems/types';
 import type {
   SolutionRecordListItem,
   SolutionSaveState,
@@ -54,8 +50,6 @@ interface SolutionEditorSidebarProps {
   onTagsChange: (tags: string[]) => void;
   onTitleChange: (title: string) => void;
   problem: ProblemDetail | null;
-  problemSearchQuery: string;
-  problemSearchResults: ProblemSearchResult[];
   relatedSolutions: SolutionRecordListItem[];
   saveState: SolutionSaveState;
   selectedTags: string[];
@@ -81,17 +75,13 @@ export default function SolutionEditorSidebar({
   onTagsChange,
   onTitleChange,
   problem,
-  problemSearchQuery,
-  problemSearchResults,
   relatedSolutions,
   saveState,
   selectedTags,
   status,
   title,
 }: SolutionEditorSidebarProps) {
-  const [isChangingProblem, setIsChangingProblem] = useState(
-    problemSearchQuery.length > 0
-  );
+  const [isChangingProblem, setIsChangingProblem] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -185,8 +175,6 @@ export default function SolutionEditorSidebar({
               <div className="pt-2">
                 <ProblemInlineSearch
                   onSelectProblem={onProblemSelected}
-                  results={problemSearchResults}
-                  initialQuery={problemSearchQuery}
                   title="問題を変える"
                   description={
                     isAuthenticated
@@ -199,11 +187,7 @@ export default function SolutionEditorSidebar({
             )}
           </>
         ) : onProblemSelected ? (
-          <ProblemInlineSearch
-            onSelectProblem={onProblemSelected}
-            results={problemSearchResults}
-            initialQuery={problemSearchQuery}
-          />
+          <ProblemInlineSearch onSelectProblem={onProblemSelected} />
         ) : (
           <p className="text-sm text-slate-500">問題を選んでください。</p>
         )}
