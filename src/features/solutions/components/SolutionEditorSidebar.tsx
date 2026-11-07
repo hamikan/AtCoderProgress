@@ -146,24 +146,38 @@ export default function SolutionEditorSidebar({
               <SaveStatus saveState={saveState} />
             </div>
             <div className="flex items-start gap-1">
-              <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-snug text-slate-900">
-                {currentContest?.problemIndex ?? problem.problemIndex} - {problem.name}
-              </h1>
+              {onProblemSelected && isChangingProblem ? (
+                <div className="min-w-0 flex-1">
+                  <ProblemInlineSearch
+                    autoFocus
+                    onSelectProblem={onProblemSelected}
+                    onCancel={() => setIsChangingProblem(false)}
+                    placeholder={
+                      isAuthenticated ? '移す先の問題 ID / 問題名' : '問題 ID / 問題名'
+                    }
+                  />
+                </div>
+              ) : (
+                <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-snug text-slate-900">
+                  {currentContest?.problemIndex ?? problem.problemIndex} - {problem.name}
+                </h1>
+              )}
               {onProblemSelected && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   aria-expanded={isChangingProblem}
-                  aria-label="問題を変える"
-                  title="問題を変える"
+                  aria-label={isChangingProblem ? '問題を変えるのをやめる' : '問題を変える'}
+                  title={isChangingProblem ? 'やめる' : '問題を変える'}
                   onClick={() => setIsChangingProblem((value) => !value)}
-                  className={cn(
-                    'size-7 shrink-0 text-slate-400 hover:text-slate-900',
-                    isChangingProblem && 'bg-slate-100 text-slate-900'
-                  )}
+                  className="size-7 shrink-0 text-slate-400 hover:text-slate-900"
                 >
-                  <ArrowLeftRight className="size-4" />
+                  {isChangingProblem ? (
+                    <X className="size-4" />
+                  ) : (
+                    <ArrowLeftRight className="size-4" />
+                  )}
                 </Button>
               )}
             </div>
@@ -189,23 +203,13 @@ export default function SolutionEditorSidebar({
                 AtCoderで開く
               </a>
             </div>
-            {onProblemSelected && isChangingProblem && (
-              <div className="pt-2">
-                <ProblemInlineSearch
-                  onSelectProblem={onProblemSelected}
-                  title="問題を変える"
-                  description={
-                    isAuthenticated
-                      ? 'この記録を、選んだ問題の記録に移します。'
-                      : '選んだ問題に切り替えます。'
-                  }
-                  placeholder="abc301_d / 問題名"
-                />
-              </div>
-            )}
           </>
         ) : onProblemSelected ? (
-          <ProblemInlineSearch onSelectProblem={onProblemSelected} />
+          <ProblemInlineSearch
+            onSelectProblem={onProblemSelected}
+            title="記録する問題を選ぶ"
+            description="問題名か問題 ID を入れると、候補が出ます。"
+          />
         ) : (
           <p className="text-sm text-slate-500">問題を選んでください。</p>
         )}

@@ -19,6 +19,8 @@ interface SearchResponse {
 
 interface ProblemInlineSearchProps {
   onSelectProblem: (problemId: string) => void;
+  onCancel?: () => void;
+  autoFocus?: boolean;
   title?: string;
   description?: string;
   placeholder?: string;
@@ -26,8 +28,10 @@ interface ProblemInlineSearchProps {
 
 export default function ProblemInlineSearch({
   onSelectProblem,
-  title = '記録する問題を選ぶ',
-  description = '問題名か問題 ID を入れると、候補が出ます。',
+  onCancel,
+  autoFocus = false,
+  title,
+  description,
   placeholder = 'abc301_d / 問題名',
 }: ProblemInlineSearchProps) {
   const [query, setQuery] = useState('');
@@ -59,15 +63,20 @@ export default function ProblemInlineSearch({
 
   return (
     <div className="space-y-3">
-      <div className="space-y-1">
-        <h2 className="text-sm font-bold text-slate-900">{title}</h2>
-        <p className="text-xs leading-relaxed text-slate-500">{description}</p>
-      </div>
+      {(title || description) && (
+        <div className="space-y-1">
+          {title && <h2 className="text-sm font-bold text-slate-900">{title}</h2>}
+          {description && (
+            <p className="text-xs leading-relaxed text-slate-500">{description}</p>
+          )}
+        </div>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
         <Input
           aria-label="記録する問題を探す"
+          autoFocus={autoFocus}
           placeholder={placeholder}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -77,6 +86,9 @@ export default function ProblemInlineSearch({
               if (isSettled && results[0]) {
                 onSelectProblem(results[0].id);
               }
+            } else if (event.key === 'Escape' && onCancel) {
+              event.stopPropagation();
+              onCancel();
             }
           }}
           maxLength={MAX_PROBLEM_SEARCH_QUERY_LENGTH}
