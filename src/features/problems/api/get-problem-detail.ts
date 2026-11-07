@@ -6,15 +6,19 @@ import type { ProblemDetail } from '@/features/problems/types';
 export async function getProblemDetail(problemId: string): Promise<ProblemDetail | null> {
   const problem = await prisma.problem.findUnique({
     where: { id: problemId },
-    include: { contests: true },
+    include: {
+      contests: { include: { contest: { select: { startEpochSecond: true } } } },
+    },
   });
 
   if (!problem) {
     return null;
   }
 
-  const contests = [...problem.contests].sort((left, right) =>
-    left.contestId.localeCompare(right.contestId)
+  const contests = [...problem.contests].sort(
+    (left, right) =>
+      right.contest.startEpochSecond - left.contest.startEpochSecond ||
+      left.contestId.localeCompare(right.contestId)
   );
   const primaryContest =
     contests.find((contest) => contest.contestId === problem.firstContestId) ??
