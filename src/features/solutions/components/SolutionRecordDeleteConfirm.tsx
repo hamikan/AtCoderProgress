@@ -61,7 +61,7 @@ export default function SolutionRecordDeleteConfirm({
           type="button"
           onClick={onConfirm}
           disabled={isDeleting}
-          className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md bg-red-600 px-2.5 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+          className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md bg-slate-900 px-2.5 text-xs font-medium text-white transition-colors hover:bg-slate-700 disabled:opacity-60"
         >
           {isDeleting && <Loader2 className="size-3 animate-spin" />}
           消す
