@@ -86,7 +86,8 @@ export default function SolutionStatusPicker({
             }}
             className={cn(
               'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-50',
-              isSelected ? cn('font-medium', option.textClassName) : 'text-slate-700'
+              option.textClassName,
+              isSelected && 'font-medium'
             )}
           >
             <span className={cn('size-2 shrink-0 rounded-full', option.dotClassName)} />
