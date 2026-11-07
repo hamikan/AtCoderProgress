@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { getDifficultyColor, getDifficultyOrbColor } from './difficulty';
+import {
+  getDifficultyCircleStyle,
+  getDifficultyColor,
+  getDifficultyOrbColor,
+} from './difficulty';
 
 test('getDifficultyColor maps AtCoder difficulty bands', () => {
   assert.deepEqual(
@@ -38,5 +42,27 @@ test('getDifficultyOrbColor uses the same bands as background colors', () => {
       'bg-[#FF8000]',
       'bg-[#FF0000]',
     ]
+  );
+});
+
+test('getDifficultyCircleStyle fills the circle by progress within the band', () => {
+  assert.deepEqual(getDifficultyCircleStyle(1220), {
+    borderColor: '#00C0C0',
+    background: 'linear-gradient(to top, #00C0C0 5%, transparent 5%)',
+  });
+  assert.deepEqual(getDifficultyCircleStyle(399), {
+    borderColor: '#808080',
+    background: 'linear-gradient(to top, #808080 100%, transparent 100%)',
+  });
+  assert.deepEqual(getDifficultyCircleStyle(2800), {
+    borderColor: '#FF0000',
+    background: 'linear-gradient(to top, #FF0000 0%, transparent 0%)',
+  });
+});
+
+test('getDifficultyCircleStyle uses bronze, silver and gold from 3200', () => {
+  assert.deepEqual(
+    [3200, 3600, 4000].map((difficulty) => getDifficultyCircleStyle(difficulty).borderColor),
+    ['#965C2C', '#808080', '#FFD700']
   );
 });

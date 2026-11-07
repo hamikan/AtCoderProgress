@@ -10,17 +10,12 @@ import {
   X,
 } from 'lucide-react';
 
+import DifficultyCircle from '@/components/atcoder/DifficultyCircle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import ProblemInlineSearch from '@/features/solutions/components/ProblemInlineSearch';
+import SolutionContestMenu from '@/features/solutions/components/SolutionContestMenu';
 import SolutionStatusPicker from '@/features/solutions/components/SolutionStatusPicker';
 import SolutionTagSelector from '@/features/solutions/components/SolutionTagSelector';
 import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
@@ -135,21 +130,35 @@ export default function SolutionEditorSidebar({
         {problem ? (
           <>
             <div className="flex items-center justify-between gap-2 text-xs">
-              <span className="text-slate-500">
-                {(contestId ?? problem.firstContest.id).toUpperCase()} ·{' '}
-                {currentContest?.problemIndex ?? problem.problemIndex}
-                {problem.difficulty !== null && (
-                  <span className={cn('ml-2 font-medium', getDifficultyColor(problem.difficulty))}>
-                    ● {problem.difficulty}
-                  </span>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="truncate text-slate-500">
+                  {currentContest ? currentContest.contestId.toUpperCase() : 'コンテスト未選択'}
+                </span>
+                {canChooseContest && (
+                  <SolutionContestMenu
+                    contestId={contestId}
+                    contests={problem.contests}
+                    onContestChange={onContestChange}
+                  />
                 )}
-              </span>
+              </div>
               <SaveStatus saveState={saveState} />
             </div>
             <h1 className="break-words text-lg font-bold leading-snug text-slate-900">
-              {problem.name}
+              {currentContest?.problemIndex ?? problem.problemIndex} - {problem.name}
             </h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+              {problem.difficulty !== null && (
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 font-medium',
+                    getDifficultyColor(problem.difficulty)
+                  )}
+                >
+                  <DifficultyCircle difficulty={problem.difficulty} />
+                  {problem.difficulty}
+                </span>
+              )}
               <a
                 href={`https://atcoder.jp/contests/${linkContestId}/tasks/${problem.id}`}
                 target="_blank"
@@ -195,24 +204,6 @@ export default function SolutionEditorSidebar({
 
       {problem && (
         <section className="space-y-2 border-b border-slate-100 px-5 py-4">
-          {canChooseContest && (
-            <div className="space-y-1.5 pb-2">
-              <p className={SECTION_LABEL_CLASS_NAME}>コンテスト</p>
-              <Select value={contestId ?? undefined} onValueChange={onContestChange}>
-                <SelectTrigger className="w-full border-slate-200 bg-white text-sm shadow-none">
-                  <SelectValue placeholder="コンテストを選ぶ" />
-                </SelectTrigger>
-                <SelectContent>
-                  {problem.contests.map((contest) => (
-                    <SelectItem key={contest.contestId} value={contest.contestId}>
-                      {contest.contestId.toUpperCase()} / {contest.problemIndex}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="flex items-center justify-between">
             <p className={SECTION_LABEL_CLASS_NAME}>この問題の記録</p>
             {contestId && (
@@ -262,7 +253,7 @@ export default function SolutionEditorSidebar({
             <p className="text-xs text-slate-400">
               {contestId
                 ? 'この問題の記録はまだありません。'
-                : 'コンテストを選ぶと表示されます。'}
+                : '上の「変更」でコンテストを選ぶと表示されます。'}
             </p>
           )}
         </section>
