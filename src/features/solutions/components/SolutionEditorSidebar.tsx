@@ -155,10 +155,11 @@ export default function SolutionEditorSidebar({
                     placeholder={
                       isAuthenticated ? '移す先の問題 ID / 問題名' : '問題 ID / 問題名'
                     }
+                    inputClassName="h-7 py-0 text-lg md:text-lg"
                   />
                 </div>
               ) : (
-                <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-snug text-slate-900">
+                <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-7 text-slate-900">
                   {currentContest?.problemIndex ?? problem.problemIndex} - {problem.name}
                 </h1>
               )}

@@ -8,6 +8,7 @@ import { findProblems } from '@/features/problems/actions/find-problems';
 import { MAX_PROBLEM_SEARCH_QUERY_LENGTH } from '@/features/problems/functions/normalize-problem-search';
 import type { ProblemSearchResult } from '@/features/problems/types';
 import { useDebounce } from '@/hooks/use-debounce';
+import { cn } from '@/lib/utils';
 
 const MIN_QUERY_LENGTH = 2;
 
@@ -24,6 +25,7 @@ interface ProblemInlineSearchProps {
   title?: string;
   description?: string;
   placeholder?: string;
+  inputClassName?: string;
 }
 
 export default function ProblemInlineSearch({
@@ -33,6 +35,7 @@ export default function ProblemInlineSearch({
   title,
   description,
   placeholder = 'abc301_d / 問題名',
+  inputClassName,
 }: ProblemInlineSearchProps) {
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState<SearchResponse | null>(null);
@@ -92,7 +95,7 @@ export default function ProblemInlineSearch({
             }
           }}
           maxLength={MAX_PROBLEM_SEARCH_QUERY_LENGTH}
-          className="pl-9 pr-9"
+          className={cn('pl-9 pr-9', inputClassName)}
         />
         {isQueryLongEnough && !isSettled && (
           <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-slate-400" />
