@@ -30,10 +30,10 @@ export default function SolutionContestMenu({
         <button
           type="button"
           aria-label={`コンテストを変える（今は ${label}）`}
-          className="-ml-1.5 inline-flex min-w-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className="-ml-1.5 inline-flex min-w-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <span className="truncate">{label}</span>
-          <ChevronDown className="size-3.5 shrink-0" />
+          <ChevronDown className="size-4 shrink-0 text-slate-500" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">

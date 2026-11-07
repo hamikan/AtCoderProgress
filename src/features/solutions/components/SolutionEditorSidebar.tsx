@@ -141,7 +141,7 @@ export default function SolutionEditorSidebar({
                   onContestChange={onContestChange}
                 />
               ) : (
-                <span className="min-w-0 truncate text-slate-500">{contestLabel}</span>
+                <span className="min-w-0 truncate text-sm font-semibold text-slate-700">{contestLabel}</span>
               )}
               <SaveStatus saveState={saveState} />
             </div>
