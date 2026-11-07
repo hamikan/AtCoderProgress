@@ -155,7 +155,7 @@ export default function SolutionEditorSidebar({
                     placeholder={
                       isAuthenticated ? '移す先の問題 ID / 問題名' : '問題 ID / 問題名'
                     }
-                    inputClassName="h-7 py-0 text-lg md:text-lg"
+                    inputClassName="h-7 py-0 text-lg placeholder:text-sm md:text-lg"
                   />
                 </div>
               ) : (
