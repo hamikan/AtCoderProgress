@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   formatSolutionRecordLabel,
   getDefaultContestId,
+  getPathAfterDeletingRecord,
   getSolutionEditorKey,
   hasUnsavedScopeMove,
 } from './solution-editor';
@@ -56,5 +57,26 @@ test('getSolutionEditorKey identifies the editable record scope', () => {
       contestId: 'abc001',
     }),
     'solution-1:abc001_a:abc001'
+  );
+});
+
+test('getPathAfterDeletingRecord opens the record before the deleted one', () => {
+  const records = [{ id: 'one' }, { id: 'two' }, { id: 'three' }];
+  const scope = { problemId: 'abc001_a', contestId: 'abc001' };
+  assert.equal(
+    getPathAfterDeletingRecord({ ...scope, records, deletedId: 'two' }),
+    '/solutions/one'
+  );
+  assert.equal(
+    getPathAfterDeletingRecord({ ...scope, records, deletedId: 'one' }),
+    '/solutions/two'
+  );
+  assert.equal(
+    getPathAfterDeletingRecord({ ...scope, records, deletedId: 'unlisted' }),
+    '/solutions/three'
+  );
+  assert.equal(
+    getPathAfterDeletingRecord({ ...scope, records: [{ id: 'one' }], deletedId: 'one' }),
+    '/solutions/new?problemId=abc001_a&contestId=abc001'
   );
 });

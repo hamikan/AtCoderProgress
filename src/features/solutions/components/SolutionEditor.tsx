@@ -16,6 +16,7 @@ import { Plate, usePlateEditor } from 'platejs/react';
 import { EditorKit } from '@/components/editor/editor-kit';
 import { Button } from '@/components/ui/button';
 import { Editor, EditorContainer } from '@/components/ui/editor';
+import { deleteSolution } from '@/features/solutions/actions/delete-solution';
 import { saveSolution } from '@/features/solutions/actions/save-solution';
 import SolutionEditorSidebar from '@/features/solutions/components/SolutionEditorSidebar';
 import { isEmptySolutionContent } from '@/features/solutions/functions/solution-content';
@@ -25,6 +26,7 @@ import {
 } from '@/features/solutions/functions/save-signature';
 import {
   getDefaultContestId,
+  getPathAfterDeletingRecord,
   getSolutionEditorKey,
   hasUnsavedScopeMove,
 } from '@/features/solutions/functions/solution-editor';
@@ -120,6 +122,8 @@ function SolutionEditorContent({
   // 保存が終わる前に別の画面へ移ったとき、移った先の URL を書き換えたり読み直したりしないため
   const isMountedRef = useRef(true);
   const saveInFlightRef = useRef(false);
+  // 開いている記録を消したあと、離れるときの保存などで消した記録を書き直そうとしないため
+  const isDeletedRef = useRef(false);
   const pendingSaveRef = useRef<SaveSolutionInput | null>(null);
   // 保存側が引き受け済みの最新ペイロードの控えと、入力途中の値の控え。画面を離れるときにデバウンス待ちの入力を流すために使う
   const lastHandledSignatureRef = useRef<string | null>(null);
@@ -280,7 +284,7 @@ function SolutionEditorContent({
     if (saveInFlightRef.current) return;
     saveInFlightRef.current = true;
     try {
-      while (pendingSaveRef.current) {
+      while (pendingSaveRef.current && !isDeletedRef.current) {
         const input = {
           ...pendingSaveRef.current,
           solutionId: savedSolutionIdRef.current,
@@ -338,7 +342,12 @@ function SolutionEditorContent({
 
   function flushPendingSave() {
     const snapshot = latestSnapshotRef.current;
-    if (!snapshot || !snapshot.isAuthenticated || !snapshot.isContestValid) {
+    if (
+      isDeletedRef.current ||
+      !snapshot ||
+      !snapshot.isAuthenticated ||
+      !snapshot.isContestValid
+    ) {
       return;
     }
     const { payload } = snapshot;
@@ -389,6 +398,7 @@ function SolutionEditorContent({
       if (!shouldSaveInitialDraft && !hasScopeMove) return;
     }
     if (
+      isDeletedRef.current ||
       !isAuthenticated ||
       !problem?.id ||
       !debouncedContestId ||
@@ -457,6 +467,40 @@ function SolutionEditorContent({
     router.push(`/solutions/new?${searchParams}`);
   }
 
+  async function handleDeleteRecord(solutionId: string): Promise<boolean> {
+    if (!problem) return false;
+    const isActive = solutionId === savedSolutionIdRef.current;
+    if (isActive) {
+      isDeletedRef.current = true;
+    }
+    try {
+      const result = await deleteSolution(solutionId);
+      if (!result.ok) {
+        isDeletedRef.current = false;
+        return false;
+      }
+    } catch {
+      isDeletedRef.current = false;
+      return false;
+    }
+
+    if (!isActive) {
+      router.refresh();
+      return true;
+    }
+    isNavigatingRef.current = true;
+    // 消した記録の URL が履歴に残らないよう、置き換えて移る
+    router.replace(
+      getPathAfterDeletingRecord({
+        records: visibleRelatedSolutions,
+        deletedId: solutionId,
+        problemId: problem.id,
+        contestId,
+      })
+    );
+    return true;
+  }
+
   function handleSelectSolutionRecord(solutionId: string) {
     isNavigatingRef.current = true;
     onSelectSolution?.(solutionId);
@@ -522,6 +566,7 @@ function SolutionEditorContent({
         onClose={closeSidebar}
         onContestChange={setContestId}
         onCreateRecord={handleCreateNewRecord}
+        onDeleteRecord={handleDeleteRecord}
         onProblemSelected={onProblemSelected}
         onSelectRecord={handleSelectSolutionRecord}
         onStatusChange={setStatus}

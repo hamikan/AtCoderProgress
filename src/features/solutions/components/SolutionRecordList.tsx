@@ -1,7 +1,9 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 
+import DeleteSolutionDialog from '@/features/solutions/components/DeleteSolutionDialog';
 import { formatSolutionRecordLabel } from '@/features/solutions/functions/solution-editor';
 import { getSolutionStatusOption } from '@/features/solutions/functions/solution-status';
 import type {
@@ -16,7 +18,13 @@ interface SolutionRecordListProps {
   title: string;
   status: SolutionStatus;
   onCreateRecord: () => void;
+  onDeleteRecord: (solutionId: string) => Promise<boolean>;
   onSelectRecord: (solutionId: string) => void;
+}
+
+interface DeleteTarget {
+  id: string;
+  label: string;
 }
 
 export default function SolutionRecordList({
@@ -25,32 +33,58 @@ export default function SolutionRecordList({
   title,
   status,
   onCreateRecord,
+  onDeleteRecord,
   onSelectRecord,
 }: SolutionRecordListProps) {
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  // 一覧の読み直しが届くまで、消した記録が残って見えないようにする
+  const [deletedIds, setDeletedIds] = useState<string[]>([]);
+  const shownRecords = records.filter((record) => !deletedIds.includes(record.id));
   // 書き始める前の新しい記録や保存したばかりの記録は、まだ一覧に入っていないため末尾に足して見せる
-  const isActiveRecordListed = records.some((record) => record.id === activeSolutionId);
+  const isActiveRecordListed = shownRecords.some((record) => record.id === activeSolutionId);
   // 何も書いていない新しい記録をもう1つ作っても意味がないため、保存済みの記録を開いているときだけ出す
   const canCreateRecord = activeSolutionId !== null;
 
+  async function handleDelete(target: DeleteTarget): Promise<boolean> {
+    const ok = await onDeleteRecord(target.id);
+    // 開いている記録を消したときは別の画面へ移るので、移り終わるまでダイアログを出したままにする
+    if (ok && target.id !== activeSolutionId) {
+      setDeletedIds((ids) => [...ids, target.id]);
+      setDeleteTarget(null);
+    }
+    return ok;
+  }
+
   return (
     <div className="space-y-1.5">
-      {records.map((record, index) => {
+      {shownRecords.map((record, index) => {
         const isActive = record.id === activeSolutionId;
+        const label = formatSolutionRecordLabel(isActive ? { title } : record, index);
         return (
           <SolutionRecordRow
             key={record.id}
-            label={formatSolutionRecordLabel(isActive ? { title } : record, index)}
+            label={label}
             status={isActive ? status : record.status}
             isActive={isActive}
             onSelect={() => onSelectRecord(record.id)}
+            onDelete={() => setDeleteTarget({ id: record.id, label })}
           />
         );
       })}
       {!isActiveRecordListed && (
         <SolutionRecordRow
-          label={formatSolutionRecordLabel({ title }, records.length)}
+          label={formatSolutionRecordLabel({ title }, shownRecords.length)}
           status={status}
           isActive
+          onDelete={
+            activeSolutionId
+              ? () =>
+                  setDeleteTarget({
+                    id: activeSolutionId,
+                    label: formatSolutionRecordLabel({ title }, shownRecords.length),
+                  })
+              : undefined
+          }
         />
       )}
       {canCreateRecord && (
@@ -64,6 +98,14 @@ export default function SolutionRecordList({
           <Plus className="size-4" />
         </button>
       )}
+      {deleteTarget && (
+        <DeleteSolutionDialog
+          key={deleteTarget.id}
+          label={deleteTarget.label}
+          onCancel={() => setDeleteTarget(null)}
+          onDelete={() => handleDelete(deleteTarget)}
+        />
+      )}
     </div>
   );
 }
@@ -73,19 +115,17 @@ function SolutionRecordRow({
   status,
   isActive,
   onSelect,
+  onDelete,
 }: {
   label: string;
   status: SolutionStatus;
   isActive: boolean;
   onSelect?: () => void;
+  onDelete?: () => void;
 }) {
   const statusOption = getSolutionStatusOption(status);
-  const className = cn(
-    'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-    isActive
-      ? 'border-blue-600 bg-blue-50 text-blue-900'
-      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-  );
+  const mainClassName =
+    'flex min-w-0 flex-1 items-center justify-between gap-2 py-2 pl-3 text-left';
   const content = (
     <>
       <span className="min-w-0 truncate">{label}</span>
@@ -97,21 +137,36 @@ function SolutionRecordRow({
     </>
   );
 
-  if (!onSelect) {
-    return (
-      <div aria-current={isActive ? 'true' : undefined} className={className}>
-        {content}
-      </div>
-    );
-  }
   return (
-    <button
-      type="button"
+    <div
       aria-current={isActive ? 'true' : undefined}
-      onClick={onSelect}
-      className={className}
+      className={cn(
+        'group flex items-center gap-1 rounded-lg border pr-1 text-sm transition-colors',
+        isActive
+          ? 'border-blue-600 bg-blue-50 text-blue-900'
+          : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+      )}
     >
-      {content}
-    </button>
+      {onSelect ? (
+        <button type="button" onClick={onSelect} className={mainClassName}>
+          {content}
+        </button>
+      ) : (
+        <div className={mainClassName}>{content}</div>
+      )}
+      {onDelete ? (
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label={`「${label}」を消す`}
+          title="この記録を消す"
+          className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      ) : (
+        <span aria-hidden="true" className="size-7 shrink-0" />
+      )}
+    </div>
   );
 }

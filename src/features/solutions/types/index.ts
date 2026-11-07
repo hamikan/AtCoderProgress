@@ -8,6 +8,7 @@ export type {
   SolutionRouteParamsInput,
   SolutionSearchParamsInput,
 } from './input/solution-navigation';
+export type { DeleteSolutionError } from './error/delete-solution-error';
 export type { SaveSolutionError } from './error/save-solution-error';
 export type { SolutionSidebarLookupError } from './error/solution-sidebar-lookup-error';
 export type {

@@ -37,6 +37,7 @@ interface SolutionEditorSidebarProps {
   onClose: () => void;
   onContestChange: (contestId: string) => void;
   onCreateRecord: () => void;
+  onDeleteRecord: (solutionId: string) => Promise<boolean>;
   onProblemSelected?: (problemId: string) => void;
   onSelectRecord: (solutionId: string) => void;
   onStatusChange: (status: SolutionStatus) => void;
@@ -62,6 +63,7 @@ export default function SolutionEditorSidebar({
   onClose,
   onContestChange,
   onCreateRecord,
+  onDeleteRecord,
   onProblemSelected,
   onSelectRecord,
   onStatusChange,
@@ -224,6 +226,7 @@ export default function SolutionEditorSidebar({
               title={title}
               status={status}
               onCreateRecord={onCreateRecord}
+              onDeleteRecord={onDeleteRecord}
               onSelectRecord={onSelectRecord}
             />
           ) : (
