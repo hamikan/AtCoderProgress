@@ -20,7 +20,7 @@ export default function DeleteAccountSection() {
     if (event.key !== 'Escape') {
       event.stopPropagation();
     }
-    // 変換を確定する Enter で退会しないようにする
+    // 変換を確定する Enter でアカウントを削除しないようにする
     if (event.key === 'Enter' && !event.nativeEvent.isComposing && canDelete) {
       event.preventDefault();
       void submit(confirmation);
@@ -39,7 +39,7 @@ export default function DeleteAccountSection() {
         onClick={() => setIsConfirming(true)}
         className="w-full rounded-sm px-2 py-1.5 text-left text-xs text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
       >
-        退会する
+        アカウント削除
       </button>
     );
   }
@@ -47,7 +47,7 @@ export default function DeleteAccountSection() {
   return (
     <div className="space-y-2 px-2 py-2 text-xs">
       <p className="leading-relaxed text-slate-600">
-        解法記録と自分で作ったタグがすべて消え、元に戻せません。続けるときは「
+        アカウントを削除すると、解法記録と自分で作ったタグがすべて消え、元に戻せません。続けるときは「
         {DELETE_ACCOUNT_CONFIRMATION}」と入力してください。
       </p>
       <input
@@ -71,7 +71,7 @@ export default function DeleteAccountSection() {
           onClick={() => void submit(confirmation)}
           className="h-7 flex-1 text-xs"
         >
-          {isDeleting ? '退会しています…' : '退会する'}
+          {isDeleting ? '削除しています…' : '削除する'}
         </Button>
         <Button
           type="button"

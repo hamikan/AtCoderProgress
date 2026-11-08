@@ -223,7 +223,7 @@ model ProblemReview {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  // ★はおすすめの問題に使う全員の平均に入るため、退会しても誰のものかを外して残す
+  // ★はおすすめの問題に使う全員の平均に入るため、アカウントを削除しても誰のものかを外して残す
   user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   problem        Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
 

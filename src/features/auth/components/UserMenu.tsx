@@ -100,7 +100,7 @@ export default function UserMenu({ user, linkedProviders }: UserMenuProps) {
           <LogOut className="mr-2 h-4 w-4" /><span>ログアウト</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {/* メニューを閉じたら、途中まで進めた退会の確認を最初からにする */}
+        {/* メニューを閉じたら、途中まで進めたアカウント削除の確認を最初からにする */}
         <DeleteAccountSection key={isOpen ? 'open' : 'closed'} />
       </DropdownMenuContent>
     </DropdownMenu>

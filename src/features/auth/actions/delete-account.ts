@@ -26,7 +26,7 @@ export async function deleteAccount(
     await prisma.user.delete({ where: { id: user.id } });
   } catch (error: unknown) {
     console.error('Failed to delete account', { error, userId: user.id });
-    return failure('INTERNAL_ERROR', '退会できませんでした。時間をおいてもう一度お試しください。');
+    return failure('INTERNAL_ERROR', 'アカウントを削除できませんでした。時間をおいてもう一度お試しください。');
   }
   return { ok: true, value: { status: 'deleted' } };
 }

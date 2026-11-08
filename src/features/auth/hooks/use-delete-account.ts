@@ -21,7 +21,7 @@ export function useDeleteAccount() {
       // 画面に残ったログイン中の状態ごと捨てるため、読み込み直してトップへ戻る
       window.location.assign('/');
     } catch {
-      setError('退会できませんでした。時間をおいてもう一度お試しください。');
+      setError('アカウントを削除できませんでした。時間をおいてもう一度お試しください。');
       setIsDeleting(false);
     }
   }
