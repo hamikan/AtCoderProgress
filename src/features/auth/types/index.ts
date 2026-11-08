@@ -5,6 +5,7 @@ export type { ApplyAtCoderIdChangeResult } from './output/atcoder-id-change-resu
 export type { UnlinkProviderResult } from './output/unlink-provider-result';
 export type { LinkAtCoderIdError } from './error/link-atcoder-id-error';
 export type { UnlinkProviderError } from './error/unlink-provider-error';
+export type { DeleteAccountError } from './error/delete-account-error';
 export type {
   AtCoderFetchState,
   AtCoderFetchStatus,
