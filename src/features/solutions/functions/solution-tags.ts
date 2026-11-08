@@ -10,45 +10,60 @@ export function toTagKey(value: string): string {
   return value.toLocaleLowerCase();
 }
 
-export function buildTagChoices(
-  availableTags: readonly TagChoice[],
-  selectedTags: readonly string[]
-): TagChoice[] {
-  const choicesByKey = new Map<string, TagChoice>();
-  for (const tag of availableTags) {
-    choicesByKey.set(toTagKey(tag.name), { name: tag.name, usageCount: tag.usageCount });
-  }
-  // まだ保存していない新しいタグも、付けている間は選べるように並べる
-  for (const tagName of selectedTags) {
-    const key = toTagKey(tagName);
-    if (!choicesByKey.has(key)) {
-      choicesByKey.set(key, { name: tagName, usageCount: 0 });
-    }
-  }
-  return [...choicesByKey.values()].sort(
+export function rankTagsByUsage(tags: readonly TagChoice[]): Map<string, number> {
+  const sorted = [...tags].sort(
     (a, b) => b.usageCount - a.usageCount || a.name.localeCompare(b.name)
   );
+  const ranking = new Map<string, number>();
+  for (const tag of sorted) {
+    const key = toTagKey(tag.name);
+    if (!ranking.has(key)) {
+      ranking.set(key, ranking.size);
+    }
+  }
+  return ranking;
 }
 
-export function filterTagChoices(
-  choices: readonly TagChoice[],
+export function listTagsToAdd(
+  tags: readonly TagChoice[],
+  selectedTags: readonly string[],
+  ranking: ReadonlyMap<string, number>,
   search: string
-): TagChoice[] {
+): string[] {
+  const hiddenKeys = new Set(selectedTags.map((tag) => toTagKey(tag)));
   const searchKey = toTagKey(normalizeTagName(search));
-  if (!searchKey) {
-    return [...choices];
+  const names: string[] = [];
+  for (const tag of tags) {
+    const key = toTagKey(tag.name);
+    if (hiddenKeys.has(key) || !key.includes(searchKey)) {
+      continue;
+    }
+    hiddenKeys.add(key);
+    names.push(tag.name);
   }
-  return choices.filter((choice) => toTagKey(choice.name).includes(searchKey));
+  // 開いたあとに作ったタグは順位がないので、目に入るよう先頭に置く
+  const rankOf = (name: string) => ranking.get(toTagKey(name)) ?? -1;
+  return names.sort((a, b) => rankOf(a) - rankOf(b) || a.localeCompare(b));
+}
+
+export function findExistingTagName(
+  tags: readonly TagChoice[],
+  selectedTags: readonly string[],
+  name: string
+): string | null {
+  const key = toTagKey(normalizeTagName(name));
+  const names = [...selectedTags, ...tags.map((tag) => tag.name)];
+  return names.find((existing) => toTagKey(existing) === key) ?? null;
 }
 
 export function findTagToCreate(
-  choices: readonly TagChoice[],
+  tags: readonly TagChoice[],
+  selectedTags: readonly string[],
   search: string
 ): string | null {
   const name = normalizeTagName(search);
-  if (!name) {
+  if (!name || findExistingTagName(tags, selectedTags, name)) {
     return null;
   }
-  const key = toTagKey(name);
-  return choices.some((choice) => toTagKey(choice.name) === key) ? null : name;
+  return name;
 }

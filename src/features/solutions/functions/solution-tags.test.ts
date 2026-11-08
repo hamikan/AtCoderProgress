@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  buildTagChoices,
-  filterTagChoices,
+  findExistingTagName,
   findTagToCreate,
+  listTagsToAdd,
   normalizeTagName,
+  rankTagsByUsage,
 } from './solution-tags';
 
 const AVAILABLE = [
@@ -19,26 +20,38 @@ test('normalizeTagName trims and collapses spaces', () => {
   assert.equal(normalizeTagName('  segment   tree '), 'segment tree');
 });
 
-test('buildTagChoices orders by usage and keeps unsaved selections', () => {
-  const choices = buildTagChoices(AVAILABLE, ['dp', '新しいタグ']);
-  assert.deepEqual(
-    choices.map((choice) => choice.name),
-    ['DP', '二分探索', 'BFS', '実装', '新しいタグ']
+test('listTagsToAdd keeps the opening order and hides selected tags', () => {
+  const ranking = rankTagsByUsage(AVAILABLE);
+  assert.deepEqual(listTagsToAdd(AVAILABLE, ['dp'], ranking, ''), ['二分探索', 'BFS', '実装']);
+
+  const recounted = AVAILABLE.map((tag) =>
+    tag.name === '実装' ? { ...tag, usageCount: 9 } : tag
   );
+  assert.deepEqual(listTagsToAdd(recounted, [], ranking, ''), ['DP', '二分探索', 'BFS', '実装']);
 });
 
-test('filterTagChoices matches without case', () => {
-  const choices = buildTagChoices(AVAILABLE, []);
-  assert.deepEqual(
-    filterTagChoices(choices, 'b').map((choice) => choice.name),
-    ['BFS']
-  );
-  assert.equal(filterTagChoices(choices, '').length, choices.length);
+test('listTagsToAdd puts tags made after opening first', () => {
+  const ranking = rankTagsByUsage(AVAILABLE);
+  const withNewTag = [...AVAILABLE, { id: '5', name: '幾何', usageCount: 1 }];
+  assert.deepEqual(listTagsToAdd(withNewTag, [], ranking, ''), [
+    '幾何',
+    'DP',
+    '二分探索',
+    'BFS',
+    '実装',
+  ]);
 });
 
-test('findTagToCreate offers a new name only when nothing matches exactly', () => {
-  const choices = buildTagChoices(AVAILABLE, []);
-  assert.equal(findTagToCreate(choices, ' 幾何 '), '幾何');
-  assert.equal(findTagToCreate(choices, 'dp'), null);
-  assert.equal(findTagToCreate(choices, '   '), null);
+test('listTagsToAdd filters without case', () => {
+  const ranking = rankTagsByUsage(AVAILABLE);
+  assert.deepEqual(listTagsToAdd(AVAILABLE, [], ranking, 'b'), ['BFS']);
+});
+
+test('findExistingTagName and findTagToCreate match names without case', () => {
+  assert.equal(findExistingTagName(AVAILABLE, [], 'dp'), 'DP');
+  assert.equal(findExistingTagName(AVAILABLE, ['新しいタグ'], '新しいタグ'), '新しいタグ');
+  assert.equal(findTagToCreate(AVAILABLE, [], ' 幾何 '), '幾何');
+  assert.equal(findTagToCreate(AVAILABLE, [], 'dp'), null);
+  assert.equal(findTagToCreate(AVAILABLE, ['新しいタグ'], '新しいタグ'), null);
+  assert.equal(findTagToCreate(AVAILABLE, [], '   '), null);
 });

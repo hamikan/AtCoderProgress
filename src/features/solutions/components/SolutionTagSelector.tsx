@@ -1,14 +1,15 @@
 'use client';
 
-import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { useRef, useState, type KeyboardEvent } from 'react';
+import { Plus, Search, X } from 'lucide-react';
 
 import type { SelectableTag } from '@/features/problems/types';
 import {
-  buildTagChoices,
-  filterTagChoices,
+  findExistingTagName,
   findTagToCreate,
+  listTagsToAdd,
   normalizeTagName,
+  rankTagsByUsage,
   toTagKey,
 } from '@/features/solutions/functions/solution-tags';
 import { cn } from '@/lib/utils';
@@ -27,21 +28,16 @@ export default function SolutionTagSelector({
   selectedTags,
   onSelectedTagsChange,
 }: SolutionTagSelectorProps) {
+  // 保存のたびに使用回数が変わっても、開いている間は並びを動かさない
+  const [ranking] = useState(() => rankTagsByUsage(availableTags));
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
-  const selectedKeys = useMemo(
-    () => new Set(selectedTags.map((tag) => toTagKey(tag))),
-    [selectedTags]
-  );
-  const choices = useMemo(
-    () => buildTagChoices(availableTags, selectedTags),
-    [availableTags, selectedTags]
-  );
-  const shownChoices = filterTagChoices(choices, search);
-  const tagToCreate = findTagToCreate(choices, search);
+  const tagsToAdd = listTagsToAdd(availableTags, selectedTags, ranking, search);
+  const tagToCreate = findTagToCreate(availableTags, selectedTags, search);
 
   function addTag(tagName: string) {
-    if (!selectedKeys.has(toTagKey(tagName))) {
+    const key = toTagKey(tagName);
+    if (!selectedTags.some((tag) => toTagKey(tag) === key)) {
       onSelectedTagsChange([...selectedTags, tagName]);
     }
   }
@@ -57,12 +53,8 @@ export default function SolutionTagSelector({
     searchRef.current?.focus();
   }
 
-  function toggleTag(tagName: string) {
-    if (selectedKeys.has(toTagKey(tagName))) {
-      removeTag(tagName);
-    } else {
-      addTag(tagName);
-    }
+  function handlePick(tagName: string) {
+    addTag(tagName);
     if (search) {
       clearSearch();
     }
@@ -78,14 +70,32 @@ export default function SolutionTagSelector({
     if (!name) {
       return;
     }
-    const sameChoice = choices.find((choice) => toTagKey(choice.name) === toTagKey(name));
-    addTag(sameChoice?.name ?? name);
+    addTag(findExistingTagName(availableTags, selectedTags, name) ?? name);
     clearSearch();
   }
 
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-slate-500">タグ</p>
+      {selectedTags.length > 0 && (
+        <div role="group" aria-label="付けたタグ" className="flex flex-wrap gap-1.5">
+          {selectedTags.map((tagName) => (
+            <button
+              key={tagName}
+              type="button"
+              onClick={() => removeTag(tagName)}
+              aria-label={`${tagName} を外す`}
+              className={cn(
+                CHIP_CLASS_NAME,
+                'border-transparent bg-blue-50 font-medium text-blue-700 hover:bg-blue-100'
+              )}
+            >
+              <span className="truncate">{tagName}</span>
+              <X className="size-3 shrink-0 opacity-60" />
+            </button>
+          ))}
+        </div>
+      )}
       <div className="relative">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
         <input
@@ -99,14 +109,11 @@ export default function SolutionTagSelector({
           className="h-8 w-full rounded-md border border-slate-200 bg-white pl-8 pr-2 text-sm outline-none transition-colors focus:border-slate-400"
         />
       </div>
-      <div role="group" aria-label="タグ" className="flex flex-wrap gap-1.5 empty:hidden">
+      <div role="group" aria-label="タグの候補" className="flex flex-wrap gap-1.5 empty:hidden">
         {tagToCreate && (
           <button
             type="button"
-            onClick={() => {
-              addTag(tagToCreate);
-              clearSearch();
-            }}
+            onClick={() => handlePick(tagToCreate)}
             className={cn(
               CHIP_CLASS_NAME,
               'border-dashed border-blue-400 text-blue-700 hover:bg-blue-50'
@@ -116,27 +123,21 @@ export default function SolutionTagSelector({
             <span className="truncate">「{tagToCreate}」を作る</span>
           </button>
         )}
-        {shownChoices.map((choice) => {
-          const isSelected = selectedKeys.has(toTagKey(choice.name));
-          return (
-            <button
-              key={choice.name}
-              type="button"
-              aria-pressed={isSelected}
-              onClick={() => toggleTag(choice.name)}
-              className={cn(
-                CHIP_CLASS_NAME,
-                isSelected
-                  ? 'border-blue-600 bg-blue-50 font-medium text-blue-700 hover:bg-blue-100'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-              )}
-            >
-              <span className="truncate">{choice.name}</span>
-            </button>
-          );
-        })}
+        {tagsToAdd.map((tagName) => (
+          <button
+            key={tagName}
+            type="button"
+            onClick={() => handlePick(tagName)}
+            className={cn(
+              CHIP_CLASS_NAME,
+              'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+            )}
+          >
+            <span className="truncate">{tagName}</span>
+          </button>
+        ))}
       </div>
-      {choices.length === 0 && !tagToCreate ? (
+      {availableTags.length === 0 && selectedTags.length === 0 && !tagToCreate ? (
         <p className="text-xs text-slate-400">タグはまだありません。名前を打つと作れます。</p>
       ) : null}
     </div>
