@@ -38,7 +38,7 @@ export const MarkBoxPlugin = createPlatePlugin({
       if (keys.length === 0) {
         return;
       }
-      // 何も書いていない箱で Enter を押したら、下の行へ移らずにその箱を消す
+      // 空の箱で Enter を押すのは箱から抜けたいときなので、ほかのブロックと同じく、下の行へ移らずに箱を消す
       event.preventDefault();
       editor.tf.withoutNormalizing(() => {
         keys.forEach((key) => editor.tf.removeMark(key));

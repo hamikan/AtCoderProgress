@@ -52,7 +52,7 @@ export const ToggleKit = [
           normalizeNode(entry);
         },
         toggleBlock(type, options) {
-          // トグルのボタンでリストの行をトグルにするときは、番号や・を外して置き換える
+          // 番号や・を残したままトグルにすると normalizeNode でリストの行に戻されるため、先に外して置き換える
           if (type === KEYS.toggle) {
             editor.tf.withoutNormalizing(() => {
               removeListProps(editor);

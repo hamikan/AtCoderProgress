@@ -69,7 +69,7 @@ export function FontColorToolbarButton({
         editor.tf.select(editor.selection);
         editor.tf.focus();
 
-        // 選ばずに色の付いた文字の中へカーソルを置いたときは、その色のひと続きを変える
+        // 打つ前の色だけを変えても、すでに付いた色は直せないため、色の付いた文字の中にカーソルがあるときはそのひと続きを変える
         const run = getMarkRunRange(editor, nodeType);
         if (run) {
           editor.tf.setNodes({ [nodeType]: value }, { at: run, match: TextApi.isText });
