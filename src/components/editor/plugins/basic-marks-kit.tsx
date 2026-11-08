@@ -28,6 +28,7 @@ import { HighlightLeaf } from '@/components/ui/highlight-node';
 import { KbdLeaf } from '@/components/ui/kbd-node';
 
 import { notInCodeBlock } from './input-rule-guard';
+import { MarkBoxPlugin } from './mark-box-plugin';
 
 export const BasicMarksKit = [
   BoldPlugin.configure({
@@ -99,4 +100,5 @@ export const BasicMarksKit = [
     shortcuts: { toggle: { keys: 'mod+shift+h' } },
   }),
   KbdPlugin.withComponent(KbdLeaf),
+  MarkBoxPlugin,
 ];

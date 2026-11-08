@@ -37,6 +37,11 @@ export function MoreToolbarButton(props: DropdownMenuProps) {
 
       <DropdownMenuContent
         className="ignore-click-outside/toolbar flex max-h-[500px] min-w-[180px] flex-col overflow-y-auto"
+        // 閉じたあとフォーカスがこのボタンに戻ると、エディタを押し直したときに打つ前の印（付け外し）が消えるため
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          editor.tf.focus();
+        }}
         align="start"
       >
         <DropdownMenuGroup>

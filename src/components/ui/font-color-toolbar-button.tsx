@@ -10,6 +10,7 @@ import type {
 import { useComposedRef } from '@udecode/cn';
 import debounce from 'lodash/debounce.js';
 import { EraserIcon, PlusIcon } from 'lucide-react';
+import { TextApi } from 'platejs';
 import { useEditorRef, useEditorSelector } from 'platejs/react';
 
 import { buttonVariants } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { getMarkRunRange } from '@/lib/plate/mark-run';
 import { cn } from '@/lib/utils';
 
 import { ToolbarButton, ToolbarMenuGroup } from './toolbar';
@@ -67,6 +69,12 @@ export function FontColorToolbarButton({
         editor.tf.select(editor.selection);
         editor.tf.focus();
 
+        // 打つ前の色だけを変えても、すでに付いた色は直せないため、色の付いた文字の中にカーソルがあるときはそのひと続きを変える
+        const run = getMarkRunRange(editor, nodeType);
+        if (run) {
+          editor.tf.setNodes({ [nodeType]: value }, { at: run, match: TextApi.isText });
+          return;
+        }
         editor.tf.addMarks({ [nodeType]: value });
       }
     },
@@ -86,13 +94,12 @@ export function FontColorToolbarButton({
       editor.tf.select(editor.selection);
       editor.tf.focus();
 
-      if (selectedColor) {
-        editor.tf.removeMarks(nodeType);
-      }
+      const run = getMarkRunRange(editor, nodeType);
+      editor.tf.removeMarks(nodeType, run ? { at: run } : undefined);
 
       onToggle();
     }
-  }, [editor, selectedColor, onToggle, nodeType]);
+  }, [editor, onToggle, nodeType]);
 
   React.useEffect(() => {
     if (selectionDefined) {
@@ -114,7 +121,14 @@ export function FontColorToolbarButton({
         </ToolbarButton>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start">
+      <DropdownMenuContent
+        // 閉じたあとフォーカスがこのボタンに戻ると、エディタを押し直したときに打つ前の色が消えるため
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          editor.tf.focus();
+        }}
+        align="start"
+      >
         <ColorPicker
           color={selectedColor || color}
           clearColor={clearColor}
@@ -165,14 +179,13 @@ function PureColorPicker({
           updateColor={updateColor}
         />
       </ToolbarMenuGroup>
-      {color && (
-        <ToolbarMenuGroup>
-          <DropdownMenuItem className="p-2" onClick={clearColor}>
-            <EraserIcon />
-            <span>Clear</span>
-          </DropdownMenuItem>
-        </ToolbarMenuGroup>
-      )}
+      {/* 選んだ範囲の先頭に色がなくても途中の色を消せるよう、いつも出す */}
+      <ToolbarMenuGroup>
+        <DropdownMenuItem className="p-2" onClick={clearColor}>
+          <EraserIcon />
+          <span>Clear</span>
+        </DropdownMenuItem>
+      </ToolbarMenuGroup>
     </div>
   );
 }

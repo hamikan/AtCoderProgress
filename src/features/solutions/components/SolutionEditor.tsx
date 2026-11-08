@@ -461,6 +461,8 @@ function SolutionEditorContent({
   function handleEditorSurfaceMouseDown(event: MouseEvent<HTMLDivElement>) {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
+    // ツールバーのメニューは画面の外側に描かれるが React ではここまで伝わるため、枠の中を押したときだけ扱う
+    if (!event.currentTarget.contains(target)) return;
     if (
       target.closest(
         '[data-slate-editor="true"], [contenteditable="true"], input, [role="toolbar"]'

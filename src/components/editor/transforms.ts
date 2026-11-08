@@ -7,7 +7,6 @@ import { insertCodeBlock, toggleCodeBlock } from '@platejs/code-block';
 import { triggerFloatingLink } from '@platejs/link/react';
 import { insertEquation, insertInlineEquation } from '@platejs/math';
 import { insertMedia } from '@platejs/media';
-import { SuggestionPlugin } from '@platejs/suggestion/react';
 import { TablePlugin } from '@platejs/table/react';
 import { insertToc } from '@platejs/toc';
 import {
@@ -93,9 +92,7 @@ export const insertBlock = (
     }
 
     if (!isSameBlockType) {
-      editor.getApi(SuggestionPlugin).suggestion.withoutSuggestions(() => {
-        editor.tf.removeNodes({ previousEmptyBlock: true });
-      });
+      editor.tf.removeNodes({ previousEmptyBlock: true });
     }
   });
 };
