@@ -1,15 +1,37 @@
 'use client';
 
-import { ElementApi, KEYS } from 'platejs';
+import { ElementApi, KEYS, type SlateEditor, type TElement } from 'platejs';
 import { TogglePlugin } from '@platejs/toggle/react';
 
 import { IndentKit } from '@/components/editor/plugins/indent-kit';
 import { ToggleElement } from '@/components/ui/toggle-node';
 
+const LIST_PROP_KEYS = [
+  KEYS.listType,
+  KEYS.listStart,
+  KEYS.listRestart,
+  KEYS.listRestartPolite,
+  KEYS.listChecked,
+];
+
+// リストは1段目を indent 1 で表すので、トグルにするときは1段浅くして同じ深さに見せる
+function removeListProps(editor: SlateEditor) {
+  for (const [node, path] of editor.api.blocks<TElement>({ mode: 'lowest' })) {
+    if (!node[KEYS.listType]) continue;
+    editor.tf.unsetNodes(LIST_PROP_KEYS, { at: path });
+    const indent = typeof node.indent === 'number' ? node.indent - 1 : 0;
+    if (indent > 0) {
+      editor.tf.setNodes({ indent }, { at: path });
+    } else {
+      editor.tf.unsetNodes(KEYS.indent, { at: path });
+    }
+  }
+}
+
 export const ToggleKit = [
   ...IndentKit,
   TogglePlugin.withComponent(ToggleElement).overrideEditor(
-    ({ editor, tf: { insertBreak, normalizeNode } }) => ({
+    ({ editor, tf: { insertBreak, normalizeNode, toggleBlock } }) => ({
       transforms: {
         insertBreak() {
           const entry = editor.api.block();
@@ -28,6 +50,17 @@ export const ToggleKit = [
             return;
           }
           normalizeNode(entry);
+        },
+        toggleBlock(type, options) {
+          // トグルのボタンでリストの行をトグルにするときは、番号や・を外して置き換える
+          if (type === KEYS.toggle) {
+            editor.tf.withoutNormalizing(() => {
+              removeListProps(editor);
+              toggleBlock(type, options);
+            });
+            return;
+          }
+          toggleBlock(type, options);
         },
       },
     })
