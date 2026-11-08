@@ -23,7 +23,8 @@ interface SolutionTagSelectorProps {
 const CHIP_CLASS_NAME =
   'inline-flex h-5.5 max-w-full items-center gap-1 rounded-md border px-2 text-xs transition-colors';
 
-const TAG_CHIP_CLASS_NAME = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50';
+const TAG_CHIP_CLASS_NAME =
+  'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50';
 
 export default function SolutionTagSelector({
   availableTags,
@@ -79,9 +80,14 @@ export default function SolutionTagSelector({
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-slate-500">タグ</p>
-      {selectedTags.length > 0 && (
-        <div role="group" aria-label="付けたタグ" className="flex flex-wrap gap-1.5">
-          {selectedTags.map((tagName) => (
+      {/* 後でタグごとに色を付けるので、付けたかどうかは色ではなく置き場所で見せる */}
+      <div
+        role="group"
+        aria-label="付けたタグ"
+        className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-md bg-slate-100 p-2"
+      >
+        {selectedTags.length > 0 ? (
+          selectedTags.map((tagName) => (
             <button
               key={tagName}
               type="button"
@@ -92,9 +98,11 @@ export default function SolutionTagSelector({
             >
               <span className="truncate">{tagName}</span>
             </button>
-          ))}
-        </div>
-      )}
+          ))
+        ) : (
+          <span className="text-xs text-slate-400">未設定</span>
+        )}
+      </div>
       <div className="relative">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
         <input
