@@ -11,6 +11,8 @@ import {
   type UploadThingFileInfo,
 } from '@/lib/uploadthing-cleanup';
 
+import { describeDatabaseTarget } from './database-target';
+
 const LIST_PAGE_SIZE = 500;
 const DELETE_CHUNK_SIZE = 100;
 const DEFAULT_MIN_AGE_DAYS = 7;
@@ -39,20 +41,6 @@ function parseArgs(argv: string[]): CliOptions {
   }
 
   return { execute, minAgeDays };
-}
-
-function describeDatabaseTarget(): string {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    return 'DATABASE_URL が未設定です';
-  }
-  try {
-    const parsed = new URL(databaseUrl);
-    const database = parsed.pathname.replace(/^\//, '');
-    return `${parsed.hostname}:${parsed.port || '5432'} / ${database}`;
-  } catch {
-    return 'DATABASE_URL の形式を解釈できませんでした';
-  }
 }
 
 interface UploadThingTokenInfo {

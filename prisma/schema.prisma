@@ -163,7 +163,9 @@ model Contest {
   id                String  @id
   startEpochSecond  Int     @map("start_epoch_second")
   durationSecond    BigInt  @map("duration_second")
-  
+  // 推定できなかったときも入れて、同じ順位表を取りに行き続けないようにする
+  customDifficultyEstimatedAt DateTime? @map("custom_difficulty_estimated_at")
+
   problems          ContestProblem[]
   firstProblems     Problem[]        @relation("FirstContest")
   solutions         Solution[]
@@ -175,6 +177,8 @@ model Problem {
   id                  String       @id
   name                String
   difficulty          Int?
+  // 独自推定（irt5_time）の clipDifficulty 前の値。取り込みで AtCoder Problems の値に上書きされないよう difficulty と分けて持つ
+  customDifficulty    Int?         @map("custom_difficulty")
   totalSolutionCount  Int          @default(0) @map("total_solution_count")
   firstContestId      String       @map("first_contest_id")
   
