@@ -10,7 +10,7 @@ export async function syncContestsAndProblems() {
   const raw = await fetchContestResources();
   const normalized = normalizeContestData(raw);
   await persistContestsAndProblems(normalized);
-  // 問題データ待ちで取っておいた提出は、取り直しても範囲から外れていて拾えないため、ここで移す
+  // ダッシュボードを開いて提出を取り直すのを待たずに、問題データが入った時点で数に入れる
   const promotedCount = await promoteAllPendingSubmissions();
   if (promotedCount > 0) {
     console.log(`Moved ${promotedCount} pending submission(s) now that their problems are imported.`);

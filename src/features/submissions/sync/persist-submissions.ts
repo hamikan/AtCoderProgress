@@ -71,7 +71,7 @@ export async function persistSubmissionsInTransaction(
   atcoderAccountId: string,
   data: SubmissionResources
 ): Promise<PersistSubmissionsResult> {
-  // 前に取っておいた提出のうち、問題データが入ったものを先に移しておく
+  // 問題データの取り込みのあとで移しそこねたものも、ここで拾う
   const promotedCount = await promotePendingSubmissions(transaction, { atcoderAccountId });
 
   const allRecords: SubmissionPersistenceRecord[] = data.submissions.map((submission) => ({
