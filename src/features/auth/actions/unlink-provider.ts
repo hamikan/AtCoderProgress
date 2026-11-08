@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@/generated/prisma/client';
 
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { unlinkProvider as unlinkProviderInTransaction } from '@/features/auth/sync/unlink-provider';
@@ -22,8 +23,10 @@ export async function unlinkProvider(
   }
 
   try {
-    const result = await prisma.$transaction((transaction) =>
-      unlinkProviderInTransaction(transaction, user.id, provider)
+    // 別の画面から2つを同時に解除すると、どちらも「もう1つ残っている」と見て両方消えてしまうため
+    const result = await prisma.$transaction(
+      (transaction) => unlinkProviderInTransaction(transaction, user.id, provider),
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
     );
     if (result.status === 'not-linked') {
       return failure('NOT_LINKED', 'そのログイン方法は連携されていません。');
@@ -36,6 +39,10 @@ export async function unlinkProvider(
     return { ok: true, value: { status: 'unlinked' } };
   } catch (error: unknown) {
     console.error('Failed to unlink provider', { error, userId: user.id });
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034') {
+      return failure('CONFLICT', '同時に更新が行われました。もう一度お試しください。');
+    }
     return failure('INTERNAL_ERROR', 'ログイン方法の解除に失敗しました。');
   }
 }
