@@ -11,11 +11,11 @@ export const MAX_SOLUTION_CONTENT_NODE_COUNT = 5000;
 
 const DATABASE_ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 export const solutionStatusSchema = z.enum([
-  'SELF_AC',
-  'EXPLANATION_AC',
-  'REVIEW_AC',
-  'AC',
+  'UNSET',
   'TRYING',
+  'EXPLANATION_AC',
+  'SELF_AC',
+  'REVIEW_AC',
   'UNSOLVED',
 ]);
 

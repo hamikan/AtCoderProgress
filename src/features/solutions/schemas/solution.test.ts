@@ -38,7 +38,7 @@ function solutionInput(overrides: Partial<SolutionInputFixture> = {}): SolutionI
     contestId: 'abc001',
     content: VALID_CONTENT,
     problemId: 'abc001_a',
-    status: 'AC',
+    status: 'UNSET',
     tagNames: [],
     title: null,
     ...overrides,
@@ -57,7 +57,7 @@ test('parseSolutionInput parses and normalizes save payloads', () => {
       content: VALID_CONTENT,
       problemId: 'abc001_a',
       solutionId: 'solution-1',
-      status: 'AC',
+      status: 'UNSET',
       tagNames: ['dp', 'graph'],
       title: 'title',
     }
@@ -76,7 +76,7 @@ test('parseSolutionInput defaults blank optional fields for new saves', () => {
       content: VALID_CONTENT,
       problemId: 'abc001_a',
       solutionId: null,
-      status: 'AC',
+      status: 'UNSET',
       tagNames: ['dynamic programming', 'math'],
       title: null,
     }

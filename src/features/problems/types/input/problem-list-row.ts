@@ -11,7 +11,7 @@ export interface ProblemListRow {
     problemIndex: string;
   }>;
   solutions: Array<{
-    status: ProblemStatus;
+    status: ProblemStatus | 'UNSET';
   }>;
   submissions: Array<{
     id: number;

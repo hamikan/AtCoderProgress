@@ -78,7 +78,7 @@ export async function getProblemList(
       case 'AC':
         andConditions.push({
           OR: [
-            { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } },
+            { solutions: { some: { userId, status: { in: ['SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } },
             ...acceptedSubmission
           ]
         });
@@ -92,13 +92,13 @@ export async function getProblemList(
             ]
           },
           ...acceptedSubmission.map((condition) => ({ NOT: condition })),
-          { NOT: { solutions: { some: { userId, status: { in: ['AC', 'SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } } }
+          { NOT: { solutions: { some: { userId, status: { in: ['SELF_AC', 'EXPLANATION_AC', 'REVIEW_AC'] } } } } }
         );
         break;
       case 'UNSOLVED':
         andConditions.push(
           ...anySubmission.map((condition) => ({ NOT: condition })),
-          { NOT: { solutions: { some: { userId } } } }
+          { NOT: { solutions: { some: { userId, status: { not: 'UNSET' } } } } }
         );
         break;
       default:
