@@ -46,10 +46,7 @@ export default function DeleteAccountSection() {
 
   return (
     <div className="space-y-2 px-2 py-2 text-xs">
-      <p className="leading-relaxed text-slate-600">
-        アカウントを削除すると、解法記録と自分で作ったタグがすべて消え、元に戻せません。続けるときは「
-        {DELETE_ACCOUNT_CONFIRMATION}」と入力してください。
-      </p>
+      <p className="leading-relaxed text-slate-600">すべての記録が消え、元に戻せません。</p>
       <input
         type="text"
         autoFocus
@@ -58,7 +55,7 @@ export default function DeleteAccountSection() {
         onKeyDown={handleKeyDown}
         disabled={isDeleting}
         aria-label="確認の言葉"
-        placeholder={DELETE_ACCOUNT_CONFIRMATION}
+        placeholder={`「${DELETE_ACCOUNT_CONFIRMATION}」と入力`}
         className="h-8 w-full rounded-md border border-slate-200 px-2 text-sm outline-none transition-colors placeholder:text-slate-300 focus:border-red-300"
       />
       {error && <p className="text-red-600">{error}</p>}
