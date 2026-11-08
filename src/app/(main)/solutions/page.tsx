@@ -2,34 +2,25 @@ import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
 import { getProblemDetail } from '@/features/problems/api/get-problem-detail';
-import { searchProblems } from '@/features/problems/api/search-problems';
 import { getSolutionById } from '@/features/solutions/api/get-solution-by-id';
 import { getSolutionRecords } from '@/features/solutions/api/get-solution-records';
 import { getSidebarContestProblems } from '@/features/solutions/api/get-sidebar-contest-problems';
 import { getUserSolutions } from '@/features/solutions/api/get-user-solutions';
 import SolutionsWorkspace from '@/features/solutions/components/SolutionsWorkspace';
-import { normalizeSolutionSearchParams } from '@/features/solutions/functions/normalize-solution-search-params';
 import type {
   SolutionRecordListItem,
-  SolutionSearchParamsInput,
   SolutionWithTags,
 } from '@/features/solutions/types';
 import type { ProblemDetail } from '@/features/problems/types';
 
-interface SolutionsPageProps {
-  searchParams: Promise<SolutionSearchParamsInput>;
-}
-
-export default async function SolutionsPage({ searchParams }: SolutionsPageProps) {
+export default async function SolutionsPage() {
   const user = await getCurrentUser();
   const userId = user?.id;
-  const { problemSearch } = normalizeSolutionSearchParams(await searchParams);
-  const [solutions, contestProblems, availableTags, problemSearchResults] =
+  const [solutions, contestProblems, availableTags] =
     await Promise.all([
       getUserSolutions(userId),
       getSidebarContestProblems(userId),
       getSelectableTags(userId),
-      searchProblems(problemSearch),
     ]);
 
   let initialProblem: ProblemDetail | null = null;
@@ -63,8 +54,6 @@ export default async function SolutionsPage({ searchParams }: SolutionsPageProps
       initialSolution={initialSolution}
       initialContestId={initialContestId}
       initialRelatedSolutions={initialRelatedSolutions}
-      problemSearchQuery={problemSearch}
-      problemSearchResults={problemSearchResults}
       isAuthenticated={Boolean(user)}
       notice={!user ? <LoginPrompt returnTo="/solutions" /> : null}
     />

@@ -6,19 +6,15 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import SolutionsSidebar from '@/features/solutions/components/SolutionsSidebar';
 import { useSolutionsSidebarState } from '@/features/solutions/components/SolutionsSidebarStateProvider';
 import SolutionEditor from '@/features/solutions/components/SolutionEditor';
+import { DEFAULT_SOLUTION_STATUS } from '@/features/solutions/functions/solution-status';
 import type {
   SolutionDraftState,
   SolutionListItem,
   SolutionRecordListItem,
   SolutionSidebarContestProblem,
   SolutionWithTags,
-  SolutionStatus,
 } from '@/features/solutions/types';
-import type {
-  ProblemDetail,
-  ProblemSearchResult,
-  SelectableTag,
-} from '@/features/problems/types';
+import type { ProblemDetail, SelectableTag } from '@/features/problems/types';
 
 interface SolutionsWorkspaceProps {
   solutions: SolutionListItem[];
@@ -28,18 +24,15 @@ interface SolutionsWorkspaceProps {
   initialSolution: SolutionWithTags | null;
   initialContestId: string | null;
   initialRelatedSolutions: SolutionRecordListItem[];
-  problemSearchQuery: string;
-  problemSearchResults: ProblemSearchResult[];
   isAuthenticated: boolean;
   notice?: ReactNode;
 }
 
 const DEFAULT_CONTENT = JSON.stringify([{ type: 'p', children: [{ text: '' }] }]);
-const DEFAULT_STATUS: SolutionStatus = 'AC';
 const EMPTY_DRAFT_STATE: SolutionDraftState = {
   title: '',
   content: DEFAULT_CONTENT,
-  status: DEFAULT_STATUS,
+  status: DEFAULT_SOLUTION_STATUS,
   tags: [],
   contestId: null,
 };
@@ -52,8 +45,6 @@ export default function SolutionsWorkspace({
   initialSolution,
   initialContestId,
   initialRelatedSolutions,
-  problemSearchQuery,
-  problemSearchResults,
   isAuthenticated,
   notice,
 }: SolutionsWorkspaceProps) {
@@ -110,8 +101,6 @@ export default function SolutionsWorkspace({
             onDraftChange={setDraftState}
             onProblemSelected={handleSelectProblem}
             onSelectSolution={handleSelectSolution}
-            problemSearchQuery={problemSearchQuery}
-            problemSearchResults={problemSearchResults}
             isAuthenticated={isAuthenticated}
             notice={notice}
           />

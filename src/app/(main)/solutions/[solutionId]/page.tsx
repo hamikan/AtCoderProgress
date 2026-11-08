@@ -4,7 +4,6 @@ import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
 import { getProblemDetail } from '@/features/problems/api/get-problem-detail';
-import { searchProblems } from '@/features/problems/api/search-problems';
 import { getSolutionById } from '@/features/solutions/api/get-solution-by-id';
 import { getSolutionRecords } from '@/features/solutions/api/get-solution-records';
 import { getSidebarContestProblems } from '@/features/solutions/api/get-sidebar-contest-problems';
@@ -33,14 +32,13 @@ export default async function SolutionPage({ params, searchParams }: SolutionPag
     notFound();
   }
 
-  const { problemId, problemSearch } = normalizeSolutionSearchParams(await searchParams);
-  const [solution, solutions, contestProblems, availableTags, problemSearchResults] =
+  const { problemId } = normalizeSolutionSearchParams(await searchParams);
+  const [solution, solutions, contestProblems, availableTags] =
     await Promise.all([
       userId ? getSolutionById(userId, solutionId) : Promise.resolve(null),
       getUserSolutions(userId),
       getSidebarContestProblems(userId),
       getSelectableTags(userId),
-      searchProblems(problemSearch),
     ]);
 
   if (userId && !solution) {
@@ -67,8 +65,6 @@ export default async function SolutionPage({ params, searchParams }: SolutionPag
       initialSolution={solution}
       initialContestId={solution?.contestId ?? null}
       initialRelatedSolutions={relatedSolutions}
-      problemSearchQuery={problemSearch}
-      problemSearchResults={problemSearchResults}
       isAuthenticated={Boolean(user)}
       notice={
         !user ? (

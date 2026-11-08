@@ -202,7 +202,7 @@ test('getSelectedSidebarGroupKeys returns the groups that lead to the selected r
           title: null,
           createdAt: '2026-10-31T00:00:00.000Z',
           updatedAt: '2026-10-31T00:00:00.000Z',
-          status: 'AC' as const,
+          status: 'UNSET' as const,
         },
       ],
     },

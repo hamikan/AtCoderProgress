@@ -9,3 +9,5 @@ export interface SolutionDraftState {
 }
 
 export type SolutionSaveState = 'idle' | 'saving' | 'saved' | 'error';
+
+export type SolutionRecordDeletePhase = 'confirming' | 'deleting' | 'failed';

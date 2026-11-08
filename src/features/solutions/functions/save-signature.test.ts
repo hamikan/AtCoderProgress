@@ -12,7 +12,7 @@ const PAYLOAD: SavePayload = {
   contestId: 'abc001',
   title: null,
   content: '[{"type":"p","children":[{"text":"メモ"}]}]',
-  status: 'AC',
+  status: 'UNSET',
   tagNames: [],
 };
 
