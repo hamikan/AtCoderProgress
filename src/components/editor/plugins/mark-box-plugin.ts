@@ -16,8 +16,8 @@ function getCursorText(editor: SlateEditor): NodeEntry<TText> | undefined {
   return entry && TextApi.isText(entry[0]) ? (entry as NodeEntry<TText>) : undefined;
 }
 
-export const EmptyMarkBoxPlugin = createPlatePlugin({
-  key: 'emptyMarkBox',
+export const MarkBoxPlugin = createPlatePlugin({
+  key: 'markBox',
   handlers: {
     onKeyDown: ({ editor, event }) => {
       if (
@@ -46,8 +46,26 @@ export const EmptyMarkBoxPlugin = createPlatePlugin({
       return true;
     },
   },
-}).overrideEditor(({ editor, tf: { removeMark } }) => ({
+}).overrideEditor(({ editor, tf: { insertSoftBreak, removeMark } }) => ({
   transforms: {
+    insertSoftBreak() {
+      const marks = editor.api.marks() ?? {};
+      if (!BOX_MARK_KEYS.some((key) => marks[key])) {
+        insertSoftBreak();
+        return;
+      }
+      editor.tf.withoutNormalizing(() => {
+        if (editor.api.isExpanded()) {
+          editor.tf.delete();
+        }
+        const current = editor.api.marks() ?? {};
+        // 改行まで箱に入れると、箱が行をまたいで切れ切れに見えるため、改行は箱の外に置く
+        editor.marks = Object.fromEntries(
+          Object.entries(current).filter(([key]) => !BOX_MARK_KEYS.includes(key))
+        );
+        editor.tf.insertText('\n');
+      });
+    },
     removeMark(key) {
       const entry = getCursorText(editor);
       // 空の行の文字に付いた印は、打つ前の印だけ外してもカーソルが動くと箱が戻るため、文字からも外す
