@@ -38,6 +38,18 @@ function createTransaction() {
         return {};
       },
     },
+    pendingSubmission: {
+      async findMany() {
+        return [];
+      },
+      async createMany(args: unknown) {
+        calls.push({ name: 'pendingSubmission.createMany', args });
+        return {};
+      },
+      async deleteMany() {
+        return {};
+      },
+    },
     userRatingHistory: {
       async createMany(args: unknown) {
         calls.push({ name: 'userRatingHistory.createMany', args });

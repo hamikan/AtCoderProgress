@@ -4,6 +4,7 @@ import type {
 import type { NormalizedContestData } from '@/features/problems/types/input/normalized-contest-data';
 
 import { ESTIMATED_DIFFICULTIES } from './estimated-difficulties';
+import { SUPPLEMENTAL_PROBLEMS } from './supplemental-problems';
 
 // 次のコードを引用・編集して使用しています。
 // https://github.com/kenkoooo/AtCoderProblems/blob/master/atcoder-problems-frontend/src/utils/index.ts
@@ -40,9 +41,31 @@ export function normalizeContestData(resources: ContestResources): NormalizedCon
     problemIndex: cp.problem_index,
   }));
 
+  const listedProblemIds = new Set(normalizedProblems.map((problem) => problem.id));
+  const contestIds = new Set(normalizedContests.map((contest) => contest.id));
+  // 問題には最初のコンテストが必要なので、コンテストが一覧にあるものだけを補う
+  const supplementalProblems = SUPPLEMENTAL_PROBLEMS.filter(
+    (problem) => !listedProblemIds.has(problem.id) && contestIds.has(problem.contestId)
+  );
+
   return {
     contests: normalizedContests,
-    problems: normalizedProblems,
-    contestProblems: normalizedContestProblems,
+    problems: [
+      ...normalizedProblems,
+      ...supplementalProblems.map((problem) => ({
+        id: problem.id,
+        name: problem.name,
+        difficulty: null,
+        firstContestId: problem.contestId,
+      })),
+    ],
+    contestProblems: [
+      ...normalizedContestProblems,
+      ...supplementalProblems.map((problem) => ({
+        contestId: problem.contestId,
+        problemId: problem.id,
+        problemIndex: problem.problemIndex,
+      })),
+    ],
   };
 }

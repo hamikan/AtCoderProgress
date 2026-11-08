@@ -86,6 +86,7 @@ model AtCoderAccount {
   createdAt                 DateTime    @default(now()) @map("created_at")
 
   submissions               Submission[]
+  pendingSubmissions        PendingSubmission[]
   ratingHistory             UserRatingHistory[]
 
   @@map("atcoder_accounts")
@@ -137,6 +138,25 @@ model Submission {
 
   @@index([atcoderAccountId, epochSecond])
   @@map("submissions")
+}
+
+// 問題データにまだない問題への提出。捨てると取り直す範囲から外れて二度と拾えないため、ここに取っておき、問題データが入ったら submissions へ移す
+model PendingSubmission {
+  id               Int      @id
+  epochSecond      Int      @map("epoch_second")
+  problemId        String   @map("problem_id")
+  contestId        String   @map("contest_id")
+  atcoderAccountId String   @map("atcoder_account_id")
+  language         String
+  point            Float
+  length           Int
+  result           String
+  executionTime    Int?     @map("execution_time")
+
+  atcoderAccount   AtCoderAccount @relation(fields: [atcoderAccountId], references: [id], onDelete: Cascade)
+
+  @@index([atcoderAccountId])
+  @@map("pending_submissions")
 }
 
 model Contest {
