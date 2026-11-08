@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Check, LogOut } from 'lucide-react';
 import { signIn, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
@@ -16,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import DeleteAccountSection from '@/features/auth/components/DeleteAccountSection';
 import { useUnlinkProvider } from '@/features/auth/hooks/use-unlink-provider';
 
 const LOGIN_PROVIDERS = [
@@ -36,9 +38,10 @@ export default function UserMenu({ user, linkedProviders }: UserMenuProps) {
   const pathname = usePathname();
   const { error: unlinkError, isUnlinking, unlink } = useUnlinkProvider();
   const canUnlink = linkedProviders.length > 1;
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
@@ -96,6 +99,9 @@ export default function UserMenu({ user, linkedProviders }: UserMenuProps) {
         <DropdownMenuItem onClick={() => signOut()}>
           <LogOut className="mr-2 h-4 w-4" /><span>ログアウト</span>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* メニューを閉じたら、途中まで進めた退会の確認を最初からにする */}
+        <DeleteAccountSection key={isOpen ? 'open' : 'closed'} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

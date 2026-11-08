@@ -203,7 +203,7 @@ model Solution {
 
   userTags  SolutionUserTag[]
 
-  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user      User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   problem   Problem         @relation(fields: [problemId], references: [id], onDelete: Restrict)
   contest   Contest         @relation(fields: [contestId], references: [id], onDelete: Restrict)
   
@@ -216,14 +216,15 @@ model Solution {
 
 model ProblemReview {
   id             String    @id @default(cuid())
-  userId         String    @map("user_id")
+  userId         String?   @map("user_id")
   problemId      String    @map("problem_id")
   stars          Int       @default(3)
   reviewPriority Int       @default(3) @map("review_priority")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // ★はおすすめの問題に使う全員の平均に入るため、退会しても誰のものかを外して残す
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   problem        Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   @@unique([userId, problemId])
