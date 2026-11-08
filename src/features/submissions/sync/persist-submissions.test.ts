@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   persistSubmissionsForAccount,
   persistSubmissionsInTransaction,
+  promotePendingSubmissions,
 } from './persist-submissions';
 import type { SubmissionSyncTransaction } from '@/features/submissions/types';
 
@@ -32,12 +33,35 @@ type StoredSubmission = {
   executionTime: number | null;
 };
 
-function createTransaction(storedSubmissions: StoredSubmission[] = []) {
+const PENDING_ROW = {
+  id: 3,
+  epochSecond: 300,
+  problemId: 'abc001_a',
+  contestId: 'abc001',
+  atcoderAccountId: 'tourist',
+  language: 'C++',
+  point: 100,
+  length: 1000,
+  result: 'AC',
+  executionTime: 10,
+};
+
+function createTransaction({
+  storedSubmissions = [],
+  knownProblemIds = ['abc001_a'],
+  pendingRows = [],
+}: {
+  storedSubmissions?: StoredSubmission[];
+  knownProblemIds?: string[];
+  pendingRows?: Array<typeof PENDING_ROW>;
+} = {}) {
   const writes: {
     upserts: unknown[];
     submissions: unknown[];
     updates: unknown[];
-  } = { upserts: [], submissions: [], updates: [] };
+    pendingCreated: Array<{ id: number }>;
+    pendingDeleted: number[];
+  } = { upserts: [], submissions: [], updates: [], pendingCreated: [], pendingDeleted: [] };
 
   const transaction: SubmissionSyncTransaction = {
     atCoderAccount: {
@@ -47,8 +71,8 @@ function createTransaction(storedSubmissions: StoredSubmission[] = []) {
       },
     },
     problem: {
-      async findMany() {
-        return [{ id: 'abc001_a' }];
+      async findMany({ where }) {
+        return where.id.in.filter((id) => knownProblemIds.includes(id)).map((id) => ({ id }));
       },
     },
     submission: {
@@ -56,12 +80,27 @@ function createTransaction(storedSubmissions: StoredSubmission[] = []) {
         return storedSubmissions;
       },
       async createMany({ data }) {
-        writes.submissions = data;
+        writes.submissions.push(...data);
         return { count: data.length };
       },
       async update(args) {
         writes.updates.push(args);
         return {};
+      },
+    },
+    pendingSubmission: {
+      async findMany({ where }) {
+        return pendingRows.filter(
+          (row) => where.atcoderAccountId === undefined || row.atcoderAccountId === where.atcoderAccountId
+        );
+      },
+      async createMany({ data }) {
+        writes.pendingCreated.push(...data);
+        return { count: data.length };
+      },
+      async deleteMany({ where }) {
+        writes.pendingDeleted.push(...where.id.in);
+        return { count: where.id.in.length };
       },
     },
   };
@@ -123,9 +162,9 @@ test('keeps the entered name when no submission tells the AtCoder spelling', asy
 });
 
 test('updates a stored submission whose judge result changed', async () => {
-  const { transaction, writes } = createTransaction([
-    { id: 1, result: 'WJ', point: 0, executionTime: null },
-  ]);
+  const { transaction, writes } = createTransaction({
+    storedSubmissions: [{ id: 1, result: 'WJ', point: 0, executionTime: null }],
+  });
 
   const result = await persistSubmissionsInTransaction(
     transaction,
@@ -133,7 +172,7 @@ test('updates a stored submission whose judge result changed', async () => {
     SUBMISSION_DATA
   );
 
-  assert.deepEqual(result, { storedCount: 0, updatedCount: 1, droppedCount: 0 });
+  assert.deepEqual(result, { storedCount: 0, updatedCount: 1, pendingCount: 0, promotedCount: 0 });
   assert.deepEqual(writes.submissions, []);
   assert.deepEqual(writes.updates, [
     {
@@ -144,9 +183,9 @@ test('updates a stored submission whose judge result changed', async () => {
 });
 
 test('does not rewrite a stored submission that has not changed', async () => {
-  const { transaction, writes } = createTransaction([
-    { id: 1, result: 'AC', point: 100, executionTime: 10 },
-  ]);
+  const { transaction, writes } = createTransaction({
+    storedSubmissions: [{ id: 1, result: 'AC', point: 100, executionTime: 10 }],
+  });
 
   const result = await persistSubmissionsInTransaction(
     transaction,
@@ -154,19 +193,45 @@ test('does not rewrite a stored submission that has not changed', async () => {
     SUBMISSION_DATA
   );
 
-  assert.deepEqual(result, { storedCount: 0, updatedCount: 0, droppedCount: 0 });
+  assert.deepEqual(result, { storedCount: 0, updatedCount: 0, pendingCount: 0, promotedCount: 0 });
   assert.deepEqual(writes.updates, []);
 });
 
-test('counts submissions for problems that are not imported yet as dropped', async () => {
+test('keeps submissions for problems that are not imported yet as pending', async () => {
   const { transaction, writes } = createTransaction();
 
   const result = await persistSubmissionsInTransaction(transaction, 'tourist', {
-    submissions: [
-      { ...SUBMISSION_DATA.submissions[0], id: 2, problem_id: 'abc999_a' },
-    ],
+    submissions: [{ ...SUBMISSION_DATA.submissions[0], id: 2, problem_id: 'abc999_a' }],
   });
 
-  assert.deepEqual(result, { storedCount: 0, updatedCount: 0, droppedCount: 1 });
+  assert.deepEqual(result, { storedCount: 0, updatedCount: 0, pendingCount: 1, promotedCount: 0 });
   assert.deepEqual(writes.submissions, []);
+  assert.deepEqual(
+    writes.pendingCreated.map((row) => row.id),
+    [2]
+  );
+});
+
+test('moves pending submissions into submissions once their problem is imported', async () => {
+  const { transaction, writes } = createTransaction({ pendingRows: [PENDING_ROW] });
+
+  const result = await persistSubmissionsInTransaction(transaction, 'tourist', {
+    submissions: [],
+  });
+
+  assert.deepEqual(result, { storedCount: 0, updatedCount: 0, pendingCount: 0, promotedCount: 1 });
+  assert.deepEqual(writes.submissions, [PENDING_ROW]);
+  assert.deepEqual(writes.pendingDeleted, [3]);
+});
+
+test('leaves pending submissions whose problem is still missing', async () => {
+  const { transaction, writes } = createTransaction({
+    pendingRows: [{ ...PENDING_ROW, problemId: 'ahc069_b' }],
+  });
+
+  const result = await promotePendingSubmissions(transaction);
+
+  assert.equal(result, 0);
+  assert.deepEqual(writes.submissions, []);
+  assert.deepEqual(writes.pendingDeleted, []);
 });

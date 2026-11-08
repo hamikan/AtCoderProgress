@@ -122,3 +122,48 @@ test('normalizeContestData accepts nullable API fields and preserves unknown dif
   ]).success, false);
   assert.equal(problemModelsSchema.safeParse({ a: { difficulty: 'unknown' } }).success, false);
 });
+
+test('normalizeContestData adds the supplemental problems AtCoder Problems does not list', () => {
+  const normalized = normalizeContestData({
+    contests: [{ id: 'APG4bPython', start_epoch_second: 0, duration_second: 0 }],
+    mergedProblems: [
+      {
+        id: 'APG4bPython_ci',
+        name: '隣り合う同じ値を探す',
+        contest_id: 'APG4bPython',
+        first_contest_id: 'APG4bPython',
+      },
+    ],
+    contestProblems: [],
+    problemModels: {},
+  });
+
+  assert.deepEqual(
+    normalized.problems.find((problem) => problem.id === 'APG4bPython_cd'),
+    { id: 'APG4bPython_cd', name: '計算量の見積もり', difficulty: null, firstContestId: 'APG4bPython' }
+  );
+  assert.deepEqual(
+    normalized.contestProblems.find((link) => link.problemId === 'APG4bPython_cd'),
+    { contestId: 'APG4bPython', problemId: 'APG4bPython_cd', problemIndex: 'EX19' }
+  );
+  assert.equal(
+    normalized.problems.filter((problem) => problem.id === 'APG4bPython_ci').length,
+    1
+  );
+  assert.equal(
+    normalized.contestProblems.some((link) => link.problemId === 'APG4bPython_ci'),
+    false
+  );
+});
+
+test('normalizeContestData skips supplemental problems whose contest is not listed', () => {
+  const normalized = normalizeContestData({
+    contests: [],
+    mergedProblems: [],
+    contestProblems: [],
+    problemModels: {},
+  });
+
+  assert.equal(normalized.problems.length, 0);
+  assert.equal(normalized.contestProblems.length, 0);
+});

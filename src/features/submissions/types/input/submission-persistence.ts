@@ -1,7 +1,8 @@
 export interface PersistSubmissionsResult {
   storedCount: number;
   updatedCount: number;
-  droppedCount: number;
+  pendingCount: number;
+  promotedCount: number;
 }
 
 export interface SubmissionPersistenceRecord {
@@ -43,6 +44,18 @@ export interface SubmissionWriterTransaction {
     update(args: {
       data: { result: string; point: number; executionTime: number | null };
       where: { id: number };
+    }): Promise<unknown>;
+  };
+  pendingSubmission: {
+    findMany(args: {
+      where: { atcoderAccountId?: string };
+    }): Promise<SubmissionPersistenceRecord[]>;
+    createMany(args: {
+      data: SubmissionPersistenceRecord[];
+      skipDuplicates: true;
+    }): Promise<unknown>;
+    deleteMany(args: {
+      where: { id: { in: number[] } };
     }): Promise<unknown>;
   };
 }
