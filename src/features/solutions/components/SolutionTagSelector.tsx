@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, type KeyboardEvent } from 'react';
-import { Plus, Search, X } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 
 import type { SelectableTag } from '@/features/problems/types';
 import {
@@ -22,6 +22,8 @@ interface SolutionTagSelectorProps {
 
 const CHIP_CLASS_NAME =
   'inline-flex h-5.5 max-w-full items-center gap-1 rounded-md border px-2 text-xs transition-colors';
+
+const TAG_CHIP_CLASS_NAME = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50';
 
 export default function SolutionTagSelector({
   availableTags,
@@ -85,13 +87,10 @@ export default function SolutionTagSelector({
               type="button"
               onClick={() => removeTag(tagName)}
               aria-label={`${tagName} を外す`}
-              className={cn(
-                CHIP_CLASS_NAME,
-                'border-transparent bg-blue-50 font-medium text-blue-700 hover:bg-blue-100'
-              )}
+              title="押すと外す"
+              className={cn(CHIP_CLASS_NAME, TAG_CHIP_CLASS_NAME)}
             >
               <span className="truncate">{tagName}</span>
-              <X className="size-3 shrink-0 opacity-60" />
             </button>
           ))}
         </div>
@@ -128,10 +127,7 @@ export default function SolutionTagSelector({
             key={tagName}
             type="button"
             onClick={() => handlePick(tagName)}
-            className={cn(
-              CHIP_CLASS_NAME,
-              'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-            )}
+            className={cn(CHIP_CLASS_NAME, TAG_CHIP_CLASS_NAME)}
           >
             <span className="truncate">{tagName}</span>
           </button>
