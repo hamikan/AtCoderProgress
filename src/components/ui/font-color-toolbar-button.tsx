@@ -114,7 +114,14 @@ export function FontColorToolbarButton({
         </ToolbarButton>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start">
+      <DropdownMenuContent
+        // 閉じたあとフォーカスがこのボタンに戻ると、エディタを押し直したときに打つ前の色が消えるため
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          editor.tf.focus();
+        }}
+        align="start"
+      >
         <ColorPicker
           color={selectedColor || color}
           clearColor={clearColor}
