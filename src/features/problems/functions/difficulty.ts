@@ -16,10 +16,7 @@ export function isCustomDifficultyTargetContest(contestId: string): boolean {
   return Number(match[2]) >= CUSTOM_DIFFICULTY_MIN_CONTEST[kind];
 }
 
-/**
- * 画面に出す difficulty を決める。独自推定があればそれを、なければ AtCoder Problems の値を使う。
- * null のときは、前の値を空で上書きしないよう、書き込まずに残す。
- */
+// null のときは、前の値を空で上書きしないよう、取り込みで書き込まずに残す
 export function resolveProblemDifficulty(
   customDifficulty: number | null,
   atcoderProblemsDifficulty: number | null
