@@ -1,7 +1,10 @@
+import type { Metadata } from 'next';
 import LoginPanel from '@/features/auth/components/LoginPanel';
 import { getLoginErrorMessage } from '@/features/auth/functions/get-login-error-message';
 import { normalizeLoginCallbackUrl } from '@/features/auth/functions/normalize-login-callback-url';
 import type { LoginSearchParamsInput } from '@/features/auth/types';
+
+export const metadata: Metadata = { title: 'ログイン' };
 
 interface LoginPageProps {
   searchParams: Promise<LoginSearchParamsInput>;

@@ -18,6 +18,9 @@ import { getRecentSubmissions } from '@/features/submissions/api/get-recent-subm
 import { getSolvedProblemStatistics } from '@/features/submissions/api/get-solved-problem-statistics';
 import RecentActivity from '@/features/submissions/components/RecentActivity';
 import { buildHeatmapStats } from '@/features/submissions/functions/build-heatmap-stats';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { title: 'ダッシュボード' };
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();

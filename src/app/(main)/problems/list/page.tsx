@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
@@ -7,6 +8,8 @@ import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
 import ProblemsFilters from '@/features/problems/components/ProblemsFilters';
 import ProblemsList from '@/features/problems/components/ProblemsList';
 import type { ProblemListSearchParamsInput } from '@/features/problems/types';
+
+export const metadata: Metadata = { title: '問題リスト' };
 
 interface ProblemListPageProps {
   searchParams: Promise<ProblemListSearchParamsInput>;

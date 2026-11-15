@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { FaGithub } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
@@ -11,7 +12,7 @@ interface LoginPanelProps {
 
 export default function LoginPanel({ callbackUrl, errorMessage }: LoginPanelProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 px-4">
       <div className="w-full max-w-sm space-y-6 rounded-lg bg-white p-8 shadow-md">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">ログイン</h1>
@@ -44,6 +45,12 @@ export default function LoginPanel({ callbackUrl, errorMessage }: LoginPanelProp
           </button>
         </div>
       </div>
+      <Link
+        href="/dashboard"
+        className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline"
+      >
+        ダッシュボードに戻る
+      </Link>
     </div>
   );
 }

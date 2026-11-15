@@ -1,9 +1,13 @@
+import type { Metadata } from 'next';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
+import LinkAtCoderPrompt from '@/features/auth/components/LinkAtCoderPrompt';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getAccountJourneyAnalytics } from '@/features/ratings/api/get-account-journey-analytics';
 import AccountJourney from '@/features/ratings/components/AccountJourney';
 import { getAcceptedProblemHeatmap } from '@/features/submissions/api/get-accepted-problem-heatmap';
 import ActivityHeatmap from '@/features/submissions/components/ActivityHeatmap';
+
+export const metadata: Metadata = { title: '分析' };
 
 export default async function AnalyticsPage() {
   const user = await getCurrentUser();
@@ -15,9 +19,15 @@ export default async function AnalyticsPage() {
   return (
     <div className="h-full overflow-y-auto bg-slate-50">
       <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8">
-        {!user && <LoginPrompt returnTo="/analytics" />}
+        {!user && (
+          <LoginPrompt
+            returnTo="/analytics"
+            description="ログインすると、あなたのレートや提出をもとにした分析を表示できます。"
+          />
+        )}
+        {user && !user.atcoderId && <LinkAtCoderPrompt />}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-500">Analytics</p>
+          <p className="text-sm font-medium text-slate-500">分析</p>
           <h1 className="text-2xl font-bold tracking-normal text-slate-950">
             アカウント遍歴
           </h1>

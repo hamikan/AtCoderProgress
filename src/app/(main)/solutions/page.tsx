@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
@@ -12,6 +13,8 @@ import type {
   SolutionWithTags,
 } from '@/features/solutions/types';
 import type { ProblemDetail } from '@/features/problems/types';
+
+export const metadata: Metadata = { title: '解法記録' };
 
 export default async function SolutionsPage() {
   const user = await getCurrentUser();

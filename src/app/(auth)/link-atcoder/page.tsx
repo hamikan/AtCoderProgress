@@ -1,6 +1,9 @@
+import type { Metadata } from 'next';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LinkAtCoderForm from '@/features/auth/components/LinkAtCoderForm';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
+
+export const metadata: Metadata = { title: 'AtCoder IDの連携' };
 
 export default async function LinkAtCoderPage() {
   const user = await getCurrentUser();
