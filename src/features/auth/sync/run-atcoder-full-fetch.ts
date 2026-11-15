@@ -11,7 +11,10 @@ import {
 import type { SubmissionWriterTransaction } from '@/features/submissions/types';
 import { fetchRatingHistory } from '@/lib/atcoder/ratings/fetch-rating-history';
 import { fetchSubmissions } from '@/lib/atcoder/submissions/fetch-submissions';
+import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
+
+const logger = createLogger('atcoder-full-fetch');
 
 type FullFetchTransaction = SubmissionWriterTransaction &
   RatingHistoryWriterTransaction & {
@@ -84,15 +87,16 @@ export async function runAtCoderFullFetch(
           finishAtCoderFullFetch(transaction, atcoderAccountId, profileData, new Date())
         ),
     });
+    logger.info('finished', { atcoderAccountId });
   } catch (error) {
-    console.warn('[atcoder-full-fetch] failed', { atcoderAccountId, error });
+    logger.warn('failed', { atcoderAccountId, error });
     await prisma.atCoderAccount
       .update({
         where: { id: atcoderAccountId },
         data: { fetchStartedAt: null, fetchFailedAt: new Date() },
       })
       .catch((updateError: unknown) => {
-        console.error('[atcoder-full-fetch] could not record the failure', updateError);
+        logger.error('could not record the failure', { atcoderAccountId, error: updateError });
       });
   }
 }

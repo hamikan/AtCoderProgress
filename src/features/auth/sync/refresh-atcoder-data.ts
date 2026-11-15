@@ -9,6 +9,9 @@ import { getAtCoderFetchStatus } from '@/features/auth/functions/atcoder-fetch-s
 import { syncRatingHistory } from '@/features/ratings/sync/sync-rating-history';
 import { syncSubmissions } from '@/features/submissions/sync/sync-submissions';
 import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('atcoder-refresh');
 
 // 同じプロセスの中での重複だけを防ぐ（別のサーバーインスタンスでは同時に走りうる）
 const refreshInFlight = new Set<string>();
@@ -47,17 +50,20 @@ export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void
       latestSubmission?.epochSecond ?? null
     );
 
-    const results = await Promise.allSettled([
+    const [submissions, ratings] = await Promise.allSettled([
       syncSubmissions(atcoderId, fromSecond),
       syncRatingHistory(atcoderId),
     ]);
-    for (const result of results) {
-      if (result.status === 'rejected') {
-        console.warn('[atcoder-refresh] sync failed', result.reason);
-      }
+    if (submissions.status === 'fulfilled') {
+      logger.info('refreshed submissions', { atcoderAccountId, ...submissions.value });
+    } else {
+      logger.warn('could not refresh submissions', { atcoderAccountId, error: submissions.reason });
+    }
+    if (ratings.status === 'rejected') {
+      logger.warn('could not refresh the rating history', { atcoderAccountId, error: ratings.reason });
     }
   } catch (error) {
-    console.warn('[atcoder-refresh] failed', error);
+    logger.warn('failed', { atcoderAccountId, error });
   } finally {
     refreshInFlight.delete(atcoderAccountId);
   }
