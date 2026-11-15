@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { getDifficultyColor } from '@/lib/atcoder/difficulty';
 import { formatProblemDisplayName } from '@/lib/atcoder/problem-name';
@@ -36,9 +37,9 @@ export default function RecommendedProblems({ className, data }: RecommendedProb
             <span
               className={cn(
                 "text-sm font-semibold px-2.5 py-0.5 rounded-lg",
-                colorClass,
-                `bg-[${colorHex}]/10`
+                colorClass
               )}
+              style={{ backgroundColor: `color-mix(in srgb, ${colorHex} 10%, transparent)` }}
             >
               {difficultyLabel}
             </span>
@@ -55,9 +56,9 @@ export default function RecommendedProblems({ className, data }: RecommendedProb
           </div>
         </div>
         <div className="flex flex-col gap-3 ml-4 text-slate-400 dark:text-slate-600 shrink-0">
-          <a href={`/solutions/new?problemId=${problem.id}`} title="Write solution">
+          <Link href={`/solutions/new?problemId=${problem.id}`} title="解法を書く" aria-label="解法を書く">
             <Edit3 className="w-[18px] h-[18px] hover:text-primary cursor-pointer transition-colors" />
-          </a>
+          </Link>
         </div>
       </div>
     );

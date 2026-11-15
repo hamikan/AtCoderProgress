@@ -69,6 +69,12 @@ export async function loadRemainingContestLists(options: {
     return;
   }
 
+  // 失敗した状態から呼ばれたときは再読み込みなので、失敗の表示を先に外す
+  if (current.loadFailed) {
+    current = { ...current, loadFailed: false };
+    setContestListEntry(cacheKey, current);
+  }
+
   try {
     while (current.hasMore) {
       try {

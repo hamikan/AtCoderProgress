@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -29,6 +29,7 @@ export default function AtCoderIdSwitcher({
   const [retryError, setRetryError] = useState<string | null>(null);
   const router = useRouter();
   const { update } = useSession();
+  const isPollingRef = useRef(false);
 
   // 取得中は状態だけを確かめ、終わったときに一度だけ画面を読み直す。毎回読み直すと、おすすめの問題などが入れ替わってしまう
   useEffect(() => {
@@ -37,10 +38,20 @@ export default function AtCoderIdSwitcher({
     }
     let cancelled = false;
     const timer = setInterval(async () => {
-      const latestStatus = await getMyAtCoderFetchStatus();
-      if (!cancelled && latestStatus !== 'fetching') {
-        clearInterval(timer);
-        router.refresh();
+      if (isPollingRef.current) {
+        return;
+      }
+      isPollingRef.current = true;
+      try {
+        const latestStatus = await getMyAtCoderFetchStatus();
+        if (!cancelled && latestStatus !== 'fetching') {
+          clearInterval(timer);
+          router.refresh();
+        }
+      } catch {
+        // 一時的な失敗は無視する。次の周期でまた確かめる
+      } finally {
+        isPollingRef.current = false;
       }
     }, FETCH_STATUS_POLL_MS);
     return () => {
