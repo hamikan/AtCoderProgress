@@ -6,8 +6,11 @@ import { Prisma } from '@/generated/prisma/client';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { unlinkProvider as unlinkProviderInTransaction } from '@/features/auth/sync/unlink-provider';
 import type { UnlinkProviderError } from '@/features/auth/types';
+import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import type { Result } from '@/lib/types/result';
+
+const logger = createLogger('provider-unlink');
 
 const LINKABLE_PROVIDERS = ['google', 'github'] as const;
 
@@ -38,11 +41,11 @@ export async function unlinkProvider(
     revalidatePath('/');
     return { ok: true, value: { status: 'unlinked' } };
   } catch (error: unknown) {
-    console.error('Failed to unlink provider', { error, userId: user.id });
-
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034') {
+      logger.warn('conflicted with another update', { userId: user.id, provider });
       return failure('CONFLICT', '同時に更新が行われました。もう一度お試しください。');
     }
+    logger.error('failed', { userId: user.id, provider, error });
     return failure('INTERNAL_ERROR', 'ログイン方法の解除に失敗しました。');
   }
 }

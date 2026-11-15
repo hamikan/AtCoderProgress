@@ -22,8 +22,11 @@ import type {
 } from '@/features/auth/types';
 import { checkAtCoderUserExists } from '@/lib/atcoder/check-user-exists';
 import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
+import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import type { Result } from '@/lib/types/result';
+
+const logger = createLogger('atcoder-link');
 
 interface LinkAtCoderIdValue {
   status: 'linked' | 'unchanged';
@@ -101,11 +104,11 @@ export async function linkAtCoderId(
       value: { status: result.status === 'unchanged' ? 'unchanged' : 'linked' },
     };
   } catch (error: unknown) {
-    console.error('Failed to link AtCoder ID', { error, userId: user.id });
-
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034') {
+      logger.warn('conflicted with another update', { userId: user.id });
       return failure('CONFLICT', '同時に更新が行われました。もう一度お試しください。');
     }
+    logger.error('failed', { userId: user.id, error });
     return failure('INTERNAL_ERROR', 'AtCoder IDの更新に失敗しました。');
   }
 }

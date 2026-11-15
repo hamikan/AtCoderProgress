@@ -5,8 +5,11 @@ import { revalidatePath } from 'next/cache';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { parseSolutionId } from '@/features/solutions/schemas/solution';
 import type { DeleteSolutionError } from '@/features/solutions/types';
+import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import type { Result } from '@/lib/types/result';
+
+const logger = createLogger('solution-delete');
 
 interface DeleteSolutionValue {
   solutionId: string;
@@ -44,10 +47,10 @@ export async function deleteSolution(
       };
     }
   } catch (error: unknown) {
-    console.error('Failed to delete solution', {
-      error,
+    logger.error('failed', {
       userId: user.id,
       solutionId: parsedId,
+      error,
     });
     return {
       ok: false,

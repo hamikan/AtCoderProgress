@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import type { SubmissionResources } from '@/lib/atcoder/submissions/types';
 import type {
@@ -8,6 +9,8 @@ import type {
   SubmissionSyncTransaction,
   SubmissionWriterTransaction,
 } from '@/features/submissions/types';
+
+const logger = createLogger('submission-sync');
 
 async function findExistingProblemIds(
   transaction: SubmissionWriterTransaction,
@@ -59,11 +62,11 @@ async function keepPendingSubmissions(
     where: { id: { in: records.map((record) => record.id) } },
   });
   await transaction.pendingSubmission.createMany({ data: records, skipDuplicates: true });
-  const problemIds = [...new Set(records.map((record) => record.problemId))];
-  console.warn(
-    `[submissions] ${atcoderAccountId}: kept ${records.length} submission(s) ` +
-      `until their problems are imported (${problemIds.slice(0, 5).join(', ')})`
-  );
+  logger.warn('kept submissions until their problems are imported', {
+    atcoderAccountId,
+    count: records.length,
+    problemIds: [...new Set(records.map((record) => record.problemId))].slice(0, 5),
+  });
 }
 
 export async function persistSubmissionsInTransaction(
@@ -153,7 +156,7 @@ export async function persistSubmissionsForAccount(
   atcoderId: string,
   data: SubmissionResources,
   fetchedAt: Date
-): Promise<void> {
+): Promise<PersistSubmissionsResult> {
   const canonicalName = getCanonicalAtCoderName(data);
   await transaction.atCoderAccount.upsert({
     where: { id: atcoderAccountId },
@@ -167,7 +170,7 @@ export async function persistSubmissionsForAccount(
       submissionsLastFetchedAt: fetchedAt,
     },
   });
-  await persistSubmissionsInTransaction(transaction, atcoderAccountId, data);
+  return persistSubmissionsInTransaction(transaction, atcoderAccountId, data);
 }
 
 export async function persistSubmissions(
@@ -175,8 +178,8 @@ export async function persistSubmissions(
   atcoderId: string,
   data: SubmissionResources,
   fetchedAt: Date = new Date()
-): Promise<void> {
-  await prisma.$transaction((transaction) =>
+): Promise<PersistSubmissionsResult> {
+  return prisma.$transaction((transaction) =>
     persistSubmissionsForAccount(
       transaction,
       atcoderAccountId,
