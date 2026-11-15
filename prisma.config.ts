@@ -14,6 +14,7 @@ export default defineConfig({
     seed: 'ts-node -r tsconfig-paths/register --compiler-options {"module":"CommonJS"} prisma/seed.ts',
   },
   datasource: {
-    url: process.env.DATABASE_URL,
+    // マイグレーションは接続プール（PgBouncer）越しだと止まることがあるので、直接つなぐ URL があればそちらを使う
+    url: process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL,
   },
 });

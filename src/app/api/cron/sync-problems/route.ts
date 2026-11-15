@@ -5,7 +5,8 @@ import { isAuthorizedCronRequest } from '@/lib/cron/authorize';
 const logger = createLogger('problem-sync');
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+// 空の DB への最初の取り込みは、全件を足すので時間がかかる
+export const maxDuration = 300;
 
 export async function GET(request: Request): Promise<Response> {
   if (!isAuthorizedCronRequest(request.headers.get('authorization'), process.env.CRON_SECRET)) {

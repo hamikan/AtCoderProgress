@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import '../scripts/load-env';
+
 import { prisma } from '@/lib/prisma';
 import { syncContestsAndProblems } from '@/features/problems/sync/sync-contests-and-problems';
 import { syncRatingHistory } from '@/features/ratings/sync/sync-rating-history';
