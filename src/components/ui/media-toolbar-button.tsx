@@ -38,7 +38,7 @@ export function MediaToolbarButton({
   if (nodeType !== KEYS.img) return null;
 
   return (
-    <ToolbarButton onClick={() => openFilePicker()} tooltip="Image">
+    <ToolbarButton onClick={() => openFilePicker()} tooltip="画像">
       <ImageIcon />
     </ToolbarButton>
   );

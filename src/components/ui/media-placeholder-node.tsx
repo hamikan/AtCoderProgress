@@ -27,7 +27,7 @@ import { validateEditorImageFileBeforeCompression } from '@/lib/validation/edito
 
 const IMAGE_CONTENT = {
   accept: [...EDITOR_IMAGE_ACCEPT],
-  content: 'Add an image',
+  content: '画像を追加',
   icon: <ImageIcon />,
 };
 

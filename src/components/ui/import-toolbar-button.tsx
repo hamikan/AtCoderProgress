@@ -82,7 +82,7 @@ export function ImportToolbarButton(props: DropdownMenuProps) {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false} {...props}>
       <DropdownMenuTrigger asChild>
-        <ToolbarButton pressed={open} tooltip="Import" isDropdown>
+        <ToolbarButton pressed={open} tooltip="読み込み" isDropdown>
           <ArrowUpToLineIcon className="size-4" />
         </ToolbarButton>
       </DropdownMenuTrigger>
@@ -94,7 +94,7 @@ export function ImportToolbarButton(props: DropdownMenuProps) {
               openHtmlFilePicker();
             }}
           >
-            Import from HTML
+            HTMLから読み込み
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -102,7 +102,7 @@ export function ImportToolbarButton(props: DropdownMenuProps) {
               openMdFilePicker();
             }}
           >
-            Import from Markdown
+            Markdownから読み込み
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -110,7 +110,7 @@ export function ImportToolbarButton(props: DropdownMenuProps) {
               openDocxFilePicker();
             }}
           >
-            Import from Word
+            Wordから読み込み
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

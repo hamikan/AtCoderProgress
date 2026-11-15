@@ -10,7 +10,7 @@ export const BlockPlaceholderKit = [
       className:
         'relative before:absolute before:inset-x-0 before:cursor-text before:text-muted-foreground/80 before:content-[attr(placeholder)]',
       placeholders: {
-        [KEYS.p]: 'Type something...',
+        [KEYS.p]: 'ここに入力…',
       },
       query: ({ path }) => path.length === 1,
     },

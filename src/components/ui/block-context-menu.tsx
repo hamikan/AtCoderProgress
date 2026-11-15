@@ -107,7 +107,7 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                 editor.tf.focus();
               }}
             >
-              Delete
+              削除
             </ContextMenuItem>
             <ContextMenuItem
               onClick={() => {
@@ -116,29 +116,29 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                   .blockSelection.duplicate();
               }}
             >
-              Duplicate
+              複製
               {/* <ContextMenuShortcut>⌘ + D</ContextMenuShortcut> */}
             </ContextMenuItem>
             <ContextMenuSub>
-              <ContextMenuSubTrigger>Turn into</ContextMenuSubTrigger>
+              <ContextMenuSubTrigger>変換</ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-48">
                 <ContextMenuItem onClick={() => handleTurnInto(KEYS.p)}>
-                  Text
+                  テキスト
                 </ContextMenuItem>
 
                 <ContextMenuItem onClick={() => handleTurnInto(KEYS.h1)}>
-                  Heading 1
+                  見出し 1
                 </ContextMenuItem>
                 <ContextMenuItem onClick={() => handleTurnInto(KEYS.h2)}>
-                  Heading 2
+                  見出し 2
                 </ContextMenuItem>
                 <ContextMenuItem onClick={() => handleTurnInto(KEYS.h3)}>
-                  Heading 3
+                  見出し 3
                 </ContextMenuItem>
                 <ContextMenuItem
                   onClick={() => handleTurnInto(KEYS.blockquote)}
                 >
-                  Blockquote
+                  引用
                 </ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
@@ -152,7 +152,7 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                   .blockSelection.setIndent(1)
               }
             >
-              Indent
+              インデント
             </ContextMenuItem>
             <ContextMenuItem
               onClick={() =>
@@ -161,19 +161,19 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                   .blockSelection.setIndent(-1)
               }
             >
-              Outdent
+              インデントを戻す
             </ContextMenuItem>
             <ContextMenuSub>
-              <ContextMenuSubTrigger>Align</ContextMenuSubTrigger>
+              <ContextMenuSubTrigger>配置</ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-48">
                 <ContextMenuItem onClick={() => handleAlign('left')}>
-                  Left
+                  左揃え
                 </ContextMenuItem>
                 <ContextMenuItem onClick={() => handleAlign('center')}>
-                  Center
+                  中央揃え
                 </ContextMenuItem>
                 <ContextMenuItem onClick={() => handleAlign('right')}>
-                  Right
+                  右揃え
                 </ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>

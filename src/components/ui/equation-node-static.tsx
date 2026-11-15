@@ -46,7 +46,7 @@ export function EquationElementStatic(
         ) : (
           <div className="flex h-7 w-full items-center gap-2 whitespace-nowrap text-muted-foreground text-sm">
             <RadicalIcon className="size-6 text-muted-foreground/80" />
-            <div>Add a Tex equation</div>
+            <div>TeXの数式を追加</div>
           </div>
         )}
       </div>

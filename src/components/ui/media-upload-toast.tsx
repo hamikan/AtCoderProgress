@@ -23,43 +23,41 @@ const useUploadErrorToast = () => {
     switch (code) {
       case UploadErrorCode.INVALID_FILE_SIZE: {
         toast.error(
-          `The size of files ${data.files
+          `ファイルのサイズが正しくありません: ${data.files
             .map((f) => f.name)
-            .join(', ')} is invalid`
+            .join(', ')}`
         );
 
         break;
       }
       case UploadErrorCode.INVALID_FILE_TYPE: {
         toast.error(
-          `The type of files ${data.files
+          `ファイルの形式が正しくありません: ${data.files
             .map((f) => f.name)
-            .join(', ')} is invalid`
+            .join(', ')}`
         );
 
         break;
       }
       case UploadErrorCode.TOO_LARGE: {
         toast.error(
-          `The size of files ${data.files
+          `ファイルのサイズが上限 ${data.maxFileSize} を超えています: ${data.files
             .map((f) => f.name)
-            .join(', ')} is too large than ${data.maxFileSize}`
+            .join(', ')}`
         );
 
         break;
       }
       case UploadErrorCode.TOO_LESS_FILES: {
         toast.error(
-          `The mini um number of files is ${data.minFileCount} for ${data.fileType}`
+          `${data.fileType}は${data.minFileCount}個以上のファイルが必要です`
         );
 
         break;
       }
       case UploadErrorCode.TOO_MANY_FILES: {
         toast.error(
-          `The maximum number of files is ${data.maxFileCount} ${
-            data.fileType ? `for ${data.fileType}` : ''
-          }`
+          `${data.fileType ? `${data.fileType}の` : ''}ファイルは最大${data.maxFileCount}個までです`
         );
 
         break;

@@ -54,78 +54,78 @@ type Group = {
 
 const groups: Group[] = [
   {
-    group: 'Basic blocks',
+    group: '基本ブロック',
     items: [
       {
         icon: <PilcrowIcon />,
         keywords: ['paragraph'],
-        label: 'Text',
+        label: 'テキスト',
         value: KEYS.p,
       },
       {
         icon: <Heading1Icon />,
         keywords: ['title', 'h1'],
-        label: 'Heading 1',
+        label: '見出し 1',
         value: KEYS.h1,
       },
       {
         icon: <Heading2Icon />,
         keywords: ['subtitle', 'h2'],
-        label: 'Heading 2',
+        label: '見出し 2',
         value: KEYS.h2,
       },
       {
         icon: <Heading3Icon />,
         keywords: ['subtitle', 'h3'],
-        label: 'Heading 3',
+        label: '見出し 3',
         value: KEYS.h3,
       },
       {
         icon: <ListIcon />,
         keywords: ['unordered', 'ul', '-'],
-        label: 'Bulleted list',
+        label: '箇条書き',
         value: KEYS.ul,
       },
       {
         icon: <ListOrdered />,
         keywords: ['ordered', 'ol', '1'],
-        label: 'Numbered list',
+        label: '番号付きリスト',
         value: KEYS.ol,
       },
       {
         icon: <Square />,
         keywords: ['checklist', 'task', 'checkbox', '[]'],
-        label: 'To-do list',
+        label: 'チェックリスト',
         value: KEYS.listTodo,
       },
       {
         icon: <ChevronRightIcon />,
         keywords: ['collapsible', 'expandable'],
-        label: 'Toggle',
+        label: '折りたたみ',
         value: KEYS.toggle,
       },
       {
         icon: <Code2 />,
         keywords: ['```'],
-        label: 'Code Block',
+        label: 'コードブロック',
         value: KEYS.codeBlock,
       },
       {
         icon: <Table />,
-        label: 'Table',
+        label: '表',
         value: KEYS.table,
       },
       {
         icon: <Quote />,
         keywords: ['citation', 'blockquote', 'quote', '>'],
-        label: 'Blockquote',
+        label: '引用',
         value: KEYS.blockquote,
       },
       {
-        description: 'Insert a highlighted block.',
+        description: '目立たせたい内容を囲みで挿入します。',
         icon: <LightbulbIcon />,
         keywords: ['note'],
-        label: 'Callout',
+        label: '囲み',
         value: KEYS.callout,
       },
     ].map((item) => ({
@@ -136,19 +136,19 @@ const groups: Group[] = [
     })),
   },
   {
-    group: 'Advanced blocks',
+    group: '応用ブロック',
     items: [
       {
         icon: <TableOfContentsIcon />,
         keywords: ['toc'],
-        label: 'Table of contents',
+        label: '目次',
         value: KEYS.toc,
       },
       {
         focusEditor: false,
         icon: <RadicalIcon />,
         keywords: ['math', 'block'],
-        label: 'Math (block)',
+        label: '数式',
         value: KEYS.equation,
       },
     ].map((item) => ({
@@ -159,13 +159,13 @@ const groups: Group[] = [
     })),
   },
   {
-    group: 'Inline',
+    group: '文中',
     items: [
       {
         focusEditor: false,
         icon: <RadicalIcon />,
         keywords: ['math', 'inline'],
-        label: 'Math (inline)',
+        label: '文中の数式',
         value: KEYS.inlineEquation,
       },
     ].map((item) => ({
@@ -188,7 +188,7 @@ export function SlashInputElement(
         <InlineComboboxInput />
 
         <InlineComboboxContent>
-          <InlineComboboxEmpty>No results</InlineComboboxEmpty>
+          <InlineComboboxEmpty>見つかりません</InlineComboboxEmpty>
 
           {groups.map(({ group, items }) => (
             <InlineComboboxGroup key={group}>

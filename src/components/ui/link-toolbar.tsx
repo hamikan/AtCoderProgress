@@ -99,7 +99,7 @@ export function LinkFloatingToolbar({
 
         <FloatingLinkUrlInput
           className={inputVariants()}
-          placeholder="Paste link"
+          placeholder="リンクを貼り付け"
           data-plate-focus
         />
       </div>
@@ -110,7 +110,7 @@ export function LinkFloatingToolbar({
         </div>
         <input
           className={inputVariants()}
-          placeholder="Text to display"
+          placeholder="表示するテキスト"
           data-plate-focus
           {...textInputProps}
         />
@@ -127,7 +127,7 @@ export function LinkFloatingToolbar({
         type="button"
         {...editButtonProps}
       >
-        Edit link
+        リンクを編集
       </button>
 
       <Separator orientation="vertical" />
@@ -191,7 +191,7 @@ function LinkOpenButton() {
       onMouseOver={(e) => {
         e.stopPropagation();
       }}
-      aria-label="Open link in a new tab"
+      aria-label="新しいタブでリンクを開く"
       target="_blank"
     >
       <ExternalLink width={18} />

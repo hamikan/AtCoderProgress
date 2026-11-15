@@ -183,7 +183,7 @@ function PureColorPicker({
       <ToolbarMenuGroup>
         <DropdownMenuItem className="p-2" onClick={clearColor}>
           <EraserIcon />
-          <span>Clear</span>
+          <span>クリア</span>
         </DropdownMenuItem>
       </ToolbarMenuGroup>
     </div>
@@ -275,7 +275,7 @@ function ColorCustom({
               e.preventDefault();
             }}
           >
-            <span className="sr-only">Custom</span>
+            <span className="sr-only">カスタム</span>
             <PlusIcon />
           </DropdownMenuItem>
         </ColorInput>
