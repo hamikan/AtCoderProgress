@@ -25,6 +25,7 @@ test('buildSolvedProblemStatistics calculates unique totals, monthly change, and
     acCount: 5,
     acCountChange: 3,
     currentStreak: 3,
+    longestStreak: 3,
     monthlySolved: 4,
     monthlySolvedChange: 3,
   });
@@ -53,7 +54,27 @@ test('buildSolvedProblemStatistics returns an empty anonymous state', () => {
     acCount: 0,
     acCountChange: 0,
     currentStreak: 0,
+    longestStreak: 0,
     monthlySolved: 0,
     monthlySolvedChange: 0,
   });
+});
+
+test('buildSolvedProblemStatistics finds the longest streak over the whole history', () => {
+  const dayEpoch = (daysAgo: number) =>
+    Math.floor(Date.UTC(2026, 10, 15, 3) / 1000) - daysAgo * 24 * 60 * 60;
+  // 2 年前に 400 日続けて、最近は 2 日だけ。1 年分のヒートマップからは 400 日の記録が見えない
+  const longRun = Array.from({ length: 400 }, (_, index) => ({
+    epochSecond: dayEpoch(800 - index),
+    problemId: `old-${index}`,
+  }));
+  const recent = [0, 1].map((daysAgo) => ({ epochSecond: dayEpoch(daysAgo), problemId: `new-${daysAgo}` }));
+
+  const result = buildSolvedProblemStatistics(
+    [...longRun, ...recent],
+    new Date(Date.UTC(2026, 10, 15, 3))
+  );
+
+  assert.equal(result.currentStreak, 2);
+  assert.equal(result.longestStreak, 400);
 });

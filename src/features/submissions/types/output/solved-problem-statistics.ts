@@ -4,4 +4,5 @@ export interface SolvedProblemStatistics {
   monthlySolved: number;
   monthlySolvedChange: number;
   currentStreak: number;
+  longestStreak: number;
 }

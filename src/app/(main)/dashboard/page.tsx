@@ -13,11 +13,9 @@ import { getRecommendedProblems } from '@/features/recommendations/api/get-recom
 import RecommendedProblems from '@/features/recommendations/components/RecommendedProblems';
 import { getInProgressSolutions } from '@/features/solutions/api/get-in-progress-solutions';
 import InProgressRecords from '@/features/solutions/components/InProgressRecords';
-import { getAcceptedProblemHeatmap } from '@/features/submissions/api/get-accepted-problem-heatmap';
 import { getRecentSubmissions } from '@/features/submissions/api/get-recent-submissions';
 import { getSolvedProblemStatistics } from '@/features/submissions/api/get-solved-problem-statistics';
 import RecentActivity from '@/features/submissions/components/RecentActivity';
-import { buildHeatmapStats } from '@/features/submissions/functions/build-heatmap-stats';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -30,7 +28,6 @@ export default async function DashboardPage() {
     solvedProblemStats,
     ratingSummary,
     ratingHistory,
-    acceptedProblemHeatmap,
     recentSubmissions,
     tagStats,
     inProgressSolutions,
@@ -38,7 +35,6 @@ export default async function DashboardPage() {
     getSolvedProblemStatistics(atcoderAccountId),
     getRatingSummary(atcoderAccountId),
     getRatingHistory(atcoderAccountId),
-    getAcceptedProblemHeatmap(atcoderAccountId),
     getRecentSubmissions(atcoderAccountId),
     getTagStatistics(userId, atcoderAccountId),
     getInProgressSolutions(userId),
@@ -49,7 +45,6 @@ export default async function DashboardPage() {
     ratingSummary.currentRating
   );
 
-  const heatmapStats = buildHeatmapStats(acceptedProblemHeatmap);
   const lastMonthSolved =
     solvedProblemStats.monthlySolved - solvedProblemStats.monthlySolvedChange;
   // 今月の AC は解き直しも数えるので、今月初めて AC した問題との差が解き直しになる
@@ -76,7 +71,7 @@ export default async function DashboardPage() {
     {
       label: '連続',
       value: `${solvedProblemStats.currentStreak.toLocaleString()}日`,
-      notes: [`最長 ${heatmapStats.maxStreak.toLocaleString()}日`],
+      notes: [`最長 ${solvedProblemStats.longestStreak.toLocaleString()}日`],
     },
     {
       label: 'レート',
