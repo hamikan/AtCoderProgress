@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { collectSubmissions } from './paginate-submissions';
+import { collectSubmissions, forEachSubmissionPage } from './paginate-submissions';
 import type { RawSubmission } from './types';
 
 function submission(id: number, epochSecond: number): RawSubmission {
@@ -90,4 +90,46 @@ test('collectSubmissions throws when the response goes backwards', async () => {
     collectSubmissions(fetchPage, 100, { pageSize: 5 }),
     /Invalid submission pagination response/
   );
+});
+
+test('forEachSubmissionPage hands over each page as soon as it arrives', async () => {
+  const pages = [
+    [submission(1, 10), submission(2, 20)],
+    [submission(2, 20), submission(3, 30)],
+    [submission(3, 30)],
+  ];
+  const handled: number[][] = [];
+  let index = 0;
+
+  await forEachSubmissionPage(
+    async () => pages[index++],
+    0,
+    (newSubmissions) => {
+      handled.push(newSubmissions.map((item) => item.id));
+    },
+    { pageSize: 2 }
+  );
+
+  assert.deepEqual(handled, [[1, 2], [3]]);
+});
+
+test('forEachSubmissionPage stops fetching when the handler throws', async () => {
+  let fetchCount = 0;
+
+  await assert.rejects(
+    forEachSubmissionPage(
+      async () => {
+        fetchCount += 1;
+        return [submission(fetchCount, fetchCount), submission(fetchCount + 100, fetchCount)];
+      },
+      0,
+      () => {
+        throw new Error('stop');
+      },
+      { pageSize: 2 }
+    ),
+    /stop/
+  );
+
+  assert.equal(fetchCount, 1);
 });

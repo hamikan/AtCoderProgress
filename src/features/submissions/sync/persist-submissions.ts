@@ -2,6 +2,7 @@ import 'server-only';
 
 import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
+import { LONG_TRANSACTION_OPTIONS } from '@/lib/prisma-transaction';
 import type { SubmissionResources } from '@/lib/atcoder/submissions/types';
 import type {
   PersistSubmissionsResult,
@@ -46,7 +47,10 @@ export async function promotePendingSubmissions(
 }
 
 export async function promoteAllPendingSubmissions(): Promise<number> {
-  return prisma.$transaction((transaction) => promotePendingSubmissions(transaction));
+  return prisma.$transaction(
+    (transaction) => promotePendingSubmissions(transaction),
+    LONG_TRANSACTION_OPTIONS
+  );
 }
 
 async function keepPendingSubmissions(
@@ -168,6 +172,9 @@ export async function persistSubmissionsForAccount(
     update: {
       ...(canonicalName ? { name: canonicalName } : {}),
       submissionsLastFetchedAt: fetchedAt,
+      // 失敗の印が残っていると、データがそろっていても「取得できませんでした」のまま戻らない
+      fetchStartedAt: null,
+      fetchFailedAt: null,
     },
   });
   return persistSubmissionsInTransaction(transaction, atcoderAccountId, data);
@@ -179,13 +186,9 @@ export async function persistSubmissions(
   data: SubmissionResources,
   fetchedAt: Date = new Date()
 ): Promise<PersistSubmissionsResult> {
-  return prisma.$transaction((transaction) =>
-    persistSubmissionsForAccount(
-      transaction,
-      atcoderAccountId,
-      atcoderId,
-      data,
-      fetchedAt
-    )
+  return prisma.$transaction(
+    (transaction) =>
+      persistSubmissionsForAccount(transaction, atcoderAccountId, atcoderId, data, fetchedAt),
+    LONG_TRANSACTION_OPTIONS
   );
 }

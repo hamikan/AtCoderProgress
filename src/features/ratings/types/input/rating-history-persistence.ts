@@ -14,11 +14,33 @@ export interface RatingHistoryPersistenceRecord {
   endTime: Date;
 }
 
+export type RatingHistoryPersistenceValues = Omit<
+  RatingHistoryPersistenceRecord,
+  'atcoderAccountId' | 'contestScreenName'
+>;
+
+export interface RatingHistoryWrites {
+  newRecords: RatingHistoryPersistenceRecord[];
+  changedRecords: RatingHistoryPersistenceRecord[];
+}
+
 export interface RatingHistoryWriterTransaction {
   userRatingHistory: {
     createMany(args: {
       data: RatingHistoryPersistenceRecord[];
       skipDuplicates: true;
+    }): Promise<unknown>;
+    findMany(args: {
+      where: { atcoderAccountId: string };
+    }): Promise<RatingHistoryPersistenceRecord[]>;
+    update(args: {
+      data: RatingHistoryPersistenceValues;
+      where: {
+        atcoderAccountId_contestScreenName: {
+          atcoderAccountId: string;
+          contestScreenName: string;
+        };
+      };
     }): Promise<unknown>;
   };
 }

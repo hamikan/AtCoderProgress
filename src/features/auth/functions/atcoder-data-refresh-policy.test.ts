@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  ATCODER_DATA_REFRESH_INTERVAL_MS,
+  ATCODER_DATA_REFRESH_RETRY_INTERVAL_MS,
+  getAtCoderRefreshRetryBefore,
   getSubmissionRefreshCursor,
   shouldRefreshAtCoderData,
   SUBMISSION_REFRESH_OVERLAP_SECONDS,
@@ -32,4 +35,9 @@ test('getSubmissionRefreshCursor overlaps the newest stored submission by a day'
     1_700_000_000 - SUBMISSION_REFRESH_OVERLAP_SECONDS
   );
   assert.equal(getSubmissionRefreshCursor(100), 0);
+});
+
+test('getAtCoderRefreshRetryBefore waits ten minutes, shorter than the normal interval', () => {
+  assert.deepEqual(getAtCoderRefreshRetryBefore(NOW), new Date('2026-11-02T11:50:00.000Z'));
+  assert.ok(ATCODER_DATA_REFRESH_RETRY_INTERVAL_MS < ATCODER_DATA_REFRESH_INTERVAL_MS);
 });

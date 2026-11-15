@@ -11,6 +11,8 @@ export type {
 } from './input/account-journey-rows';
 export type {
   RatingHistoryPersistenceRecord,
+  RatingHistoryPersistenceValues,
+  RatingHistoryWrites,
   RatingHistorySyncTransaction,
   RatingHistoryWriterTransaction,
 } from './input/rating-history-persistence';

@@ -83,6 +83,8 @@ model AtCoderAccount {
   // 全件の取得は裏で続けるので、取得中と失敗をここで持つ
   fetchStartedAt            DateTime?   @map("fetch_started_at")
   fetchFailedAt             DateTime?   @map("fetch_failed_at")
+  // 取り直しを最後に試した時刻。失敗が続くときに開くたび取りに行かないよう、成功の時刻とは別に持つ
+  refreshAttemptedAt        DateTime?   @map("refresh_attempted_at")
   createdAt                 DateTime    @default(now()) @map("created_at")
 
   submissions               Submission[]

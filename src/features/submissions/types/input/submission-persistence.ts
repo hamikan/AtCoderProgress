@@ -68,7 +68,12 @@ export interface AtCoderAccountUpsertTransaction {
         name: string;
         submissionsLastFetchedAt?: Date | null;
       };
-      update: { name?: string; submissionsLastFetchedAt?: Date };
+      update: {
+        name?: string;
+        submissionsLastFetchedAt?: Date;
+        fetchStartedAt?: null;
+        fetchFailedAt?: null;
+      };
       where: { id: string };
     }): Promise<unknown>;
   };

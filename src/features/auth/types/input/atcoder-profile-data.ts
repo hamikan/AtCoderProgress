@@ -1,7 +1,7 @@
 import type { RatingHistoryResource } from '@/lib/atcoder/ratings/types';
-import type { SubmissionResources } from '@/lib/atcoder/submissions/types';
 
-export interface AtCoderProfileData {
+export interface AtCoderFullFetchResult {
   ratingHistory: RatingHistoryResource[];
-  submissionData: SubmissionResources;
+  /** AtCoder 側の大文字小文字の表記。提出が1件もないときは分からないので null */
+  canonicalName: string | null;
 }

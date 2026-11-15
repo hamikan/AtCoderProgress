@@ -2,6 +2,7 @@ import 'server-only';
 
 import { prisma } from '@/lib/prisma';
 import {
+  getAtCoderRefreshRetryBefore,
   getSubmissionRefreshCursor,
   shouldRefreshAtCoderData,
 } from '@/features/auth/functions/atcoder-data-refresh-policy';
@@ -13,15 +14,8 @@ import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('atcoder-refresh');
 
-// 同じプロセスの中での重複だけを防ぐ（別のサーバーインスタンスでは同時に走りうる）
-const refreshInFlight = new Set<string>();
-
 export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void> {
   const atcoderAccountId = toAtCoderAccountId(atcoderId);
-  if (refreshInFlight.has(atcoderAccountId)) {
-    return;
-  }
-  refreshInFlight.add(atcoderAccountId);
 
   try {
     const account = await prisma.atCoderAccount.findUnique({
@@ -38,6 +32,21 @@ export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void
       getAtCoderFetchStatus(account, now) !== 'ready' ||
       !shouldRefreshAtCoderData(account?.submissionsLastFetchedAt ?? null, now)
     ) {
+      return;
+    }
+
+    // 試した時刻を先に書けた1回だけが取りに行く。別のサーバーや別のタブと重ならず、失敗が続くときも間隔が空く
+    const claimed = await prisma.atCoderAccount.updateMany({
+      where: {
+        id: atcoderAccountId,
+        OR: [
+          { refreshAttemptedAt: null },
+          { refreshAttemptedAt: { lte: getAtCoderRefreshRetryBefore(now) } },
+        ],
+      },
+      data: { refreshAttemptedAt: now },
+    });
+    if (claimed.count === 0) {
       return;
     }
 
@@ -64,7 +73,5 @@ export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void
     }
   } catch (error) {
     logger.warn('failed', { atcoderAccountId, error });
-  } finally {
-    refreshInFlight.delete(atcoderAccountId);
   }
 }

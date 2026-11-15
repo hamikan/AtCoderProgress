@@ -141,7 +141,7 @@ async function changeAtCoderId(
       applyAtCoderIdChange(transaction, userId, atcoderId, now, startFetch),
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
   );
-  if (startFetch && result.status === 'changed') {
+  if (result.status === 'changed' && result.startedFetch) {
     after(() => runAtCoderFullFetch(toAtCoderAccountId(atcoderId), atcoderId));
   }
   return { ok: true, value: result };
