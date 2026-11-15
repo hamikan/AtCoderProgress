@@ -1,105 +1,219 @@
 /**
- * 独自 difficulty（irt5_time）の推定値を生成するスクリプト。
+ * 独自 difficulty（irt5_time）を推定して、データベースに書くスクリプト。
  *
  * 使い方:
- *   npm run difficulty:estimate -- <順位表JSONのディレクトリ>
+ *   npm run difficulty:estimate                  # まだ推定していないコンテストを最大 10 個
+ *   npm run difficulty:estimate -- --limit=30
  *
- * 順位表JSONは AtCoder のコンテスト順位表（/contests/<id>/standings/json）を
- * <contestId>.json という名前で保存したものを想定する。
- * 取得時は AtCoder への負荷に注意し、レート制限の兆候があれば即座に止めること。
+ * 1. scripts/data/custom-difficulty-seed.ts の値を、custom_difficulty がまだない問題に入れる
+ * 2. 終わった ABC212 以降・ARC104 以降で、まだ推定していないコンテストの順位表を取って推定する
  *
- * 対象は ABC212以降 / ARC104以降のコンテスト。それ以外は生成しない
- * （アプリ側で AtCoder Problems の difficulty 表示値をそのまま使う）。
- * 結果は src/features/problems/functions/estimated-difficulties.ts に書き出す。
+ * 順位表 JSON はログインしないと取れない。AtCoder にログインしたブラウザのクッキー
+ * REVEL_SESSION の値を、環境変数 ATCODER_REVEL_SESSION に入れて動かす。
+ * ログインそのものの値なので、自分の PC にだけ置き、サーバーやリポジトリには置かない。
+ * 本番のデータベースに書くときは、DATABASE_URL を本番のものにして動かす。
  */
-import { readdir, readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
+import './load-env';
 
+import {
+  clipDifficulty,
+  isCustomDifficultyTargetContest,
+} from '@/features/problems/functions/difficulty';
 import {
   estimateContestDifficulties,
   type ContestStandings,
-} from '../src/lib/atcoder/estimation/estimate-difficulty';
+} from '@/lib/atcoder/estimation/estimate-difficulty';
+import { contestStandingsSchema } from '@/lib/atcoder/estimation/standings-schema';
+import { prisma } from '@/lib/prisma';
 
-const ABC_MIN = 212;
-const ARC_MIN = 104;
+import { CUSTOM_DIFFICULTY_SEED } from './data/custom-difficulty-seed';
+import { describeDatabaseTarget } from './database-target';
 
-const OUTPUT_PATH =
-  process.env.ESTIMATE_OUTPUT ??
-  path.join(
-    process.cwd(),
-    'src/features/problems/functions/estimated-difficulties.ts'
-  );
+const DEFAULT_LIMIT = 10;
+// AtCoder に負荷をかけないよう、順位表は間を空けて 1 つずつ取る
+const FETCH_DELAY_MS = 3000;
+const FETCH_TIMEOUT_MS = 30_000;
+const SESSION_ENV = 'ATCODER_REVEL_SESSION';
 
-function isTargetContest(contestId: string): boolean {
-  const match = /^(abc|arc)(\d+)$/.exec(contestId);
-  if (!match) return false;
-  const number = Number(match[2]);
-  return match[1] === 'abc' ? number >= ABC_MIN : number >= ARC_MIN;
+interface TargetContest {
+  id: string;
 }
 
-function renderOutputFile(estimates: Record<string, number>): string {
-  const lines = [
-    '/**',
-    ' * 独自 difficulty（irt5_time）の推定値。生成ファイル（手で編集しないこと）。',
-    ' *',
-    ' * 生成方法: npm run difficulty:estimate -- <順位表JSONのディレクトリ>',
-    ' * 対象: ABC212以降 / ARC104以降の問題のみ。それ以外の問題は',
-    ' * AtCoder Problems の difficulty を使う（normalize-contest-data.ts）。',
-    ' * 値は表示用の clipDifficulty 適用前の推定値。',
-    ' */',
-    'export const ESTIMATED_DIFFICULTIES: Readonly<Record<string, number>> = {',
-  ];
-  for (const taskId of Object.keys(estimates).sort()) {
-    lines.push(`  '${taskId}': ${estimates[taskId]},`);
+function parseLimit(argv: string[]): number {
+  let limit = DEFAULT_LIMIT;
+  for (const arg of argv) {
+    if (!arg.startsWith('--limit=')) {
+      throw new Error(`不明な引数です: ${arg}`);
+    }
+    const value = Number(arg.slice('--limit='.length));
+    if (!Number.isInteger(value) || value < 1) {
+      throw new Error(`--limit の値が不正です: ${arg}`);
+    }
+    limit = value;
   }
-  lines.push('};', '');
-  return lines.join('\n');
+  return limit;
+}
+
+async function applySeed(): Promise<void> {
+  const ids = Object.keys(CUSTOM_DIFFICULTY_SEED);
+  const customs = ids.map((id) => CUSTOM_DIFFICULTY_SEED[id]);
+  const displays = customs.map((custom) => clipDifficulty(custom) ?? custom);
+  const seededCount = await prisma.$executeRaw`
+    UPDATE problems AS p
+    SET custom_difficulty = v.custom, difficulty = v.display
+    FROM unnest(${ids}::text[], ${customs}::int[], ${displays}::int[]) AS v(id, custom, display)
+    WHERE p.id = v.id AND p.custom_difficulty IS NULL`;
+
+  const seededContests = await prisma.contestProblem.findMany({
+    where: { problemId: { in: ids } },
+    select: { contestId: true },
+    distinct: ['contestId'],
+  });
+  const marked = await prisma.contest.updateMany({
+    where: {
+      id: {
+        in: seededContests
+          .map((row) => row.contestId)
+          .filter(isCustomDifficultyTargetContest),
+      },
+      customDifficultyEstimatedAt: null,
+    },
+    data: { customDifficultyEstimatedAt: new Date() },
+  });
+  if (seededCount > 0 || marked.count > 0) {
+    console.log(
+      `最初の推定値を ${seededCount} 問に入れ、${marked.count} 個のコンテストを推定済みにしました`
+    );
+  }
+}
+
+async function findTargetContests(): Promise<TargetContest[]> {
+  const nowSecond = Math.floor(Date.now() / 1000);
+  // 問題データがまだないコンテストを推定済みにすると、あとで問題が入っても推定されなくなる
+  const contests = await prisma.contest.findMany({
+    where: { customDifficultyEstimatedAt: null, problems: { some: {} } },
+    select: { id: true, startEpochSecond: true, durationSecond: true },
+    orderBy: { startEpochSecond: 'asc' },
+  });
+  return contests.filter(
+    (contest) =>
+      isCustomDifficultyTargetContest(contest.id) &&
+      contest.startEpochSecond + Number(contest.durationSecond) <= nowSecond
+  );
+}
+
+async function fetchStandings(
+  contestId: string,
+  session: string
+): Promise<ContestStandings | null> {
+  const response = await fetch(`https://atcoder.jp/contests/${contestId}/standings/json`, {
+    headers: { Cookie: `REVEL_SESSION=${session}` },
+    redirect: 'manual',
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+  if (response.status === 404) {
+    return null;
+  }
+  if (response.headers.get('location')?.includes('/login')) {
+    throw new Error(
+      `ログインの情報が切れています。${SESSION_ENV} を、ログインし直したブラウザの REVEL_SESSION の値に入れ直してください`
+    );
+  }
+  if (!response.ok) {
+    throw new Error(`${contestId}: 順位表を取れませんでした（status ${response.status}）`);
+  }
+  return contestStandingsSchema.parse(await response.json());
+}
+
+async function saveEstimates(
+  contestId: string,
+  standings: ContestStandings | null
+): Promise<string> {
+  if (!standings) {
+    await markEstimated(contestId);
+    return `${contestId}: 順位表がないので飛ばしました`;
+  }
+  const estimates = estimateContestDifficulties(standings);
+  if (estimates.size === 0) {
+    await markEstimated(contestId);
+    return `${contestId}: 推定に使える参加者がいないので飛ばしました`;
+  }
+
+  const savedCount = await prisma.$transaction(async (transaction) => {
+    let count = 0;
+    for (const [taskId, estimate] of estimates) {
+      const custom = Math.round(estimate.difficulty);
+      // 別のコンテストと共有している問題は、先に推定した値を残す
+      const result = await transaction.problem.updateMany({
+        where: { id: taskId, customDifficulty: null },
+        data: { customDifficulty: custom, difficulty: clipDifficulty(custom) },
+      });
+      count += result.count;
+    }
+    await transaction.contest.update({
+      where: { id: contestId },
+      data: { customDifficultyEstimatedAt: new Date() },
+    });
+    return count;
+  });
+  const boundaryCount = [...estimates.values()].filter((estimate) => estimate.atBoundary).length;
+  return (
+    `${contestId}: ${estimates.size} 問を推定し、${savedCount} 問に書きました` +
+    (boundaryCount > 0 ? `（探索範囲の端: ${boundaryCount} 問）` : '')
+  );
+}
+
+async function markEstimated(contestId: string): Promise<void> {
+  await prisma.contest.update({
+    where: { id: contestId },
+    data: { customDifficultyEstimatedAt: new Date() },
+  });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function main(): Promise<void> {
-  const standingsDir = process.argv[2] ?? process.env.STANDINGS_DIR;
-  if (!standingsDir) {
-    console.error(
-      'Usage: npm run difficulty:estimate -- <standings directory>'
-    );
-    process.exitCode = 1;
+  const limit = parseLimit(process.argv.slice(2));
+  console.log(`DB 接続先: ${describeDatabaseTarget()}`);
+
+  await applySeed();
+
+  const targets = await findTargetContests();
+  if (targets.length === 0) {
+    console.log('推定するコンテストはありません');
     return;
   }
-
-  const files = (await readdir(standingsDir))
-    .filter((file) => file.endsWith('.json'))
-    .map((file) => file.replace(/\.json$/, ''))
-    .filter(isTargetContest)
-    .sort();
-  console.log(`Target contests: ${files.length}`);
-
-  const estimates: Record<string, number> = {};
-  let boundaryCount = 0;
-  for (const contestId of files) {
-    const raw = await readFile(path.join(standingsDir, `${contestId}.json`), 'utf8');
-    const standings = JSON.parse(raw) as ContestStandings;
-    const contestEstimates = estimateContestDifficulties(standings);
-    if (contestEstimates.size === 0) {
-      console.warn(`${contestId}: no selected users, skipped`);
-      continue;
-    }
-    for (const [taskId, estimate] of contestEstimates) {
-      if (taskId in estimates) {
-        console.warn(`${taskId}: already estimated, keeping the first value`);
-        continue;
-      }
-      estimates[taskId] = Math.round(estimate.difficulty);
-      if (estimate.atBoundary) boundaryCount++;
-    }
-    console.log(
-      `${contestId}: ${contestEstimates.size} problems estimated`
+  const session = process.env[SESSION_ENV];
+  if (!session) {
+    throw new Error(
+      `まだ推定していないコンテストが ${targets.length} 個あります（${targets
+        .slice(0, 5)
+        .map((contest) => contest.id)
+        .join(', ')} など）。` +
+        `順位表を取るには、AtCoder にログインしたブラウザのクッキー REVEL_SESSION の値を ${SESSION_ENV} に入れてください`
     );
   }
 
-  await writeFile(OUTPUT_PATH, renderOutputFile(estimates));
-  console.log(
-    `Wrote ${Object.keys(estimates).length} estimates (${boundaryCount} at search boundary) to ${OUTPUT_PATH}`
-  );
+  const batch = targets.slice(0, limit);
+  for (const [index, contest] of batch.entries()) {
+    if (index > 0) {
+      await sleep(FETCH_DELAY_MS);
+    }
+    const standings = await fetchStandings(contest.id, session);
+    console.log(await saveEstimates(contest.id, standings));
+  }
+  if (targets.length > batch.length) {
+    console.log(`残りの ${targets.length - batch.length} 個は、もう一度動かすと推定します`);
+  }
 }
 
-void main();
+main()
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

@@ -21,6 +21,14 @@ npm run test:coverage
 npm run build
 ```
 
+## 問題データの定期取り込み
+
+本番（Vercel）では、`vercel.json` の Cron が 1 日 1 回（日本時間の 3 時ごろ）`/api/cron/sync-problems` を呼び、AtCoder Problems から新しいコンテストと問題を取り込みます。取り込んだあと、問題データ待ちだった提出を数に入れます。
+
+- Vercel の環境変数 `CRON_SECRET` が必要です。設定されていないと、取り込みは 401 で断られます。
+- 手元では定期実行は動きません。必要なときに `npm run db:sync:latest` を実行します。
+- 独自 difficulty の推定は定期実行に含まれません。新しい ABC・ARC のあとに `npm run difficulty:estimate` を実行します。
+
 ## 設計方針
 
 URL、機能、共通基盤という大きな単位から、必要になった場所だけを小さく分けます。呼び出し側では「何をするか」が読め、細かな実装事情は各機能の内側に収まる構成を目指します。
