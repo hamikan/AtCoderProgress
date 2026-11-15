@@ -1,18 +1,22 @@
 import 'server-only';
 
 import { normalizeContestData } from '@/features/problems/functions/normalize-contest-data';
+import type { SyncContestsAndProblemsResult } from '@/features/problems/types/input/contest-data-write-plan';
 import { promoteAllPendingSubmissions } from '@/features/submissions/sync/persist-submissions';
+import { createLogger } from '@/lib/logger';
 import { fetchContestResources } from '@/lib/atcoder/contests/fetch-contest-resources';
 
 import { persistContestsAndProblems } from './persist-contests-and-problems';
 
-export async function syncContestsAndProblems() {
+const logger = createLogger('problem-sync');
+
+export async function syncContestsAndProblems(): Promise<SyncContestsAndProblemsResult> {
   const raw = await fetchContestResources();
   const normalized = normalizeContestData(raw);
-  await persistContestsAndProblems(normalized);
+  const persisted = await persistContestsAndProblems(normalized);
   // ダッシュボードを開いて提出を取り直すのを待たずに、問題データが入った時点で数に入れる
-  const promotedCount = await promoteAllPendingSubmissions();
-  if (promotedCount > 0) {
-    console.log(`Moved ${promotedCount} pending submission(s) now that their problems are imported.`);
-  }
+  const promotedSubmissionCount = await promoteAllPendingSubmissions();
+  const result = { ...persisted, promotedSubmissionCount };
+  logger.info('finished', { ...result });
+  return result;
 }

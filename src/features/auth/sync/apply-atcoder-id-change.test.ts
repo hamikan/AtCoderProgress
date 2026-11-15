@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import { applyAtCoderIdChange } from './apply-atcoder-id-change';
 import { ATCODER_ID_FETCH_INTERVAL_MS } from '@/features/auth/functions/atcoder-id-change-policy';
+import type { AtCoderFetchState } from '@/features/auth/types';
 
 const NOW = new Date('2026-07-14T00:00:00.000Z');
 const JUST_FETCHED = [new Date(NOW.getTime() - 60 * 1000)];
@@ -11,10 +12,12 @@ function createTransaction({
   atcoderId = 'chokudai',
   recentFetchTimes = [],
   storedAccountName = null,
+  storedFetchState = null,
 }: {
   atcoderId?: string | null;
   recentFetchTimes?: Date[];
   storedAccountName?: string | null;
+  storedFetchState?: AtCoderFetchState | null;
 } = {}) {
   const calls: Array<{ name: string; args: unknown }> = [];
   const transaction = {
@@ -39,6 +42,9 @@ function createTransaction({
       },
     },
     atCoderAccount: {
+      async findUnique() {
+        return storedFetchState;
+      },
       async upsert(args: { create: { name: string } }) {
         calls.push({ name: 'atCoderAccount.upsert', args });
         return { name: storedAccountName ?? args.create.name };
@@ -60,7 +66,7 @@ test('marks a new AtCoder ID as fetching, records the fetch, and links it', asyn
     true
   );
 
-  assert.deepEqual(result, { status: 'changed' });
+  assert.deepEqual(result, { status: 'changed', startedFetch: true });
   assert.deepEqual(
     calls.map((call) => call.name),
     [
@@ -107,7 +113,7 @@ test('switches to a stored AtCoder ID without fetching, even right after a fetch
     false
   );
 
-  assert.deepEqual(result, { status: 'changed' });
+  assert.deepEqual(result, { status: 'changed', startedFetch: false });
   assert.deepEqual(
     calls.map((call) => call.name),
     [
@@ -126,6 +132,37 @@ test('switches to a stored AtCoder ID without fetching, even right after a fetch
   assert.deepEqual(calls[3].args, {
     data: { atcoderId: 'Tourist', atcoderIdChangedAt: NOW },
     where: { id: 'app-user-id' },
+  });
+});
+
+test('does not start a second fetch when someone else has just started one for the same ID', async () => {
+  const { calls, transaction } = createTransaction({
+    storedAccountName: 'tourist',
+    storedFetchState: {
+      submissionsLastFetchedAt: null,
+      fetchStartedAt: new Date(NOW.getTime() - 5_000),
+      fetchFailedAt: null,
+    },
+  });
+
+  const result = await applyAtCoderIdChange(
+    transaction,
+    'app-user-id',
+    'TOURIST',
+    NOW,
+    true
+  );
+
+  assert.deepEqual(result, { status: 'changed', startedFetch: false });
+  assert.deepEqual(
+    calls.map((call) => call.name),
+    ['user.findUnique', 'atCoderIdFetch.findMany', 'atCoderAccount.upsert', 'user.update']
+  );
+  assert.deepEqual(calls[2].args, {
+    where: { id: 'tourist' },
+    create: { id: 'tourist', name: 'TOURIST', fetchStartedAt: null },
+    update: {},
+    select: { name: true },
   });
 });
 
