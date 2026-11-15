@@ -54,46 +54,46 @@ type Item = {
 
 const groups: Group[] = [
   {
-    group: 'Basic blocks',
+    group: '基本ブロック',
     items: [
       {
         icon: <PilcrowIcon />,
-        label: 'Text',
+        label: 'テキスト',
         value: KEYS.p,
       },
       {
         icon: <Heading1Icon />,
-        label: 'Heading 1',
+        label: '見出し 1',
         value: 'h1',
       },
       {
         icon: <Heading2Icon />,
-        label: 'Heading 2',
+        label: '見出し 2',
         value: 'h2',
       },
       {
         icon: <Heading3Icon />,
-        label: 'Heading 3',
+        label: '見出し 3',
         value: 'h3',
       },
       {
         icon: <TableIcon />,
-        label: 'Table',
+        label: '表',
         value: KEYS.table,
       },
       {
         icon: <FileCodeIcon />,
-        label: 'Code Block',
+        label: 'コードブロック',
         value: KEYS.codeBlock,
       },
       {
         icon: <QuoteIcon />,
-        label: 'Blockquote',
+        label: '引用',
         value: KEYS.blockquote,
       },
       {
         icon: <MinusIcon />,
-        label: 'Divider',
+        label: '区切り線',
         value: KEYS.hr,
       },
     ].map((item) => ({
@@ -108,22 +108,22 @@ const groups: Group[] = [
     items: [
       {
         icon: <ListIcon />,
-        label: 'Bulleted list',
+        label: '箇条書き',
         value: KEYS.ul,
       },
       {
         icon: <ListOrderedIcon />,
-        label: 'Numbered list',
+        label: '番号付きリスト',
         value: KEYS.ol,
       },
       {
         icon: <SquareIcon />,
-        label: 'To-do list',
+        label: 'チェックリスト',
         value: KEYS.listTodo,
       },
       {
         icon: <ChevronRightIcon />,
-        label: 'Toggle',
+        label: '折りたたみ',
         value: KEYS.toggle,
       },
     ].map((item) => ({
@@ -138,7 +138,7 @@ const groups: Group[] = [
     items: [
       {
         icon: <ImageIcon />,
-        label: 'Image',
+        label: '画像',
         value: KEYS.img,
       },
     ].map((item) => ({
@@ -149,17 +149,17 @@ const groups: Group[] = [
     })),
   },
   {
-    group: 'Advanced blocks',
+    group: '応用ブロック',
     items: [
       {
         icon: <TableOfContentsIcon />,
-        label: 'Table of contents',
+        label: '目次',
         value: KEYS.toc,
       },
       {
         focusEditor: false,
         icon: <RadicalIcon />,
-        label: 'Math (block)',
+        label: '数式',
         value: KEYS.equation,
       },
     ].map((item) => ({
@@ -170,17 +170,17 @@ const groups: Group[] = [
     })),
   },
   {
-    group: 'Inline',
+    group: '文中',
     items: [
       {
         icon: <Link2Icon />,
-        label: 'Link',
+        label: 'リンク',
         value: KEYS.link,
       },
       {
         focusEditor: false,
         icon: <RadicalIcon />,
-        label: 'Math (inline)',
+        label: '文中の数式',
         value: KEYS.inlineEquation,
       },
     ].map((item) => ({
@@ -199,7 +199,7 @@ export function InsertToolbarButton(props: DropdownMenuProps) {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false} {...props}>
       <DropdownMenuTrigger asChild>
-        <ToolbarButton pressed={open} tooltip="Insert" isDropdown>
+        <ToolbarButton pressed={open} tooltip="挿入" isDropdown>
           <PlusIcon />
         </ToolbarButton>
       </DropdownMenuTrigger>

@@ -83,7 +83,7 @@ export function useUploadFile({
       const message =
         errorMessage.length > 0
           ? errorMessage
-          : 'Something went wrong, please try again later.';
+          : '問題が発生しました。しばらくしてからもう一度お試しください。';
 
       toast.error(message);
 
@@ -95,7 +95,7 @@ export function useUploadFile({
 
       // Blob URLs are only useful for explicit local mock mode; they do not
       // survive navigation and must not be treated as persisted uploads.
-      toast.info('Mocking upload. This file will not persist after navigation.');
+      toast.info('アップロードを模擬しています。このファイルはページを移動すると消えます。');
 
       const mockUploadedFile = {
         key: 'mock-key-0',
@@ -144,7 +144,7 @@ export const { uploadFiles, useUploadThing } =
   generateReactHelpers<OurFileRouter>();
 
 export function getErrorMessage(err: unknown) {
-  const unknownError = 'Something went wrong, please try again later.';
+  const unknownError = '問題が発生しました。しばらくしてからもう一度お試しください。';
 
   if (err instanceof z.ZodError) {
     const errors = err.issues.map((issue) => issue.message);

@@ -52,7 +52,7 @@ export function CodeBlockElement(props: PlateElementProps<TCodeBlockElement>) {
               variant="ghost"
               className="size-6 text-xs"
               onClick={() => formatCodeBlock(editor, { element })}
-              title="Format code"
+              title="コードを整形"
             >
               <BracesIcon className="!size-3.5 text-muted-foreground" />
             </Button>
@@ -115,9 +115,9 @@ function CodeBlockCombobox() {
             className="h-9"
             value={searchValue}
             onValueChange={(value) => setSearchValue(value)}
-            placeholder="Search language..."
+            placeholder="言語を検索"
           />
-          <CommandEmpty>No language found.</CommandEmpty>
+          <CommandEmpty>見つかりません</CommandEmpty>
 
           <CommandList className="h-[344px] overflow-y-auto">
             <CommandGroup>
@@ -176,7 +176,7 @@ function CopyButton({
       }}
       {...props}
     >
-      <span className="sr-only">Copy</span>
+      <span className="sr-only">コピー</span>
       {hasCopied ? (
         <CheckIcon className="!size-3" />
       ) : (
@@ -197,8 +197,8 @@ export function CodeSyntaxLeaf(props: PlateLeafProps<TCodeSyntaxLeaf>) {
 }
 
 const languages: { label: string; value: string }[] = [
-  { label: 'Auto', value: 'auto' },
-  { label: 'Plain Text', value: 'plaintext' },
+  { label: '自動', value: 'auto' },
+  { label: 'プレーンテキスト', value: 'plaintext' },
   { label: 'ABAP', value: 'abap' },
   { label: 'Agda', value: 'agda' },
   { label: 'Arduino', value: 'arduino' },

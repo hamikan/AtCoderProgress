@@ -9,6 +9,7 @@ import {
   type EmojiCategoryList,
   type EmojiIconList,
   type GridRow,
+  type i18nProps,
   EmojiSettings,
 } from '@platejs/emoji';
 import {
@@ -41,6 +42,36 @@ import {
 import { cn } from '@/lib/utils';
 import { ToolbarButton } from '@/components/ui/toolbar';
 
+const emojiI18n: i18nProps = {
+  categories: {
+    activity: 'アクティビティ',
+    custom: 'カスタム',
+    flags: '旗',
+    foods: '食べ物と飲み物',
+    frequent: 'よく使う絵文字',
+    nature: '動物と自然',
+    objects: 'モノ',
+    people: '顔と人',
+    places: '旅行と場所',
+    symbols: '記号',
+  },
+  clear: 'クリア',
+  pick: '絵文字を選んでください',
+  search: '絵文字を検索',
+  searchNoResultsSubtitle: 'その絵文字は見つかりませんでした',
+  searchNoResultsTitle: '見つかりません',
+  searchResult: '検索結果',
+  skins: {
+    '1': 'デフォルト',
+    '2': '明るい',
+    '3': 'やや明るい',
+    '4': '中間',
+    '5': 'やや濃い',
+    '6': '濃い',
+    choose: 'デフォルトの肌の色を選ぶ',
+  },
+};
+
 export function EmojiToolbarButton({
   options,
   ...props
@@ -53,7 +84,7 @@ export function EmojiToolbarButton({
   return (
     <EmojiPopover
       control={
-        <ToolbarButton pressed={isOpen} tooltip="Emoji" isDropdown {...props}>
+        <ToolbarButton pressed={isOpen} tooltip="絵文字" isDropdown {...props}>
           <SmileIcon />
         </ToolbarButton>
       }
@@ -62,6 +93,7 @@ export function EmojiToolbarButton({
     >
       <EmojiPicker
         {...emojiPickerState}
+        i18n={emojiI18n}
         isOpen={isOpen}
         setIsOpen={setIsOpen}
         settings={options?.settings}
@@ -374,7 +406,7 @@ function EmojiPickerSearchBar({
           value={searchValue}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={i18n.search}
-          aria-label="Search"
+          aria-label="検索"
           autoComplete="off"
           type="text"
           autoFocus
@@ -408,7 +440,7 @@ function EmojiPickerSearchAndClear({
           )}
           onClick={clearSearch}
           title={i18n.clear}
-          aria-label="Clear"
+          aria-label="クリア"
           type="button"
         >
           {emojiSearchIcons.delete}

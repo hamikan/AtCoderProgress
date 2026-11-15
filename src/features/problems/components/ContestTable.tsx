@@ -61,10 +61,10 @@ export default function ContestTable({
                 value={contestType}
                 onValueChange={(value) => handleValueChange('contestType', value)}
               >
-                <SelectTrigger><SelectValue placeholder="Select a contest" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="コンテストを選択" /></SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel>Contests</SelectLabel>
+                    <SelectLabel>コンテスト</SelectLabel>
                     <SelectItem value="abc">ABC</SelectItem>
                     <SelectItem value="arc">ARC</SelectItem>
                     <SelectItem value="agc">AGC</SelectItem>
@@ -72,10 +72,10 @@ export default function ContestTable({
                 </SelectContent>
               </Select>
               <Select value={order} onValueChange={(value) => handleValueChange('order', value)}>
-                <SelectTrigger><SelectValue placeholder="Select by..." /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="並び順を選択" /></SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel>Order</SelectLabel>
+                    <SelectLabel>並び順</SelectLabel>
                     <SelectItem value="asc">昇順</SelectItem>
                     <SelectItem value="desc">降順</SelectItem>
                   </SelectGroup>
@@ -142,7 +142,7 @@ export default function ContestTable({
                                 <TooltipContent>
                                   <div className="space-y-1 p-1">
                                     <div className="font-medium">{problem.name}</div>
-                                    <div className="text-xs">Difficulty: {problem.difficulty ?? 'N/A'}</div>
+                                    <div className="text-xs">難易度: {problem.difficulty ?? '不明'}</div>
                                   </div>
                                 </TooltipContent>
                               </Tooltip>

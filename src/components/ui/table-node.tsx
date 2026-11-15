@@ -188,14 +188,14 @@ function TableFloatingToolbar({
           contentEditable={false}
         >
           <ToolbarGroup>
-            <ColorDropdownMenu tooltip="Background color">
+            <ColorDropdownMenu tooltip="背景色">
               <PaintBucketIcon />
             </ColorDropdownMenu>
             {canMerge && (
               <ToolbarButton
                 onClick={() => tf.table.merge()}
                 onMouseDown={(e) => e.preventDefault()}
-                tooltip="Merge cells"
+                tooltip="セルを結合"
               >
                 <CombineIcon />
               </ToolbarButton>
@@ -204,7 +204,7 @@ function TableFloatingToolbar({
               <ToolbarButton
                 onClick={() => tf.table.split()}
                 onMouseDown={(e) => e.preventDefault()}
-                tooltip="Split cell"
+                tooltip="セルを分割"
               >
                 <SquareSplitHorizontalIcon />
               </ToolbarButton>
@@ -212,7 +212,7 @@ function TableFloatingToolbar({
 
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <ToolbarButton tooltip="Cell borders">
+                <ToolbarButton tooltip="セルの罫線">
                   <Grid2X2Icon />
                 </ToolbarButton>
               </DropdownMenuTrigger>
@@ -224,7 +224,7 @@ function TableFloatingToolbar({
 
             {collapsedInside && (
               <ToolbarGroup>
-                <ToolbarButton tooltip="Delete table" {...buttonProps}>
+                <ToolbarButton tooltip="表を削除" {...buttonProps}>
                   <Trash2Icon />
                 </ToolbarButton>
               </ToolbarGroup>
@@ -238,7 +238,7 @@ function TableFloatingToolbar({
                   tf.insert.tableRow({ before: true });
                 }}
                 onMouseDown={(e) => e.preventDefault()}
-                tooltip="Insert row before"
+                tooltip="上に行を挿入"
               >
                 <ArrowUp />
               </ToolbarButton>
@@ -247,7 +247,7 @@ function TableFloatingToolbar({
                   tf.insert.tableRow();
                 }}
                 onMouseDown={(e) => e.preventDefault()}
-                tooltip="Insert row after"
+                tooltip="下に行を挿入"
               >
                 <ArrowDown />
               </ToolbarButton>
@@ -256,7 +256,7 @@ function TableFloatingToolbar({
                   tf.remove.tableRow();
                 }}
                 onMouseDown={(e) => e.preventDefault()}
-                tooltip="Delete row"
+                tooltip="行を削除"
               >
                 <XIcon />
               </ToolbarButton>
@@ -270,7 +270,7 @@ function TableFloatingToolbar({
                   tf.insert.tableColumn({ before: true });
                 }}
                 onMouseDown={(e) => e.preventDefault()}
-                tooltip="Insert column before"
+                tooltip="左に列を挿入"
               >
                 <ArrowLeft />
               </ToolbarButton>
@@ -279,7 +279,7 @@ function TableFloatingToolbar({
                   tf.insert.tableColumn();
                 }}
                 onMouseDown={(e) => e.preventDefault()}
-                tooltip="Insert column after"
+                tooltip="右に列を挿入"
               >
                 <ArrowRight />
               </ToolbarButton>
@@ -288,7 +288,7 @@ function TableFloatingToolbar({
                   tf.remove.tableColumn();
                 }}
                 onMouseDown={(e) => e.preventDefault()}
-                tooltip="Delete column"
+                tooltip="列を削除"
               >
                 <XIcon />
               </ToolbarButton>
@@ -332,28 +332,28 @@ function TableBordersDropdownMenuContent(
           onCheckedChange={getOnSelectTableBorder('top')}
         >
           <BorderTopIcon />
-          <div>Top Border</div>
+          <div>上罫線</div>
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={hasRightBorder}
           onCheckedChange={getOnSelectTableBorder('right')}
         >
           <BorderRightIcon />
-          <div>Right Border</div>
+          <div>右罫線</div>
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={hasBottomBorder}
           onCheckedChange={getOnSelectTableBorder('bottom')}
         >
           <BorderBottomIcon />
-          <div>Bottom Border</div>
+          <div>下罫線</div>
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={hasLeftBorder}
           onCheckedChange={getOnSelectTableBorder('left')}
         >
           <BorderLeftIcon />
-          <div>Left Border</div>
+          <div>左罫線</div>
         </DropdownMenuCheckboxItem>
       </DropdownMenuGroup>
 
@@ -363,14 +363,14 @@ function TableBordersDropdownMenuContent(
           onCheckedChange={getOnSelectTableBorder('none')}
         >
           <BorderNoneIcon />
-          <div>No Border</div>
+          <div>罫線なし</div>
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={hasOuterBorders}
           onCheckedChange={getOnSelectTableBorder('outer')}
         >
           <BorderAllIcon />
-          <div>Outside Borders</div>
+          <div>外枠</div>
         </DropdownMenuCheckboxItem>
       </DropdownMenuGroup>
     </DropdownMenuContent>
@@ -422,7 +422,7 @@ function ColorDropdownMenu({
         <DropdownMenuGroup>
           <DropdownMenuItem className="p-2" onClick={onClearColor}>
             <EraserIcon />
-            <span>Clear</span>
+            <span>クリア</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
