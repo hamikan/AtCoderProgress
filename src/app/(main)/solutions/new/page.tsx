@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import LoginPrompt from '@/features/auth/components/LoginPrompt';
 import { getSelectableTags } from '@/features/problems/api/get-selectable-tags';
@@ -8,6 +9,8 @@ import { getUserSolutions } from '@/features/solutions/api/get-user-solutions';
 import SolutionsWorkspace from '@/features/solutions/components/SolutionsWorkspace';
 import { normalizeSolutionSearchParams } from '@/features/solutions/functions/normalize-solution-search-params';
 import type { SolutionSearchParamsInput } from '@/features/solutions/types';
+
+export const metadata: Metadata = { title: '解法記録' };
 
 interface NewSolutionPageProps {
   searchParams: Promise<SolutionSearchParamsInput>;

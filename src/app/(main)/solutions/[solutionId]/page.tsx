@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
@@ -15,6 +16,8 @@ import type {
   SolutionRouteParamsInput,
   SolutionSearchParamsInput,
 } from '@/features/solutions/types';
+
+export const metadata: Metadata = { title: '解法記録' };
 
 interface SolutionPageProps {
   params: Promise<SolutionRouteParamsInput>;
