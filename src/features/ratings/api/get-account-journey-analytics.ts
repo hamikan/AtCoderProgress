@@ -80,11 +80,17 @@ export async function getAccountJourneyAnalytics(
   );
   const bandSummaries = buildRatingBandSummaries(
     ratingHistory,
-    submissions
+    submissions,
+    firstAcceptedByProblem
   );
 
   return {
-    summary: buildAnalyticsSummary(ratingHistory, submissions, bandSummaries),
+    summary: buildAnalyticsSummary(
+      ratingHistory,
+      submissions,
+      bandSummaries,
+      firstAcceptedByProblem
+    ),
     ratingFitness: buildRatingFitness(ratingHistory),
     bandSummaries,
     curriculumSections,

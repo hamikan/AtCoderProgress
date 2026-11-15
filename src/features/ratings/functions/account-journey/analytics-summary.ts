@@ -1,6 +1,7 @@
 import { buildFirstAcceptedByProblem } from './curriculum';
 import { formatEpochDate } from './utils';
 import type {
+  FirstAcceptedProblem,
   RatingHistoryRow,
   SubmissionRow,
 } from '@/features/ratings/types/input/account-journey-rows';
@@ -12,12 +13,13 @@ import type {
 export function buildAnalyticsSummary(
   ratingHistory: RatingHistoryRow[],
   submissions: SubmissionRow[],
-  bandSummaries: RatingBandSummary[]
+  bandSummaries: RatingBandSummary[],
+  firstAcceptedByProblem: Map<string, FirstAcceptedProblem> = buildFirstAcceptedByProblem(submissions)
 ): AnalyticsSummary {
   const attemptedCount = new Set(
     submissions.map((submission) => submission.problemId)
   ).size;
-  const acCount = buildFirstAcceptedByProblem(submissions).size;
+  const acCount = firstAcceptedByProblem.size;
   const activeDays = new Set(
     submissions.map((submission) => formatEpochDate(submission.epochSecond))
   ).size;
