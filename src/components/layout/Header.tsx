@@ -1,5 +1,7 @@
-import { Code2, Home } from 'lucide-react';
+import { Code2 } from 'lucide-react';
 import Link from 'next/link';
+
+import HeaderNav from './HeaderNav';
 
 interface HeaderProps {
   account: React.ReactNode;
@@ -11,21 +13,13 @@ export default function Header({ account }: HeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-8">
-          <div className="flex items-center space-x-2">
+          <Link href="/dashboard" className="flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-slate-600 to-slate-800">
               <Code2 className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold text-slate-800">AtCoder Progress</span>
-          </div>
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/dashboard" className="flex items-center space-x-2 text-sm font-medium text-slate-900">
-              <Home className="h-4 w-4" />
-              <span>ダッシュボード</span>
-            </Link>
-            <Link href="/problems/contest" className="text-sm font-medium text-slate-600 hover:text-slate-900">問題一覧</Link>
-            <Link href="/solutions" className="text-sm font-medium text-slate-600 hover:text-slate-900">解法記録</Link>
-            <Link href="/analytics" className="text-sm font-medium text-slate-600 hover:text-slate-900">分析</Link>
-          </nav>
+          </Link>
+          <HeaderNav />
         </div>
         <div className="flex items-center space-x-4">
           {account}

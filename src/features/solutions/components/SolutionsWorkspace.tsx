@@ -2,7 +2,7 @@
 
 import { useCallback, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import SolutionsSidebar from '@/features/solutions/components/SolutionsSidebar';
 import { useSolutionsSidebarState } from '@/features/solutions/components/SolutionsSidebarStateProvider';
 import SolutionEditor from '@/features/solutions/components/SolutionEditor';
@@ -89,6 +89,9 @@ export default function SolutionsWorkspace({
       />
 
       <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-slate-50">
+        <div className="flex shrink-0 items-center border-b bg-white px-2 py-1 md:hidden">
+          <SidebarTrigger aria-label="記録の一覧を開く" />
+        </div>
         <div className="flex min-h-0 flex-1">
           <SolutionEditor
             key={initialSolution?.id ?? `draft:${initialProblem?.id ?? 'none'}`}
