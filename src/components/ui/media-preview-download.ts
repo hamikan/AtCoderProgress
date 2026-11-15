@@ -83,6 +83,18 @@ export async function downloadImage(url: string): Promise<void> {
       URL.revokeObjectURL(objectUrl);
     }
   } catch {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (isHttpUrl(url, window.location.href)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }
+}
+
+// javascript: などの URL を開くと、その場でスクリプトが動いてしまう
+export function isHttpUrl(url: string, baseUrl: string): boolean {
+  try {
+    const { protocol } = new URL(url, baseUrl);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
   }
 }

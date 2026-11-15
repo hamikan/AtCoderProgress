@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { getMediaFileName, withImageExtension } from './media-preview-download';
+import { getMediaFileName, isHttpUrl, withImageExtension } from './media-preview-download';
 
 test('getMediaFileName uses the last path segment of the URL', () => {
   assert.equal(
@@ -45,4 +45,15 @@ test('withImageExtension appends an extension from the blob type', () => {
 test('withImageExtension keeps existing extensions and unknown types', () => {
   assert.equal(withImageExtension('photo.gif', 'image/png'), 'photo.gif');
   assert.equal(withImageExtension('abc123', 'application/octet-stream'), 'abc123');
+});
+
+test('isHttpUrl accepts only http and https URLs', () => {
+  const base = 'https://app.example/solutions/1';
+
+  assert.equal(isHttpUrl('https://x.ufs.sh/f/abc', base), true);
+  assert.equal(isHttpUrl('http://localhost:1207/image.png', base), true);
+  assert.equal(isHttpUrl('/images/a.png', base), true);
+  assert.equal(isHttpUrl('javascript:alert(1)', base), false);
+  assert.equal(isHttpUrl('data:text/html,<script>alert(1)</script>', base), false);
+  assert.equal(isHttpUrl('blob:https://app.example/1234', base), false);
 });
