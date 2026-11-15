@@ -1,10 +1,11 @@
 import 'server-only';
 
+import { getAtCoderFetchStatus } from '@/features/auth/functions/atcoder-fetch-status';
 import {
   decideAtCoderIdChange,
   getAtCoderIdFetchIntervalStart,
 } from '@/features/auth/functions/atcoder-id-change-policy';
-import type { ApplyAtCoderIdChangeResult } from '@/features/auth/types';
+import type { ApplyAtCoderIdChangeResult, AtCoderFetchState } from '@/features/auth/types';
 import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
 
 interface UserAtCoderIdReader {
@@ -33,6 +34,10 @@ type UserAtCoderIdTransaction = UserAtCoderIdReader & {
     }): Promise<unknown>;
   };
   atCoderAccount: {
+    findUnique(args: {
+      select: { submissionsLastFetchedAt: true; fetchStartedAt: true; fetchFailedAt: true };
+      where: { id: string };
+    }): Promise<AtCoderFetchState | null>;
     upsert(args: {
       create: { id: string; name: string; fetchStartedAt: Date | null };
       select: { name: true };
@@ -108,18 +113,28 @@ export async function applyAtCoderIdChange(
   }
 
   const atcoderAccountId = toAtCoderAccountId(nextAtCoderId);
+  // 呼び出し側が startFetch を決めてからここまでの間に、ほかの人が同じ ID の取得を始めていることがある。そのときは取得を重ねない
+  const startsFetch =
+    startFetch &&
+    getAtCoderFetchStatus(
+      await transaction.atCoderAccount.findUnique({
+        where: { id: atcoderAccountId },
+        select: { submissionsLastFetchedAt: true, fetchStartedAt: true, fetchFailedAt: true },
+      }),
+      now
+    ) === 'failed';
   const account = await transaction.atCoderAccount.upsert({
     where: { id: atcoderAccountId },
     create: {
       id: atcoderAccountId,
       name: nextAtCoderId,
-      fetchStartedAt: startFetch ? now : null,
+      fetchStartedAt: startsFetch ? now : null,
     },
-    update: startFetch ? { fetchStartedAt: now, fetchFailedAt: null } : {},
+    update: startsFetch ? { fetchStartedAt: now, fetchFailedAt: null } : {},
     select: { name: true },
   });
 
-  if (startFetch) {
+  if (startsFetch) {
     await transaction.atCoderIdFetch.create({
       data: { userId, atcoderAccountId },
     });
@@ -133,5 +148,5 @@ export async function applyAtCoderIdChange(
     },
   });
 
-  return { status: 'changed' };
+  return { status: 'changed', startedFetch: startsFetch };
 }

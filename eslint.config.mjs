@@ -10,6 +10,12 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "src/generated/**",
   ]),
+  {
+    // ログは src/lib/logger.ts を通して、形と重さをそろえる
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/logger.ts"],
+    rules: { "no-console": "error" },
+  },
 ]);
 
 export default eslintConfig;

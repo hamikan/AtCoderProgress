@@ -1,6 +1,8 @@
 import 'server-only';
 
+import { selectRatingHistoryWrites } from '@/features/ratings/functions/select-rating-history-writes';
 import { prisma } from '@/lib/prisma';
+import { LONG_TRANSACTION_OPTIONS } from '@/lib/prisma-transaction';
 import type { RatingHistoryResource } from '@/lib/atcoder/ratings/types';
 import type {
     RatingHistorySyncTransaction,
@@ -26,10 +28,26 @@ export async function persistRatingHistoryInTransaction(
         endTime: new Date(item.EndTime),
     }));
 
-    if (data.length > 0) {
+    if (data.length === 0) {
+        return;
+    }
+    const stored = await transaction.userRatingHistory.findMany({ where: { atcoderAccountId } });
+    const { newRecords, changedRecords } = selectRatingHistoryWrites(stored, data);
+    if (newRecords.length > 0) {
         await transaction.userRatingHistory.createMany({
-            data,
+            data: newRecords,
             skipDuplicates: true,
+        });
+    }
+    for (const { atcoderAccountId: accountId, contestScreenName, ...values } of changedRecords) {
+        await transaction.userRatingHistory.update({
+            where: {
+                atcoderAccountId_contestScreenName: {
+                    atcoderAccountId: accountId,
+                    contestScreenName,
+                },
+            },
+            data: values,
         });
     }
 }
@@ -53,7 +71,9 @@ export async function persistRatingHistory(
     atcoderId: string,
     history: RatingHistoryResource[]
 ): Promise<void> {
-    await prisma.$transaction((transaction) =>
-        persistRatingHistoryForAccount(transaction, atcoderAccountId, atcoderId, history)
+    await prisma.$transaction(
+        (transaction) =>
+            persistRatingHistoryForAccount(transaction, atcoderAccountId, atcoderId, history),
+        LONG_TRANSACTION_OPTIONS
     );
 }

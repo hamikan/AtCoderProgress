@@ -127,7 +127,12 @@ test('stores submissions under the AtCoder account with its fetch time', async (
         name: 'Tourist',
         submissionsLastFetchedAt: FETCHED_AT,
       },
-      update: { name: 'Tourist', submissionsLastFetchedAt: FETCHED_AT },
+      update: {
+        name: 'Tourist',
+        submissionsLastFetchedAt: FETCHED_AT,
+        fetchStartedAt: null,
+        fetchFailedAt: null,
+      },
     },
   ]);
   assert.deepEqual(
@@ -155,7 +160,7 @@ test('keeps the entered name when no submission tells the AtCoder spelling', asy
         name: 'TOURIST',
         submissionsLastFetchedAt: FETCHED_AT,
       },
-      update: { submissionsLastFetchedAt: FETCHED_AT },
+      update: { submissionsLastFetchedAt: FETCHED_AT, fetchStartedAt: null, fetchFailedAt: null },
     },
   ]);
   assert.deepEqual(writes.submissions, []);

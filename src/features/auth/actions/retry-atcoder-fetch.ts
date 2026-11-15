@@ -7,8 +7,11 @@ import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { getAtCoderFetchStaleBefore } from '@/features/auth/functions/atcoder-fetch-status';
 import { runAtCoderFullFetch } from '@/features/auth/sync/run-atcoder-full-fetch';
 import type { LinkAtCoderIdError } from '@/features/auth/types';
+import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import type { Result } from '@/lib/types/result';
+
+const logger = createLogger('atcoder-fetch-retry');
 
 export async function retryAtCoderFetch(): Promise<Result<null, LinkAtCoderIdError>> {
   const user = await getCurrentUser();
@@ -43,7 +46,7 @@ export async function retryAtCoderFetch(): Promise<Result<null, LinkAtCoderIdErr
       after(() => runAtCoderFullFetch(atcoderAccountId, atcoderId));
     }
   } catch (error) {
-    console.error('Failed to retry the AtCoder fetch', { error, userId: user.id });
+    logger.error('failed', { userId: user.id, error });
     return {
       ok: false,
       error: { code: 'INTERNAL_ERROR', message: 'やり直しを始められませんでした。もう一度お試しください。' },

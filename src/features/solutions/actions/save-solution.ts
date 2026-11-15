@@ -6,8 +6,11 @@ import type { Prisma } from '@/generated/prisma/client';
 import { getCurrentUser } from '@/features/auth/api/get-current-user';
 import { parseSolutionInput } from '@/features/solutions/schemas/solution';
 import type { SaveSolutionError, SaveSolutionInput } from '@/features/solutions/types';
+import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import type { Result } from '@/lib/types/result';
+
+const logger = createLogger('solution-save');
 
 interface SaveSolutionValue {
   solutionId: string;
@@ -103,10 +106,10 @@ export async function saveSolution(
       };
     }
 
-    console.error('Failed to save solution', {
-      error,
+    logger.error('failed', {
       userId: user.id,
       solutionId: parsedInput.solutionId,
+      error,
     });
     return {
       ok: false,

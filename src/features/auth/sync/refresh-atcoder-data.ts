@@ -2,6 +2,7 @@ import 'server-only';
 
 import { prisma } from '@/lib/prisma';
 import {
+  getAtCoderRefreshRetryBefore,
   getSubmissionRefreshCursor,
   shouldRefreshAtCoderData,
 } from '@/features/auth/functions/atcoder-data-refresh-policy';
@@ -9,16 +10,12 @@ import { getAtCoderFetchStatus } from '@/features/auth/functions/atcoder-fetch-s
 import { syncRatingHistory } from '@/features/ratings/sync/sync-rating-history';
 import { syncSubmissions } from '@/features/submissions/sync/sync-submissions';
 import { toAtCoderAccountId } from '@/lib/atcoder/user-id';
+import { createLogger } from '@/lib/logger';
 
-// 同じプロセスの中での重複だけを防ぐ（別のサーバーインスタンスでは同時に走りうる）
-const refreshInFlight = new Set<string>();
+const logger = createLogger('atcoder-refresh');
 
 export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void> {
   const atcoderAccountId = toAtCoderAccountId(atcoderId);
-  if (refreshInFlight.has(atcoderAccountId)) {
-    return;
-  }
-  refreshInFlight.add(atcoderAccountId);
 
   try {
     const account = await prisma.atCoderAccount.findUnique({
@@ -38,6 +35,21 @@ export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void
       return;
     }
 
+    // 試した時刻を先に書けた1回だけが取りに行く。別のサーバーや別のタブと重ならず、失敗が続くときも間隔が空く
+    const claimed = await prisma.atCoderAccount.updateMany({
+      where: {
+        id: atcoderAccountId,
+        OR: [
+          { refreshAttemptedAt: null },
+          { refreshAttemptedAt: { lte: getAtCoderRefreshRetryBefore(now) } },
+        ],
+      },
+      data: { refreshAttemptedAt: now },
+    });
+    if (claimed.count === 0) {
+      return;
+    }
+
     const latestSubmission = await prisma.submission.findFirst({
       where: { atcoderAccountId },
       orderBy: { epochSecond: 'desc' },
@@ -47,18 +59,19 @@ export async function refreshAtCoderDataIfStale(atcoderId: string): Promise<void
       latestSubmission?.epochSecond ?? null
     );
 
-    const results = await Promise.allSettled([
+    const [submissions, ratings] = await Promise.allSettled([
       syncSubmissions(atcoderId, fromSecond),
       syncRatingHistory(atcoderId),
     ]);
-    for (const result of results) {
-      if (result.status === 'rejected') {
-        console.warn('[atcoder-refresh] sync failed', result.reason);
-      }
+    if (submissions.status === 'fulfilled') {
+      logger.info('refreshed submissions', { atcoderAccountId, ...submissions.value });
+    } else {
+      logger.warn('could not refresh submissions', { atcoderAccountId, error: submissions.reason });
+    }
+    if (ratings.status === 'rejected') {
+      logger.warn('could not refresh the rating history', { atcoderAccountId, error: ratings.reason });
     }
   } catch (error) {
-    console.warn('[atcoder-refresh] failed', error);
-  } finally {
-    refreshInFlight.delete(atcoderAccountId);
+    logger.warn('failed', { atcoderAccountId, error });
   }
 }

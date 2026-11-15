@@ -6,8 +6,11 @@ import {
   isDeleteAccountConfirmed,
 } from '@/features/auth/functions/delete-account-confirmation';
 import type { DeleteAccountError } from '@/features/auth/types';
+import { createLogger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import type { Result } from '@/lib/types/result';
+
+const logger = createLogger('account-delete');
 
 export async function deleteAccount(
   confirmation: string
@@ -25,9 +28,10 @@ export async function deleteAccount(
     // 解法記録・ユーザータグ・ログイン方法などは DB の削除の連鎖で消え、★は持ち主を外して残る
     await prisma.user.delete({ where: { id: user.id } });
   } catch (error: unknown) {
-    console.error('Failed to delete account', { error, userId: user.id });
+    logger.error('failed', { userId: user.id, error });
     return failure('INTERNAL_ERROR', 'アカウントを削除できませんでした。時間をおいてもう一度お試しください。');
   }
+  logger.info('deleted', { userId: user.id });
   return { ok: true, value: { status: 'deleted' } };
 }
 
