@@ -128,7 +128,8 @@ export async function getProblemList(
     }
   }
 
-  const [totalProblems, raws] = await prisma.$transaction([
+  // トランザクションにまとめると、関連の読み込みが1本の接続に重なり、pg が非推奨の警告を出す（#191）
+  const [totalProblems, raws] = await Promise.all([
     prisma.problem.count({ where }),
     prisma.problem.findMany({
       where,
