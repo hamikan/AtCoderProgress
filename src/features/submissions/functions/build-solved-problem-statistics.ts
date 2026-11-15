@@ -48,6 +48,7 @@ export function buildSolvedProblemStatistics(
     acCount: firstAcceptedAt.size,
     acCountChange,
     currentStreak: calculateCurrentStreak(acceptedDates, now),
+    longestStreak: calculateLongestStreak(acceptedDates),
     monthlySolved: currentMonthProblems.size,
     monthlySolvedChange: currentMonthProblems.size - lastMonthProblems.size,
   };
@@ -71,4 +72,22 @@ function calculateCurrentStreak(
       return days;
     }
   }
+}
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function calculateLongestStreak(acceptedDates: ReadonlySet<string>): number {
+  const dayNumbers = [...acceptedDates]
+    .map((date) => Date.parse(date) / MILLISECONDS_PER_DAY)
+    .sort((a, b) => a - b);
+
+  let longest = 0;
+  let current = 0;
+  let previous: number | null = null;
+  for (const dayNumber of dayNumbers) {
+    current = previous !== null && dayNumber === previous + 1 ? current + 1 : 1;
+    longest = Math.max(longest, current);
+    previous = dayNumber;
+  }
+  return longest;
 }
