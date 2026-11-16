@@ -7,6 +7,7 @@ import { buildFirstAcceptedByProblem } from './curriculum';
 import {
   formatEpochDate,
   getDifficultyBucket,
+  getOrCreate,
   getRatingBand,
   resolveRatingAtEpoch,
   toPercentage,
@@ -26,18 +27,27 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function buildRatingBandSummaries(
   ratingHistory: RatingHistoryRow[],
-  submissions: SubmissionRow[]
+  submissions: SubmissionRow[],
+  firstAcceptedByProblem: Map<string, FirstAcceptedProblem> = buildFirstAcceptedByProblem(submissions)
 ): RatingBandSummary[] {
+  // どの集計も「提出時点のレート帯」で分けるので、提出ごとに一度だけ求めて使い回す
+  const submissionBandKeys = submissions.map(
+    (submission) => getRatingBand(resolveRatingAtEpoch(submission.epochSecond, ratingHistory)).key
+  );
   const contestCountByBand = countRatedContestsByContestStartBand(ratingHistory);
-  const acceptedByBand = groupAcceptedProblemsByBand(submissions, ratingHistory);
-  const attemptedByBand = groupAttemptedProblemsByBand(submissions, ratingHistory);
+  const acceptedByBand = groupAcceptedProblemsByBand(firstAcceptedByProblem, ratingHistory);
+  const attemptedByBand = groupAttemptedProblemsByBand(submissions, submissionBandKeys);
   const attemptedDifficultiesByBand = groupAttemptedDifficultiesByBand(
     submissions,
-    ratingHistory
+    submissionBandKeys
   );
-  const submissionStatsByBand = groupSubmissionStatsByBand(submissions, ratingHistory);
+  const submissionStatsByBand = groupSubmissionStatsByBand(submissions, submissionBandKeys);
   const performanceByBand = groupPerformanceByContestStartBand(ratingHistory);
-  const activityDatesByBand = groupActivityDatesByBand(ratingHistory, submissions);
+  const activityDatesByBand = groupActivityDatesByBand(
+    ratingHistory,
+    submissions,
+    submissionBandKeys
+  );
   const periodDaysByBand = sumRatingPeriodDaysByBand(ratingHistory, submissions);
 
   return RATING_BANDS.map((band) => {
@@ -95,17 +105,17 @@ export function buildRatingBandSummaries(
 }
 
 function groupAcceptedProblemsByBand(
-  submissions: SubmissionRow[],
+  firstAcceptedByProblem: Map<string, FirstAcceptedProblem>,
   ratingHistory: RatingHistoryRow[]
 ) {
-  const firstAcceptedByProblem = buildFirstAcceptedByProblem(submissions);
+  const grouped = new Map<RatingBandKey, FirstAcceptedProblem[]>();
 
-  return Array.from(firstAcceptedByProblem.values()).reduce((grouped, accepted) => {
+  for (const accepted of firstAcceptedByProblem.values()) {
     const band = getRatingBand(resolveRatingAtEpoch(accepted.epochSecond, ratingHistory));
-    const current = grouped.get(band.key) ?? [];
+    getOrCreate(grouped, band.key, () => []).push(accepted);
+  }
 
-    return new Map(grouped).set(band.key, [...current, accepted]);
-  }, new Map<RatingBandKey, FirstAcceptedProblem[]>());
+  return grouped;
 }
 
 function buildDifficultyDistribution(
@@ -142,58 +152,71 @@ function buildDifficultyDistribution(
 
 function groupAttemptedProblemsByBand(
   submissions: SubmissionRow[],
-  ratingHistory: RatingHistoryRow[]
+  submissionBandKeys: RatingBandKey[]
 ) {
-  return submissions.reduce((grouped, submission) => {
-    const band = getRatingBand(resolveRatingAtEpoch(submission.epochSecond, ratingHistory));
-    const current = grouped.get(band.key) ?? new Set<string>();
+  const grouped = new Map<RatingBandKey, Set<string>>();
 
-    return new Map(grouped).set(band.key, new Set([...current, submission.problemId]));
-  }, new Map<RatingBandKey, Set<string>>());
+  submissions.forEach((submission, index) => {
+    getOrCreate(grouped, submissionBandKeys[index], () => new Set<string>()).add(
+      submission.problemId
+    );
+  });
+
+  return grouped;
 }
 
 function groupAttemptedDifficultiesByBand(
   submissions: SubmissionRow[],
-  ratingHistory: RatingHistoryRow[]
+  submissionBandKeys: RatingBandKey[]
 ) {
-  const problemDifficultiesByBand = submissions.reduce((grouped, submission) => {
-    const band = getRatingBand(resolveRatingAtEpoch(submission.epochSecond, ratingHistory));
-    const current = grouped.get(band.key) ?? new Map<string, number | null>();
+  const problemDifficultiesByBand = new Map<RatingBandKey, Map<string, number | null>>();
 
-    if (current.has(submission.problemId)) return grouped;
-
-    return new Map(grouped).set(
-      band.key,
-      new Map(current).set(submission.problemId, submission.problem.difficulty)
-    );
-  }, new Map<RatingBandKey, Map<string, number | null>>());
-
-  return [...problemDifficultiesByBand.entries()].reduce((grouped, [bandKey, problems]) => {
-    const difficulties = [...problems.values()].filter(
-      (difficulty): difficulty is number => difficulty !== null
+  submissions.forEach((submission, index) => {
+    const problems = getOrCreate(
+      problemDifficultiesByBand,
+      submissionBandKeys[index],
+      () => new Map<string, number | null>()
     );
 
-    return new Map(grouped).set(bandKey, difficulties);
-  }, new Map<RatingBandKey, number[]>());
+    if (!problems.has(submission.problemId)) {
+      problems.set(submission.problemId, submission.problem.difficulty);
+    }
+  });
+
+  const difficultiesByBand = new Map<RatingBandKey, number[]>();
+
+  for (const [bandKey, problems] of problemDifficultiesByBand) {
+    difficultiesByBand.set(
+      bandKey,
+      [...problems.values()].filter(
+        (difficulty): difficulty is number => difficulty !== null
+      )
+    );
+  }
+
+  return difficultiesByBand;
 }
 
 function groupSubmissionStatsByBand(
   submissions: SubmissionRow[],
-  ratingHistory: RatingHistoryRow[]
+  submissionBandKeys: RatingBandKey[]
 ) {
-  return submissions.reduce((statsByBand, submission) => {
-    const band = getRatingBand(resolveRatingAtEpoch(submission.epochSecond, ratingHistory));
-    const current = statsByBand.get(band.key) ?? {
+  const statsByBand = new Map<
+    RatingBandKey,
+    { submissionCount: number; acSubmissionCount: number }
+  >();
+
+  submissions.forEach((submission, index) => {
+    const stats = getOrCreate(statsByBand, submissionBandKeys[index], () => ({
       submissionCount: 0,
       acSubmissionCount: 0,
-    };
-    const next = {
-      submissionCount: current.submissionCount + 1,
-      acSubmissionCount: current.acSubmissionCount + (submission.result === 'AC' ? 1 : 0),
-    };
+    }));
 
-    return new Map(statsByBand).set(band.key, next);
-  }, new Map<RatingBandKey, { submissionCount: number; acSubmissionCount: number }>());
+    stats.submissionCount += 1;
+    if (submission.result === 'AC') stats.acSubmissionCount += 1;
+  });
+
+  return statsByBand;
 }
 
 function countRatedContestsByContestStartBand(ratingHistory: RatingHistoryRow[]) {
@@ -217,22 +240,23 @@ function groupPerformanceByContestStartBand(ratingHistory: RatingHistoryRow[]) {
 
 function groupActivityDatesByBand(
   ratingHistory: RatingHistoryRow[],
-  submissions: SubmissionRow[]
+  submissions: SubmissionRow[],
+  submissionBandKeys: RatingBandKey[]
 ) {
-  const ratingActivities = ratingHistory.map((row) => ({
-    bandKey: getRatingBand(row.oldRating).key,
-    date: formatTokyoDate(row.endTime),
-  }));
-  const submissionActivities = submissions.map((submission) => ({
-    bandKey: getRatingBand(resolveRatingAtEpoch(submission.epochSecond, ratingHistory)).key,
-    date: formatEpochDate(submission.epochSecond),
-  }));
+  const grouped = new Map<RatingBandKey, Set<string>>();
 
-  return [...ratingActivities, ...submissionActivities].reduce((grouped, activity) => {
-    const current = grouped.get(activity.bandKey) ?? new Set<string>();
+  for (const row of ratingHistory) {
+    getOrCreate(grouped, getRatingBand(row.oldRating).key, () => new Set<string>()).add(
+      formatTokyoDate(row.endTime)
+    );
+  }
+  submissions.forEach((submission, index) => {
+    getOrCreate(grouped, submissionBandKeys[index], () => new Set<string>()).add(
+      formatEpochDate(submission.epochSecond)
+    );
+  });
 
-    return new Map(grouped).set(activity.bandKey, new Set([...current, activity.date]));
-  }, new Map<RatingBandKey, Set<string>>());
+  return grouped;
 }
 
 function sumRatingPeriodDaysByBand(
@@ -286,7 +310,8 @@ function getFirstKnownActivityDate(
 
   if (timestamps.length === 0) return null;
 
-  return new Date(Math.min(...timestamps));
+  // 配列を展開して渡すと、提出が十数万件を超えたときに引数の数の上限で失敗する
+  return new Date(timestamps.reduce((earliest, timestamp) => Math.min(earliest, timestamp)));
 }
 
 function getLastKnownActivityDate(
@@ -300,7 +325,7 @@ function getLastKnownActivityDate(
 
   if (timestamps.length === 0) return null;
 
-  return new Date(Math.max(...timestamps));
+  return new Date(timestamps.reduce((latest, timestamp) => Math.max(latest, timestamp)));
 }
 
 function countPeriodDays(start: Date, end: Date) {

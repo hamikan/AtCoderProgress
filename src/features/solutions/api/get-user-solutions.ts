@@ -8,10 +8,24 @@ export async function getUserSolutions(userId?: string): Promise<SolutionListIte
     return [];
   }
 
+  // 本文（content）は1件で最大1MBほどあるので、一覧では読まない
   const solutions = await prisma.solution.findMany({
     where: { userId },
-    include: {
-      problem: { include: { contests: true } },
+    select: {
+      id: true,
+      problemId: true,
+      contestId: true,
+      title: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      problem: {
+        select: {
+          name: true,
+          difficulty: true,
+          contests: { select: { contestId: true, problemIndex: true } },
+        },
+      },
     },
     orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
   });

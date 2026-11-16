@@ -41,16 +41,42 @@ export function getDifficultyBucket(difficulty: number | null) {
   return getRatingBand(difficulty);
 }
 
+// 提出のたびに履歴を全件たどると提出数×コンテスト数になるので、終了時刻の昇順で渡される前提で二分探索する
 export function resolveRatingAtEpoch(
   epochSecond: number,
   ratingHistory: RatingHistoryRow[]
 ) {
   if (ratingHistory.length === 0) return 0;
 
-  return ratingHistory.reduce((rating, row) => {
-    const endEpoch = Math.floor(row.endTime.getTime() / 1000);
-    return endEpoch <= epochSecond ? row.newRating : rating;
-  }, ratingHistory[0].oldRating);
+  let low = 0;
+  let high = ratingHistory.length;
+
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    const endEpoch = Math.floor(ratingHistory[middle].endTime.getTime() / 1000);
+
+    if (endEpoch <= epochSecond) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+
+  return low === 0 ? ratingHistory[0].oldRating : ratingHistory[low - 1].newRating;
+}
+
+// reduce のたびに Map や Set を複製すると件数の二乗になるので、集計中だけ関数内の Map を書き換える
+export function getOrCreate<Key, Value>(
+  map: Map<Key, Value>,
+  key: Key,
+  create: () => Value
+) {
+  const existing = map.get(key);
+  if (existing !== undefined) return existing;
+
+  const created = create();
+  map.set(key, created);
+  return created;
 }
 
 export function compareCurriculumRows(a: CurriculumRow, b: CurriculumRow) {

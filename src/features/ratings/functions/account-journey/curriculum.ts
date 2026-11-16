@@ -4,6 +4,7 @@ import {
   classifyJoiContest,
   compareCurriculumRows,
   formatEpochDate,
+  getOrCreate,
   getRatingBand,
   resolveRatingAtEpoch,
   toPercentage,
@@ -22,19 +23,22 @@ import type {
 const TYPICAL90_STAR_PATTERN = /★(\d+)/;
 
 export function buildFirstAcceptedByProblem(submissions: SubmissionRow[]) {
-  return submissions.reduce((acceptedMap, submission) => {
-    if (submission.result !== 'AC' || acceptedMap.has(submission.problemId)) {
-      return acceptedMap;
-    }
+  // 初ACのたびに Map を複製すると解いた問題数の二乗になるので、関数内の Map に足していく
+  const acceptedMap = new Map<string, FirstAcceptedProblem>();
 
-    return new Map(acceptedMap).set(submission.problemId, {
+  for (const submission of submissions) {
+    if (submission.result !== 'AC' || acceptedMap.has(submission.problemId)) continue;
+
+    acceptedMap.set(submission.problemId, {
       problemId: submission.problemId,
       contestId: submission.contestId,
       title: submission.problem.name,
       difficulty: submission.problem.difficulty,
       epochSecond: submission.epochSecond,
     });
-  }, new Map<string, FirstAcceptedProblem>());
+  }
+
+  return acceptedMap;
 }
 
 export function buildCurriculumSections(
@@ -274,10 +278,13 @@ function buildCurriculumSection({
 }
 
 function groupRowsByContest(rows: CurriculumRow[]) {
-  return rows.reduce((grouped, row) => {
-    const current = grouped.get(row.contestId) ?? [];
-    return new Map(grouped).set(row.contestId, [...current, row]);
-  }, new Map<string, CurriculumRow[]>());
+  const grouped = new Map<string, CurriculumRow[]>();
+
+  for (const row of rows) {
+    getOrCreate(grouped, row.contestId, () => []).push(row);
+  }
+
+  return grouped;
 }
 
 function buildNumericRangeGroups(
@@ -306,12 +313,12 @@ function buildNumericRangeGroups(
 }
 
 function buildPrefixGroups(problems: CurriculumProblemProgress[]) {
-  const grouped = problems.reduce((groups, problem) => {
-    const prefix = problem.index.match(/^[A-Z]+/)?.[0] ?? 'その他';
-    const current = groups.get(prefix) ?? [];
+  const grouped = new Map<string, CurriculumProblemProgress[]>();
 
-    return new Map(groups).set(prefix, [...current, problem]);
-  }, new Map<string, CurriculumProblemProgress[]>());
+  for (const problem of problems) {
+    const prefix = problem.index.match(/^[A-Z]+/)?.[0] ?? 'その他';
+    getOrCreate(grouped, prefix, () => []).push(problem);
+  }
 
   return Array.from(grouped.entries()).map(([prefix, groupProblems]) => ({
     key: `prefix-${prefix}`,
@@ -343,12 +350,11 @@ function buildJoiGroups(problems: CurriculumProblemProgress[]) {
     sc: '春季・春合宿',
     other: 'その他',
   };
-  const grouped = problems.reduce((groups, problem) => {
-    const groupKey = classifyJoiContest(problem.contestId ?? '');
-    const current = groups.get(groupKey) ?? [];
+  const grouped = new Map<keyof typeof labels, CurriculumProblemProgress[]>();
 
-    return new Map(groups).set(groupKey, [...current, problem]);
-  }, new Map<keyof typeof labels, CurriculumProblemProgress[]>());
+  for (const problem of problems) {
+    getOrCreate(grouped, classifyJoiContest(problem.contestId ?? ''), () => []).push(problem);
+  }
 
   return (Object.keys(labels) as Array<keyof typeof labels>)
     .map((key) => ({
