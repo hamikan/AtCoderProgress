@@ -16,7 +16,12 @@ export async function getInProgressSolutions(
     where: { userId, status: 'TRYING' },
     orderBy: { updatedAt: 'desc' },
     take: limit,
-    include: {
+    // 一覧に本文（content）は要らないので読まない
+    select: {
+      id: true,
+      problemId: true,
+      contestId: true,
+      updatedAt: true,
       problem: {
         select: { name: true },
       },

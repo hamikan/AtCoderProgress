@@ -310,7 +310,8 @@ function getFirstKnownActivityDate(
 
   if (timestamps.length === 0) return null;
 
-  return new Date(Math.min(...timestamps));
+  // 配列を展開して渡すと、提出が十数万件を超えたときに引数の数の上限で失敗する
+  return new Date(timestamps.reduce((earliest, timestamp) => Math.min(earliest, timestamp)));
 }
 
 function getLastKnownActivityDate(
@@ -324,7 +325,7 @@ function getLastKnownActivityDate(
 
   if (timestamps.length === 0) return null;
 
-  return new Date(Math.max(...timestamps));
+  return new Date(timestamps.reduce((latest, timestamp) => Math.max(latest, timestamp)));
 }
 
 function countPeriodDays(start: Date, end: Date) {
