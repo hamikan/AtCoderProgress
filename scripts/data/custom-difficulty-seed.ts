@@ -1,8 +1,6 @@
 /**
- * 独自 difficulty（irt5_time）の最初の推定値。clipDifficulty 前の値。
- *
- * 2026-10-31 に、保存しておいた順位表 JSON（ABC212〜ABC476、ARC104〜ARC230）から作った。
- * データベースに custom_difficulty がまだない問題にだけ、npm run difficulty:estimate が入れる。
+ * 独自 difficulty（irt5_time）の最初の推定値（clipDifficulty 前）。2026-10-31 に、保存しておいた
+ * 順位表 JSON（ABC212〜ABC476、ARC104〜ARC230）から作った。
  * 新しいコンテストの推定値はデータベースにだけ入るので、このファイルには足さない。
  */
 export const CUSTOM_DIFFICULTY_SEED: Readonly<Record<string, number>> = {

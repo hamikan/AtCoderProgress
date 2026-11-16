@@ -1,17 +1,7 @@
 /**
- * 独自 difficulty（irt5_time）を推定して、データベースに書くスクリプト。
- *
- * 使い方:
- *   npm run difficulty:estimate                  # まだ推定していないコンテストを最大 10 個
- *   npm run difficulty:estimate -- --limit=30
- *
- * 1. scripts/data/custom-difficulty-seed.ts の値を、custom_difficulty がまだない問題に入れる
- * 2. 終わった ABC212 以降・ARC104 以降で、まだ推定していないコンテストの順位表を取って推定する
- *
- * 順位表 JSON はログインしないと取れない。AtCoder にログインしたブラウザのクッキー
+ * 順位表 JSON はログインしないと取れないので、AtCoder にログインしたブラウザのクッキー
  * REVEL_SESSION の値を、環境変数 ATCODER_REVEL_SESSION に入れて動かす。
  * ログインそのものの値なので、自分の PC にだけ置き、サーバーやリポジトリには置かない。
- * 本番のデータベースに書くときは、DATABASE_URL を本番のものにして動かす。
  */
 import './load-env';
 
