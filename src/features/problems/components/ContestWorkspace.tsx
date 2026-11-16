@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import ContestTable from './ContestTable';
 import ProblemStats from './ProblemStats';
 import { loadContestChunk } from '@/features/problems/actions/load-contest-chunk';
@@ -68,11 +69,7 @@ export default function ContestWorkspace({
   );
   const isLoading = view.hasMore && !view.loadFailed;
 
-  useEffect(() => {
-    const entry = seedContestListEntry(cacheKey, initialEntry);
-    if (!entry.hasMore || entry.loadFailed) {
-      return;
-    }
+  const startLoading = useCallback(() => {
     if (!tryStartContestListLoading(cacheKey)) {
       return;
     }
@@ -83,11 +80,20 @@ export default function ContestWorkspace({
       order,
       loadChunk: loadContestChunk,
     });
-  }, [cacheKey, contestType, order, initialEntry]);
+  }, [cacheKey, contestType, order]);
+
+  // 失敗が残っていても、画面を開き直したときは続きから読み直す
+  useEffect(() => {
+    const entry = seedContestListEntry(cacheKey, initialEntry);
+    if (!entry.hasMore) {
+      return;
+    }
+    startLoading();
+  }, [cacheKey, initialEntry, startLoading]);
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <ContestTable
           contestType={contestType}
           contests={view.contests}
@@ -101,6 +107,13 @@ export default function ContestWorkspace({
                 <span className="text-sm text-slate-500">
                   残りのコンテストを読み込み中…（{view.contests.length} / {view.totalContests}件）
                 </span>
+              </div>
+            ) : view.hasMore && view.loadFailed ? (
+              <div className="flex min-h-16 items-center justify-center gap-3 pt-4">
+                <span className="text-sm text-slate-500">続きを読み込めませんでした</span>
+                <Button type="button" variant="outline" size="sm" onClick={startLoading}>
+                  もう一度読み込む
+                </Button>
               </div>
             ) : null
           }

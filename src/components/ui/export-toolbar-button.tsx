@@ -25,7 +25,19 @@ import { EditorStatic } from './editor-static';
 import { ToolbarButton } from './toolbar';
 import { DocxExportKit } from '@/components/editor/plugins/docx-export-kit';
 
-const siteUrl = 'https://platejs.org';
+// 書き出した HTML がほかのサイト（ひな形の platejs.org）のスタイルを読みに行かないよう、今の画面のスタイルを中に埋め込む
+function collectPageStyles(): string {
+  return Array.from(document.styleSheets)
+    .flatMap((sheet) => {
+      try {
+        return Array.from(sheet.cssRules, (rule) => rule.cssText);
+      } catch {
+        // 別のドメインのスタイル（Google Fonts など）は読めないので飛ばす
+        return [];
+      }
+    })
+    .join('\n');
+}
 
 export function ExportToolbarButton(props: DropdownMenuProps) {
   const editor = useEditorRef();
@@ -110,11 +122,11 @@ export function ExportToolbarButton(props: DropdownMenuProps) {
       props: { style: { padding: '0 calc(50% - 350px)', paddingBottom: '' } },
     });
 
-    const tailwindCss = `<link rel="stylesheet" href="${siteUrl}/tailwind.css">`;
+    const pageCss = `<style>${collectPageStyles().replaceAll('</style', '<\\/style')}</style>`;
     const katexCss = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.18/dist/katex.css" integrity="sha384-9PvLvaiSKCPkFKB1ZsEoTjgnJn+O3KvEwtsz37/XrkYft3DTk2gHdYvd9oWgW3tV" crossorigin="anonymous">`;
 
     const html = `<!DOCTYPE html>
-    <html lang="en">
+    <html lang="ja">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -125,7 +137,7 @@ export function ExportToolbarButton(props: DropdownMenuProps) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..700&display=swap"
           rel="stylesheet"
         />
-        ${tailwindCss}
+        ${pageCss}
         ${katexCss}
         <style>
           :root {

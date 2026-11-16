@@ -129,3 +129,30 @@ test('loadRemainingContestLists marks loadFailed and notifies on failure', async
   assert.equal(getContestListEntry(cacheKey)?.loadFailed, true);
   assert.equal(tryStartContestListLoading(cacheKey), true);
 });
+
+test('loadRemainingContestLists retries from a failed entry and clears loadFailed', async () => {
+  const cacheKey = 'abc:desc-retry';
+  createEntry(cacheKey, [createContest('abc001')], 'cursor-1');
+  assert.equal(tryStartContestListLoading(cacheKey), true);
+  await loadRemainingContestLists({
+    cacheKey,
+    contestType: 'abc',
+    order: 'desc',
+    loadChunk: async () => {
+      throw new Error('load failed');
+    },
+  });
+  assert.equal(getContestListEntry(cacheKey)?.loadFailed, true);
+
+  assert.equal(tryStartContestListLoading(cacheKey), true);
+  await loadRemainingContestLists({
+    cacheKey,
+    contestType: 'abc',
+    order: 'desc',
+    loadChunk: async () => createChunk([createContest('abc002')]),
+  });
+
+  assert.equal(getContestListEntry(cacheKey)?.loadFailed, false);
+  assert.equal(getContestListEntry(cacheKey)?.contests.length, 2);
+  assert.equal(getContestListEntry(cacheKey)?.hasMore, false);
+});

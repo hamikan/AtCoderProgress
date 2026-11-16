@@ -163,7 +163,7 @@ export default function TagRadar({ initialStats = [] }: TagRadarProps) {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900">
+            <Button variant="ghost" size="icon" aria-label="表示タグ設定" className="h-8 w-8 text-slate-500 hover:text-slate-900">
               <Settings2 className="h-4 w-4" />
             </Button>
           </PopoverTrigger>

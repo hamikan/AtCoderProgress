@@ -90,11 +90,12 @@ export default function RatingGraph({ data }: RatingGraphProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-bold text-slate-900">レート推移</CardTitle>
-          <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+          <div className="flex flex-wrap gap-x-2 gap-y-1 p-1 bg-slate-100 rounded-lg">
             {rangeOptions.map((option) => (
               <button
                 key={String(option)}
                 onClick={() => setRange(option)}
+                aria-pressed={range === option}
                 className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${range === option
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-900'
@@ -180,7 +181,7 @@ export default function RatingGraph({ data }: RatingGraphProps) {
                 cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }}
                 formatter={(value: unknown) => [
                   <span key="val" className="font-bold text-slate-900">{String(value)}</span>,
-                  <span key="label" className="text-xs text-slate-500">Rating</span>
+                  <span key="label" className="text-xs text-slate-500">レート</span>
                 ]}
                 labelFormatter={(_, payload) => {
                   const point = payload[0]?.payload as RatingData | undefined;
@@ -217,9 +218,9 @@ export default function RatingGraph({ data }: RatingGraphProps) {
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-100 pt-3 text-sm">
           <span className="font-semibold text-slate-900">直近コンテスト</span>
           <span className="text-slate-700">{latest.contestName}</span>
-          <span className="text-slate-500">Perf</span>
+          <span className="text-slate-500">パフォーマンス</span>
           <span className="font-semibold text-slate-900">
-            {latest.performance.toLocaleString()}
+            {latest.performance.toLocaleString('ja-JP')}
           </span>
           {latestChange !== null && (
             <span

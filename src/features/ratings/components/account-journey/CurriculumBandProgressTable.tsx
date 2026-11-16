@@ -105,7 +105,7 @@ function CurriculumSectionTable({
               <tr key={row.key} className="border-t border-slate-100">
                 <td className="px-3 py-2 font-medium text-slate-800">{row.label}</td>
                 <td className="px-3 py-2 text-slate-700">
-                  {row.cumulativeSolved.toLocaleString()}/{row.total.toLocaleString()}
+                  {row.cumulativeSolved.toLocaleString('ja-JP')}/{row.total.toLocaleString('ja-JP')}
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex min-w-36 items-center gap-3">
@@ -117,7 +117,7 @@ function CurriculumSectionTable({
                           : 'bg-slate-100 text-slate-500'
                       )}
                     >
-                      {row.solvedInBand.toLocaleString()}問
+                      {row.solvedInBand.toLocaleString('ja-JP')}問
                     </span>
                     <SplitProgressBar count={row} selectedBand={selectedBand} />
                   </div>
@@ -202,7 +202,7 @@ function SectionHeader({
       <h4 className="text-sm font-semibold text-slate-950">{section.title}</h4>
       <div className="flex items-center gap-2 text-sm">
         <span className="font-semibold text-slate-950">
-          {sectionCount.cumulativeSolved.toLocaleString()}/{sectionCount.total.toLocaleString()}
+          {sectionCount.cumulativeSolved.toLocaleString('ja-JP')}/{sectionCount.total.toLocaleString('ja-JP')}
         </span>
         {sectionCount.solvedInBand > 0 && (
           <span
@@ -212,7 +212,7 @@ function SectionHeader({
               selectedBand.textColor
             )}
           >
-            +{sectionCount.solvedInBand.toLocaleString()}
+            +{sectionCount.solvedInBand.toLocaleString('ja-JP')}
           </span>
         )}
       </div>

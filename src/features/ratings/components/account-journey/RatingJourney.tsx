@@ -119,16 +119,16 @@ function BandDetail({
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric label="滞在期間" value={summary.periodLabel} />
         <Metric label="活動日" value={`${summary.activeDays}日`} />
-        <Metric label="提出" value={`${summary.submissionCount.toLocaleString()}回`} />
-        <Metric label="AC提出" value={`${summary.acSubmissionCount.toLocaleString()}回`} />
+        <Metric label="提出" value={`${summary.submissionCount.toLocaleString('ja-JP')}回`} />
+        <Metric label="AC提出" value={`${summary.acSubmissionCount.toLocaleString('ja-JP')}回`} />
       </div>
 
       <MetricSection
         icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
         title="解いた量"
         metrics={[
-          ['挑戦問題', `${summary.attemptedCount.toLocaleString()}問`],
-          ['初AC', `${summary.acceptedCount.toLocaleString()}問`],
+          ['挑戦問題', `${summary.attemptedCount.toLocaleString('ja-JP')}問`],
+          ['初AC', `${summary.acceptedCount.toLocaleString('ja-JP')}問`],
           ['初AC/挑戦', formatPercent(summary.solveRate)],
           ['AC提出率', formatPercent(summary.acceptanceRate)],
         ]}
@@ -136,7 +136,7 @@ function BandDetail({
 
       <MetricSection
         icon={<Activity className="h-4 w-4 text-blue-600" />}
-        title="Difficulty"
+        title="難易度"
         metrics={[
           ['平均AC Diff', formatDifficulty(summary.averageDifficulty)],
           ['中央値AC Diff', formatDifficulty(summary.medianDifficulty)],
@@ -150,8 +150,8 @@ function BandDetail({
         icon={<CalendarDays className="h-4 w-4 text-slate-600" />}
         title="Rated"
         metrics={[
-          ['Rated参加', `${summary.contestCount.toLocaleString()}回`],
-          ['最高Perf', summary.bestPerformance?.toLocaleString() ?? '-'],
+          ['Rated参加', `${summary.contestCount.toLocaleString('ja-JP')}回`],
+          ['最高Perf', summary.bestPerformance?.toLocaleString('ja-JP') ?? '-'],
           ['色の範囲', summary.band.rangeLabel],
           ['1日あたり初AC', formatDailyRate(summary.acceptedCount, summary.totalDays)],
         ]}
@@ -227,7 +227,7 @@ function DifficultyDistribution({ summary }: { summary: RatingBandSummary }) {
                 {bucket.label}diff
               </span>
               <span className="text-sm font-semibold text-slate-950">
-                {bucket.count.toLocaleString()}問
+                {bucket.count.toLocaleString('ja-JP')}問
               </span>
             </div>
             <div className="mt-1 flex items-center justify-between gap-2 text-xs text-slate-500">

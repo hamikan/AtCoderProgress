@@ -89,7 +89,7 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
                     {week.map((day, dayIndex) => (
                       <div
                         key={`${weekIndex}-${dayIndex}`}
-                        className={`w-full aspect-square rounded-sm ${getIntensityClass(day.level)} hover:ring-2 hover:ring-slate-400 cursor-pointer transition-all`}
+                        className={`w-full aspect-square rounded-sm ${getIntensityClass(day.level)} transition-all`}
                         title={`${day.date}: ${day.count}問解答`}
                       />
                     ))}
