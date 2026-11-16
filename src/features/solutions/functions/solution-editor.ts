@@ -75,6 +75,19 @@ export function getPathAfterDeletingRecord({
   return `/solutions/new?${searchParams}`;
 }
 
+export function getProblemSwitchPath({
+  solutionId,
+  problemId,
+}: {
+  solutionId: string | null;
+  problemId: string;
+}): string {
+  const searchParams = new URLSearchParams({ problemId });
+  return solutionId
+    ? `/solutions/${solutionId}?${searchParams}`
+    : `/solutions/new?${searchParams}`;
+}
+
 export function getSolutionEditorKey({
   solutionId,
   problemId,
