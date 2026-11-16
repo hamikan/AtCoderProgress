@@ -163,7 +163,7 @@ model Contest {
   id                String  @id
   startEpochSecond  Int     @map("start_epoch_second")
   durationSecond    BigInt  @map("duration_second")
-  // 推定できなかったときも入れて、同じ順位表を取りに行き続けないようにする
+  // 独自推定を試した日時。これが空のコンテストを推定するので、推定できなかったときも入れないと、毎回同じ順位表を取りに行ってしまう
   customDifficultyEstimatedAt DateTime? @map("custom_difficulty_estimated_at")
 
   problems          ContestProblem[]
