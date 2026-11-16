@@ -1,12 +1,9 @@
 /**
- * 独自 difficulty（irt5_time）の推定値。生成ファイル（手で編集しないこと）。
- *
- * 生成方法: npm run difficulty:estimate -- <順位表JSONのディレクトリ>
- * 対象: ABC212以降 / ARC104以降の問題のみ。それ以外の問題は
- * AtCoder Problems の difficulty を使う（normalize-contest-data.ts）。
- * 値は表示用の clipDifficulty 適用前の推定値。
+ * 独自 difficulty（irt5_time）の最初の推定値（clipDifficulty 前）。2026-10-31 に、保存しておいた
+ * 順位表 JSON（ABC212〜ABC476、ARC104〜ARC230）から作った。
+ * 新しいコンテストの推定値はデータベースにだけ入るので、このファイルには足さない。
  */
-export const ESTIMATED_DIFFICULTIES: Readonly<Record<string, number>> = {
+export const CUSTOM_DIFFICULTY_SEED: Readonly<Record<string, number>> = {
 
   'abc212_a': -1000,
   'abc212_b': -147,

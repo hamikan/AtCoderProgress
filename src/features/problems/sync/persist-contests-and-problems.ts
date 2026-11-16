@@ -1,6 +1,17 @@
 import 'server-only';
 import { prisma } from '@/lib/prisma';
+import { resolveProblemDifficulty } from '@/features/problems/functions/difficulty';
 import type { NormalizedContestData } from '@/features/problems/types/input/normalized-contest-data';
+
+async function findCustomDifficulties(): Promise<Map<string, number>> {
+  const rows = await prisma.problem.findMany({
+    where: { customDifficulty: { not: null } },
+    select: { id: true, customDifficulty: true },
+  });
+  return new Map(
+    rows.flatMap((row) => (row.customDifficulty === null ? [] : [[row.id, row.customDifficulty]]))
+  );
+}
 
 export async function persistContestsAndProblems(data: NormalizedContestData) {
   const { contests, problems, contestProblems } = data;
@@ -22,19 +33,24 @@ export async function persistContestsAndProblems(data: NormalizedContestData) {
   }
 
   console.log(`Upserting ${problems.length} problems...`);
+  const customDifficulties = await findCustomDifficulties();
   const insertedProblemIds = new Set<string>();
   for (const problem of problems) {
+    const difficulty = resolveProblemDifficulty(
+      customDifficulties.get(problem.id) ?? null,
+      problem.difficulty
+    );
     await prisma.problem.upsert({
       where: { id: problem.id },
       update: {
         name: problem.name,
-        difficulty: problem.difficulty,
+        ...(difficulty !== null ? { difficulty } : {}),
         firstContestId: problem.firstContestId,
       },
       create: {
         id: problem.id,
         name: problem.name,
-        difficulty: problem.difficulty,
+        difficulty,
         firstContestId: problem.firstContestId,
       },
     });
