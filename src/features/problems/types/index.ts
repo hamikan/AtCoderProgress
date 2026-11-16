@@ -39,3 +39,4 @@ export type {
   TagCountRow,
   UserTagStatisticsRow,
 } from './input/tag-statistics-row';
+export type { ContestCellStatus } from './output/contest-cell-status';
