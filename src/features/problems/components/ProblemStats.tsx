@@ -18,7 +18,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
   const statItems = [
     {
       title: '総問題数',
-      value: stats.total.toLocaleString(),
+      value: stats.total.toLocaleString('ja-JP'),
       changeType: 'neutral',
       icon: BookOpen,
       color: 'text-blue-600',
@@ -26,7 +26,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
     },
     {
       title: 'AC済み',
-      value: stats.ac.toLocaleString(),
+      value: stats.ac.toLocaleString('ja-JP'),
       change: percentage(stats.ac),
       changeType: 'neutral',
       icon: CheckCircle,
@@ -35,7 +35,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
     },
     {
       title: '挑戦中',
-      value: stats.trying.toLocaleString(),
+      value: stats.trying.toLocaleString('ja-JP'),
       change: percentage(stats.trying),
       changeType: 'neutral',
       icon: Clock,
@@ -44,7 +44,7 @@ export default function ProblemStats({ stats }: ProblemStatsProps) {
     },
     {
       title: '未挑戦',
-      value: stats.unsolved.toLocaleString(),
+      value: stats.unsolved.toLocaleString('ja-JP'),
       change: percentage(stats.unsolved),
       changeType: 'neutral',
       icon: Target,

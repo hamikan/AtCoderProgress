@@ -1,8 +1,8 @@
 export const formatSigned = (value: number | null) => {
   if (value === null) return '-';
   const sign = value > 0 ? '+' : '';
-  return `${sign}${value.toLocaleString()}`;
+  return `${sign}${value.toLocaleString('ja-JP')}`;
 };
 
 export const formatDifficulty = (difficulty: number | null) =>
-  difficulty === null ? 'N/A' : difficulty.toLocaleString();
+  difficulty === null ? 'N/A' : difficulty.toLocaleString('ja-JP');
