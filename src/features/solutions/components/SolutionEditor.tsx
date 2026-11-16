@@ -21,6 +21,7 @@ import { FixedToolbarButtons } from '@/components/ui/fixed-toolbar-buttons';
 import { deleteSolution } from '@/features/solutions/actions/delete-solution';
 import { saveSolution } from '@/features/solutions/actions/save-solution';
 import SolutionEditorSidebar from '@/features/solutions/components/SolutionEditorSidebar';
+import SolutionSaveStatus from '@/features/solutions/components/SolutionSaveStatus';
 import SolutionTitleInput from '@/features/solutions/components/SolutionTitleInput';
 import { isEmptySolutionContent } from '@/features/solutions/functions/solution-content';
 import { DEFAULT_SOLUTION_STATUS } from '@/features/solutions/functions/solution-status';
@@ -35,6 +36,7 @@ import {
   getSolutionEditorKey,
   hasUnsavedScopeMove,
 } from '@/features/solutions/functions/solution-editor';
+import { getSolutionSaveHint } from '@/features/solutions/functions/solution-save-hint';
 import { useHydrated } from '@/features/solutions/hooks/use-hydrated';
 import { useDebounce } from '@/hooks/use-debounce';
 import type { ProblemDetail, SelectableTag } from '@/features/problems/types';
@@ -230,6 +232,11 @@ function SolutionEditorContent({
     [debouncedContestId, problem]
   );
   const activeSolutionId = initialSolution?.id ?? savedSolutionId;
+  const saveHint = getSolutionSaveHint({
+    hasCurrentContest: Boolean(currentContest),
+    hasProblemAndContest: Boolean(problem && contestId),
+    isAuthenticated,
+  });
   const visibleRelatedSolutions = useMemo(
     () =>
       relatedSolutions.filter((solution) => solution.contestId === contestId),
@@ -537,7 +544,15 @@ function SolutionEditorContent({
             {notice}
           </div>
         )}
-        <div className="flex shrink-0 justify-end px-4 pt-3 sm:px-6 xl:hidden">
+        {/* 右の欄が隠れる幅では、保存できたかどうかと、保存されない理由がここでしか分からない */}
+        <div className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 text-xs sm:px-6 xl:hidden">
+          <div className="min-w-0" aria-live="polite">
+            {saveState === 'idle' ? (
+              saveHint && <p className="text-amber-700">{saveHint}</p>
+            ) : (
+              <SolutionSaveStatus saveState={saveState} />
+            )}
+          </div>
           <Button
             type="button"
             variant="outline"

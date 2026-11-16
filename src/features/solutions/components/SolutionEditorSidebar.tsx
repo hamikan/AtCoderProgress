@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import {
   ArrowLeftRight,
-  Check,
   ExternalLink,
-  Loader2,
   X,
 } from 'lucide-react';
 
@@ -14,8 +12,10 @@ import { Button } from '@/components/ui/button';
 import ProblemInlineSearch from '@/features/solutions/components/ProblemInlineSearch';
 import SolutionContestMenu from '@/features/solutions/components/SolutionContestMenu';
 import SolutionRecordList from '@/features/solutions/components/SolutionRecordList';
+import SolutionSaveStatus from '@/features/solutions/components/SolutionSaveStatus';
 import SolutionStatusPicker from '@/features/solutions/components/SolutionStatusPicker';
 import SolutionTagSelector from '@/features/solutions/components/SolutionTagSelector';
+import { getSolutionSaveHint } from '@/features/solutions/functions/solution-save-hint';
 import type { ProblemDetail, SelectableTag } from '@/features/problems/types';
 import type {
   SolutionRecordListItem,
@@ -96,7 +96,7 @@ export default function SolutionEditorSidebar({
     : 'コンテストを選ぶ';
   const canChooseContest =
     problem !== null && (problem.contests.length > 1 || !hasCurrentContest);
-  const idleHint = getIdleHint({
+  const idleHint = getSolutionSaveHint({
     hasCurrentContest,
     hasProblemAndContest: Boolean(problem && contestId),
     isAuthenticated,
@@ -139,7 +139,7 @@ export default function SolutionEditorSidebar({
               ) : (
                 <span className="min-w-0 truncate text-sm font-semibold text-slate-700">{contestLabel}</span>
               )}
-              <SaveStatus saveState={saveState} />
+              <SolutionSaveStatus saveState={saveState} />
             </div>
             <div className="flex items-start gap-1">
               {onProblemSelected && isChangingProblem ? (
@@ -249,53 +249,4 @@ export default function SolutionEditorSidebar({
       </section>
     </aside>
   );
-}
-
-function SaveStatus({ saveState }: { saveState: SolutionSaveState }) {
-  if (saveState === 'saving') {
-    return (
-      <span className="inline-flex shrink-0 items-center gap-1 text-slate-400">
-        <Loader2 className="size-3.5 animate-spin" />
-        保存中
-      </span>
-    );
-  }
-  if (saveState === 'saved') {
-    return (
-      <span className="inline-flex shrink-0 items-center gap-1 text-emerald-600">
-        <Check className="size-3.5" />
-        保存済み
-      </span>
-    );
-  }
-  if (saveState === 'error') {
-    return (
-      <span className="inline-flex shrink-0 items-center gap-1 text-red-600">
-        <X className="size-3.5" />
-        保存できませんでした
-      </span>
-    );
-  }
-  return null;
-}
-
-function getIdleHint({
-  hasCurrentContest,
-  hasProblemAndContest,
-  isAuthenticated,
-}: {
-  hasCurrentContest: boolean;
-  hasProblemAndContest: boolean;
-  isAuthenticated: boolean;
-}): string | null {
-  if (!isAuthenticated) {
-    return 'ログインすると、記録を保存できます。';
-  }
-  if (!hasProblemAndContest) {
-    return '問題とコンテストを選ぶと、保存されます。';
-  }
-  if (!hasCurrentContest) {
-    return 'この問題が入っているコンテストを選んでください。';
-  }
-  return null;
 }
