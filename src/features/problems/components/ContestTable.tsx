@@ -16,6 +16,10 @@ import {
 } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  CONTEST_CELL_STATUS_STYLES,
+  getContestCellStatus,
+} from '@/features/problems/functions/contest-cell-status';
 import { getDifficultyColor } from '@/lib/atcoder/difficulty';
 import type { Contest, ContestKind, ContestOrder, Problem } from '@/features/problems/types';
 import type { SubmissionStatus } from '@/features/submissions/types';
@@ -82,6 +86,17 @@ export default function ContestTable({
                 </SelectContent>
               </Select>
             </div>
+            <ul aria-label="マスの色" className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-xs text-slate-600">
+              {Object.values(CONTEST_CELL_STATUS_STYLES).map(({ backgroundClass, label }) => (
+                <li key={label} className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden="true"
+                    className={`inline-block size-3 rounded-sm border border-slate-300 ${backgroundClass}`}
+                  />
+                  {label}
+                </li>
+              ))}
+            </ul>
           </CardHeader>
           <CardContent className="w-full">
             <div className="rounded-lg border border-slate-200">
@@ -111,18 +126,18 @@ export default function ContestTable({
                       </TableCell>
                       {problemIndexes.map((requestedIndex) => {
                         const { problem, problemIndex } = findProblem(contest, requestedIndex);
+                        const cellStatus = problem
+                          ? getContestCellStatus(
+                              submissionStatusMap[problem.id],
+                              contest.startEpochSecond,
+                              contest.durationSecond
+                            )
+                          : null;
+                        const cellStyle = cellStatus ? CONTEST_CELL_STATUS_STYLES[cellStatus] : null;
                         return (
                           <TableCell
                             key={requestedIndex}
-                            className={`border-l text-left ${
-                              problem
-                                ? getCellBackground(
-                                    submissionStatusMap[problem.id],
-                                    contest.startEpochSecond,
-                                    contest.durationSecond
-                                  )
-                                : ''
-                            }`}
+                            className={`border-l text-left ${cellStyle?.backgroundClass ?? ''}`}
                           >
                             {problem ? (
                               <Tooltip disableHoverableContent>
@@ -136,6 +151,8 @@ export default function ContestTable({
                                       <div className={`fade-out-text font-medium ${getDifficultyColor(problem.difficulty)}`}>
                                         {problemIndex} - {problem.name}
                                       </div>
+                                      {/* 色が見分けにくくても、読み上げでは結果が分かるようにする */}
+                                      {cellStyle && <span className="sr-only">（{cellStyle.label}）</span>}
                                     </div>
                                   </Link>
                                 </TooltipTrigger>
@@ -176,21 +193,6 @@ function findProblem(
     problem: problemIndex ? contest.problems[problemIndex] ?? null : null,
     problemIndex: problemIndex ?? requestedIndex,
   };
-}
-
-function getCellBackground(
-  submission: SubmissionStatus | undefined,
-  startEpochSecond: number,
-  durationSecond: number
-): string {
-  if (!submission?.result || submission.epochSecond === undefined) return '';
-  if (submission.result !== 'AC') return 'bg-yellow-100';
-
-  const start = BigInt(startEpochSecond);
-  const submittedAt = BigInt(submission.epochSecond);
-  return start <= submittedAt && submittedAt < start + BigInt(durationSecond)
-    ? 'bg-green-200'
-    : 'bg-green-100';
 }
 
 function getContestName(contestType: ContestKind): string {
