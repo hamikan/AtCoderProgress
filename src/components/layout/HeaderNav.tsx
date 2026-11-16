@@ -33,7 +33,7 @@ export default function HeaderNav() {
 
   return (
     <>
-      <nav className="hidden md:flex items-center space-x-6">
+      <nav className="hidden items-center space-x-6 lg:flex">
         {NAV_ITEMS.map((item) => {
           const active = isActive(pathname, item);
           const Icon = 'icon' in item ? item.icon : null;
@@ -55,7 +55,7 @@ export default function HeaderNav() {
           );
         })}
       </nav>
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="メニューを開く">
