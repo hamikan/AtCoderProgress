@@ -5,6 +5,7 @@ import {
   formatSolutionRecordLabel,
   getDefaultContestId,
   getPathAfterDeletingRecord,
+  getProblemSwitchPath,
   getSolutionEditorKey,
   hasUnsavedScopeMove,
 } from './solution-editor';
@@ -78,5 +79,16 @@ test('getPathAfterDeletingRecord opens the record before the deleted one', () =>
   assert.equal(
     getPathAfterDeletingRecord({ ...scope, records: [{ id: 'one' }], deletedId: 'one' }),
     '/solutions/new?problemId=abc001_a&contestId=abc001'
+  );
+});
+
+test('getProblemSwitchPath moves a saved record and starts a draft otherwise', () => {
+  assert.equal(
+    getProblemSwitchPath({ solutionId: 'solution-1', problemId: 'abc001_b' }),
+    '/solutions/solution-1?problemId=abc001_b'
+  );
+  assert.equal(
+    getProblemSwitchPath({ solutionId: null, problemId: 'abc001_b' }),
+    '/solutions/new?problemId=abc001_b'
   );
 });

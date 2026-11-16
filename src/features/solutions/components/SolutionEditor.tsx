@@ -62,6 +62,8 @@ interface SolutionEditorProps {
   availableTags: SelectableTag[];
   draftState?: SolutionDraftState;
   onDraftChange?: (draftState: SolutionDraftState) => void;
+  onDraftSaved?: (solutionId: string) => void;
+  onCreateRecord?: (problemId: string, contestId: string | null) => void;
   onProblemSelected?: (problemId: string) => void;
   onSelectSolution?: (solutionId: string) => void;
   isAuthenticated: boolean;
@@ -85,6 +87,8 @@ function SolutionEditorContent({
   availableTags,
   draftState,
   onDraftChange,
+  onDraftSaved,
+  onCreateRecord,
   onProblemSelected,
   onSelectSolution,
   isAuthenticated,
@@ -204,15 +208,18 @@ function SolutionEditorContent({
       ? { problemId: problem.id, contestId }
       : null
   );
-  const shouldSaveInitialDraft = Boolean(
-    problem?.id &&
-      contestId &&
-      !initialSolution &&
-      draftState &&
-      (draftState.content !== DEFAULT_CONTENT ||
-        draftState.title.trim().length > 0 ||
-        draftState.status !== DEFAULT_SOLUTION_STATUS ||
-        draftState.tags.length > 0)
+  // 開いたときの下書きだけを見る。保存し終えると下書きは消されるので、そのたびに判定が変わると余計な保存が走る
+  const [shouldSaveInitialDraft] = useState(() =>
+    Boolean(
+      problem?.id &&
+        contestId &&
+        !initialSolution &&
+        draftState &&
+        (draftState.content !== DEFAULT_CONTENT ||
+          draftState.title.trim().length > 0 ||
+          draftState.status !== DEFAULT_SOLUTION_STATUS ||
+          draftState.tags.length > 0)
+    )
   );
   const currentContest = useMemo(
     () =>
@@ -335,6 +342,7 @@ function SolutionEditorContent({
           ) {
             // ページを移るとエディタが作り直されて保存中に打った文字が消えるため、URL だけを書き換える
             window.history.replaceState(null, '', `/solutions/${savedId}`);
+            onDraftSaved?.(savedId);
           } else if (
             didMoveScope &&
             !isNavigatingRef.current &&
@@ -350,7 +358,7 @@ function SolutionEditorContent({
     } finally {
       saveInFlightRef.current = false;
     }
-  }, [router]);
+  }, [onDraftSaved, router]);
 
   function flushPendingSave() {
     const snapshot = latestSnapshotRef.current;
@@ -483,6 +491,10 @@ function SolutionEditorContent({
   function handleCreateNewRecord() {
     if (!problem) return;
     isNavigatingRef.current = true;
+    if (onCreateRecord) {
+      onCreateRecord(problem.id, contestId);
+      return;
+    }
     const searchParams = new URLSearchParams({ problemId: problem.id });
     if (contestId) {
       searchParams.set('contestId', contestId);
